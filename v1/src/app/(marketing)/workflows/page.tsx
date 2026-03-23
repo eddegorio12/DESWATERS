@@ -12,9 +12,9 @@ import { SectionHeading } from "@/features/marketing/components/section-heading"
 import { operatorViews, workflowSteps } from "@/features/marketing/lib/site-content";
 
 export const metadata: Metadata = {
-  title: "Workflows | DESWATERS",
+  title: "Workflows | DEGORIO WATER DISTRIBUTION SERVICES",
   description:
-    "See how DESWATERS handles utility workflows from customer setup through reading approval, billing, payment entry, and daily review.",
+    "See how DEGORIO WATER DISTRIBUTION SERVICES handles utility workflows from customer setup through reading approval, billing, payment entry, and daily review.",
 };
 
 const stepIcons = [Fingerprint, ClipboardCheck, CheckCircle2, FileClock, Wallet];
@@ -24,7 +24,7 @@ export default function WorkflowsPage() {
     <div className="space-y-20 pb-24 pt-10">
       <PageHero
         eyebrow="Workflows"
-        title="DESWATERS follows the same sequence your operations team already uses."
+        title="DWDS follows the same sequence your operations team already uses."
         description="The product reduces handoff friction by keeping data connected across readings, bills, cashiering, and collections review."
       />
 
@@ -84,7 +84,7 @@ export default function WorkflowsPage() {
         <article className="rounded-[2rem] border border-border/70 bg-white/90 p-8 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.55)]">
           <SectionHeading
             eyebrow="Who Uses It"
-            title="The workflow works across multiple DESWATERS roles."
+            title="The workflow works across multiple DWDS roles."
             description="The same shared system supports different responsibilities without forcing everyone into the same context at once."
           />
           <div className="mt-8 grid gap-4 sm:grid-cols-2">

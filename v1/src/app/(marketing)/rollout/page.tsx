@@ -12,9 +12,9 @@ import { SectionHeading } from "@/features/marketing/components/section-heading"
 import { futureExpansion, rolloutPhases } from "@/features/marketing/lib/site-content";
 
 export const metadata: Metadata = {
-  title: "Rollout | DESWATERS",
+  title: "Rollout | DEGORIO WATER DISTRIBUTION SERVICES",
   description:
-    "Understand the current DESWATERS release, the phased rollout path, and what the platform is designed to support next.",
+    "Understand the current DEGORIO WATER DISTRIBUTION SERVICES release, the phased rollout path, and what the platform is designed to support next.",
 };
 
 const futureIcons = [Smartphone, Zap, MessageSquareMore, Building2];
@@ -25,7 +25,7 @@ export default function RolloutPage() {
       <PageHero
         eyebrow="Rollout Path"
         title="Start with operational accuracy, then expand into customer-facing services."
-        description="DESWATERS is being built in phases so the billing and collections core stays stable before additional channels are layered in."
+        description="DWDS is being built in phases so the billing and collections core stays stable before additional channels are layered in."
       />
 
       <section className="space-y-8">
@@ -87,7 +87,7 @@ export default function RolloutPage() {
             {[
               "Public messaging now highlights the real MVP: customer records, metering, readings, billing, payments, and collections.",
               "The route structure leaves room for future customer-facing pages without mixing them into the protected admin area.",
-              "Metadata and navigation now reflect DESWATERS as a product platform instead of a temporary setup screen.",
+              "Metadata and navigation now reflect DWDS as a product platform instead of a temporary setup screen.",
             ].map((item) => (
               <div
                 key={item}

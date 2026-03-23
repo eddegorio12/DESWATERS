@@ -66,7 +66,7 @@ export function MeterAssignmentForm({
   });
 
   return (
-    <section className="rounded-3xl border border-border bg-background p-6 shadow-sm">
+    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
       <div className="space-y-2">
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           Assign Meter
@@ -87,7 +87,7 @@ export function MeterAssignmentForm({
           </label>
           <select
             id="meterId"
-            className={fieldClassName}
+            className={`${fieldClassName} bg-white`}
             disabled={assignmentBlocked}
             {...form.register("meterId")}
           >
@@ -110,7 +110,7 @@ export function MeterAssignmentForm({
           </label>
           <select
             id="customerId"
-            className={fieldClassName}
+            className={`${fieldClassName} bg-white`}
             disabled={assignmentBlocked}
             {...form.register("customerId")}
           >

@@ -47,7 +47,7 @@ export function CustomerForm() {
   });
 
   return (
-    <section className="rounded-3xl border border-border bg-background p-6 shadow-sm">
+    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
       <div className="space-y-2">
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           New Customer
@@ -69,7 +69,7 @@ export function CustomerForm() {
           <input
             id="name"
             type="text"
-            className={fieldClassName}
+            className={`${fieldClassName} bg-white`}
             placeholder="Maria Santos"
             {...form.register("name")}
           />
@@ -83,7 +83,7 @@ export function CustomerForm() {
           <textarea
             id="address"
             rows={4}
-            className={`${fieldClassName} resize-y`}
+            className={`${fieldClassName} resize-y bg-white`}
             placeholder="Purok 2, Barangay Poblacion"
             {...form.register("address")}
           />
@@ -99,7 +99,7 @@ export function CustomerForm() {
           <input
             id="contactNumber"
             type="text"
-            className={fieldClassName}
+            className={`${fieldClassName} bg-white`}
             placeholder="09XX XXX XXXX"
             {...form.register("contactNumber")}
           />

@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { MeterStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { PendingReadingApprovals } from "@/features/readings/components/pending-reading-approvals";
 import { ReadingForm } from "@/features/readings/components/reading-form";
 import { ReadingList } from "@/features/readings/components/reading-list";
@@ -114,29 +115,22 @@ export default async function AdminReadingsPage() {
       previousReading: meter.readings[0]?.currentReading ?? 0,
     }));
 
+  const flaggedForEntryCount = meterOptions.length;
+
   return (
-    <main className="min-h-screen bg-muted/30 px-6 py-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <header className="flex flex-col gap-4 rounded-3xl border border-border bg-background px-6 py-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-              Reading Operations
-            </p>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-              Reading Approval Workflow
-            </h1>
-            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-              Review the pending reading queue, approve readings individually or in bulk,
-              and keep encoding history visible for audit and correction work.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
+    <AdminPageShell
+      eyebrow="Reading Operations"
+      title="Move field submissions from meter entry to bill-ready approval without losing audit visibility."
+      description="Encode readings for active service connections, inspect the pending review queue, and keep the most recent encoding history available for correction, supervision, and downstream billing handoff."
+      actions={
+        <>
             <Link
               href="/admin/billing"
               className={cn(
                 buttonVariants({
                   variant: "outline",
-                  className: "h-10 rounded-xl px-4",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
                 })
               )}
             >
@@ -147,7 +141,8 @@ export default async function AdminReadingsPage() {
               className={cn(
                 buttonVariants({
                   variant: "outline",
-                  className: "h-10 rounded-xl px-4",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
                 })
               )}
             >
@@ -158,15 +153,37 @@ export default async function AdminReadingsPage() {
               className={cn(
                 buttonVariants({
                   variant: "outline",
-                  className: "h-10 rounded-xl px-4",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
                 })
               )}
             >
               Back to dashboard
             </Link>
             <UserButton />
-          </div>
-        </header>
+        </>
+      }
+      stats={[
+        {
+          label: "Active meters",
+          value: flaggedForEntryCount.toString(),
+          detail: "Assigned active meters ready for new reading entry",
+          accent: "teal",
+        },
+        {
+          label: "Pending review",
+          value: pendingReadings.length.toString(),
+          detail: "Encoded submissions waiting for approval",
+          accent: "amber",
+        },
+        {
+          label: "Recent history",
+          value: readings.length.toString(),
+          detail: "Latest recorded readings in the activity log",
+          accent: "sky",
+        },
+      ]}
+    >
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
           <ReadingForm meters={meterOptions} />
@@ -174,7 +191,6 @@ export default async function AdminReadingsPage() {
 
         <PendingReadingApprovals readings={pendingReadings} />
         <ReadingList readings={readings} />
-      </div>
-    </main>
+    </AdminPageShell>
   );
 }

@@ -28,7 +28,7 @@ export function ApprovedReadingBillQueue({
   readings,
 }: ApprovedReadingBillQueueProps) {
   return (
-    <section className="rounded-3xl border border-border bg-background p-6 shadow-sm">
+    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-2">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -42,7 +42,7 @@ export function ApprovedReadingBillQueue({
             create unpaid accounts receivable records.
           </p>
         </div>
-        <div className="rounded-2xl border border-border bg-muted/30 px-4 py-3 text-sm">
+        <div className="rounded-[1.4rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#f8fbfa,#eff7f5)] px-4 py-3 text-sm">
           {activeTariff ? (
             <div className="space-y-1">
               <p className="font-medium text-foreground">{activeTariff.name}</p>
@@ -57,10 +57,10 @@ export function ApprovedReadingBillQueue({
         </div>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-border">
+      <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border text-left">
-            <thead className="bg-muted/50">
+            <thead className="bg-secondary/55">
               <tr className="text-sm text-muted-foreground">
                 <th className="px-4 py-3 font-medium">Meter</th>
                 <th className="px-4 py-3 font-medium">Customer</th>

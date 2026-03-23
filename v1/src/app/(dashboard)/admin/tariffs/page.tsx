@@ -4,6 +4,7 @@ import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { TariffForm } from "@/features/tariffs/components/tariff-form";
 import { TariffList } from "@/features/tariffs/components/tariff-list";
 import { prisma } from "@/lib/prisma";
@@ -38,29 +39,23 @@ export default async function AdminTariffsPage() {
     },
   });
 
+  const activeTariff = tariffs.find((tariff) => tariff.isActive) ?? null;
+  const totalTierCount = tariffs.reduce((sum, tariff) => sum + tariff.tiers.length, 0);
+
   return (
-    <main className="min-h-screen bg-muted/30 px-6 py-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <header className="flex flex-col gap-4 rounded-3xl border border-border bg-background px-6 py-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-              Billing Rules
-            </p>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-              Tariff Configuration
-            </h1>
-            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-              Configure the progressive tiered billing rules in the admin UI so later
-              billing calculations can resolve the active tariff from the database.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
+    <AdminPageShell
+      eyebrow="Billing Rules"
+      title="Control the active water tariff with a clearer view of pricing logic and saved revisions."
+      description="Configure the live billing tariff, maintain progressive usage tiers, and keep older tariff records visible so operations can confirm which pricing schedule is currently in force."
+      actions={
+        <>
             <Link
               href="/admin/meters"
               className={cn(
                 buttonVariants({
                   variant: "outline",
-                  className: "h-10 rounded-xl px-4",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
                 })
               )}
             >
@@ -71,21 +66,44 @@ export default async function AdminTariffsPage() {
               className={cn(
                 buttonVariants({
                   variant: "outline",
-                  className: "h-10 rounded-xl px-4",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
                 })
               )}
             >
               Back to dashboard
             </Link>
             <UserButton />
-          </div>
-        </header>
+        </>
+      }
+      stats={[
+        {
+          label: "Saved tariffs",
+          value: tariffs.length.toString(),
+          detail: "Billing configurations retained in the registry",
+          accent: "teal",
+        },
+        {
+          label: "Active rule",
+          value: activeTariff ? activeTariff.name : "Not set",
+          detail: activeTariff
+            ? "Tariff currently used for new bill generation"
+            : "Create a tariff to enable billing",
+          accent: "violet",
+        },
+        {
+          label: "Defined tiers",
+          value: totalTierCount.toString(),
+          detail: "Progressive usage bands across all saved tariffs",
+          accent: "amber",
+        },
+      ]}
+    >
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
           <TariffForm />
           <TariffList tariffs={tariffs} />
         </section>
-      </div>
-    </main>
+    </AdminPageShell>
   );
 }

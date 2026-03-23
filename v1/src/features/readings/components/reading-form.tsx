@@ -86,7 +86,7 @@ export function ReadingForm({ meters }: ReadingFormProps) {
   });
 
   return (
-    <section className="rounded-3xl border border-border bg-background p-6 shadow-sm">
+    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
       <div className="space-y-2">
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           Field Entry
@@ -107,7 +107,7 @@ export function ReadingForm({ meters }: ReadingFormProps) {
           </label>
           <select
             id="meterId"
-            className={fieldClassName}
+            className={`${fieldClassName} bg-white`}
             disabled={readingBlocked}
             {...form.register("meterId")}
           >
@@ -125,7 +125,7 @@ export function ReadingForm({ meters }: ReadingFormProps) {
         </div>
 
         {selectedMeter ? (
-          <div className="grid gap-4 rounded-2xl border border-border bg-muted/30 p-4 sm:grid-cols-3">
+          <div className="grid gap-4 rounded-[1.4rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#f8fbfa,#eff7f5)] p-4 sm:grid-cols-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Customer
@@ -162,7 +162,7 @@ export function ReadingForm({ meters }: ReadingFormProps) {
             id="currentReading"
             type="number"
             step="0.01"
-            className={fieldClassName}
+            className={`${fieldClassName} bg-white`}
             disabled={readingBlocked}
             {...form.register("currentReading", { valueAsNumber: true })}
           />

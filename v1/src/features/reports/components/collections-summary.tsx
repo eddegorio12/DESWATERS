@@ -13,7 +13,7 @@ export function CollectionsSummary({
 }: CollectionsSummaryProps) {
   return (
     <section className="grid gap-4 md:grid-cols-3">
-      <article className="rounded-3xl border border-border bg-background p-6 shadow-sm">
+      <article className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           Collection Date
         </p>
@@ -25,7 +25,7 @@ export function CollectionsSummary({
         </p>
       </article>
 
-      <article className="rounded-3xl border border-border bg-background p-6 shadow-sm">
+      <article className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           Total Collections
         </p>
@@ -37,7 +37,7 @@ export function CollectionsSummary({
         </p>
       </article>
 
-      <article className="rounded-3xl border border-border bg-background p-6 shadow-sm">
+      <article className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           Payments Recorded
         </p>

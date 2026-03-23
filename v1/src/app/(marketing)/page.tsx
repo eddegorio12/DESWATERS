@@ -25,9 +25,9 @@ import {
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "DESWATERS | Water Utility Operations Platform",
+  title: "DEGORIO WATER DISTRIBUTION SERVICES | Water Utility Operations Platform",
   description:
-    "DESWATERS centralizes customer records, metering, billing, cashiering, and daily collections for utility operations teams.",
+    "DEGORIO WATER DISTRIBUTION SERVICES centralizes customer records, metering, billing, cashiering, and daily collections for utility operations teams.",
 };
 
 const statIcons = [Droplets, Users, ReceiptText, ShieldCheck];
@@ -38,8 +38,8 @@ export default function HomePage() {
     <div className="space-y-24 pb-24 pt-10">
       <PageHero
         eyebrow="Water Utility Operations"
-        title="Run DESWATERS from meter reading to daily collections in one controlled workspace."
-        description="DESWATERS gives utility teams a single operating system for customer accounts, meter tracking, progressive billing, cashier workflows, and auditable reporting."
+        title="Run DWDS from meter reading to daily collections in one controlled workspace."
+        description="DWDS gives utility teams a single operating system for customer accounts, meter tracking, progressive billing, cashier workflows, and auditable reporting."
         primaryAction={{ href: "/sign-in", label: "Open admin access" }}
         secondaryAction={{ href: "/platform", label: "Explore the platform" }}
       >
@@ -66,9 +66,9 @@ export default function HomePage() {
       <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <div className="space-y-6">
           <SectionHeading
-            eyebrow="Why DESWATERS"
+            eyebrow="Why DEGORIO"
             title="Built for utility operations, not generic invoicing."
-            description="The product mirrors the real DESWATERS workflow: account maintenance, meter assignment, reading validation, bill generation, payment posting, and same-day reporting."
+            description="The product mirrors the real DWDS workflow: account maintenance, meter assignment, reading validation, bill generation, payment posting, and same-day reporting."
           />
           <div className="grid gap-4 sm:grid-cols-2">
             {[
@@ -115,7 +115,7 @@ export default function HomePage() {
       <section className="space-y-8">
         <SectionHeading
           eyebrow="Core Modules"
-          title="Every major DESWATERS workflow has a dedicated screen and responsibility."
+          title="Every major DWDS workflow has a dedicated screen and responsibility."
           description="The platform is intentionally modular so staff can manage utility operations without fighting a monolithic interface."
         />
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
@@ -145,7 +145,7 @@ export default function HomePage() {
           <SectionHeading
             eyebrow="Reporting Layer"
             title="Collections stay auditable from cashier posting to dashboard totals."
-            description="DESWATERS keeps reporting close to the transaction flow, so operators can verify what was paid today and what still needs action."
+            description="DWDS keeps reporting close to the transaction flow, so operators can verify what was paid today and what still needs action."
           />
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {reportingHighlights.map((item) => (
@@ -202,7 +202,7 @@ export default function HomePage() {
               Put your utility operations on one source of truth before scaling outward.
             </h2>
             <p className="mt-4 text-sm leading-7 text-primary-foreground/78">
-              DESWATERS already covers the operational chain your team uses every day. The
+              DWDS already covers the operational chain your team uses every day. The
               public site now reflects that product maturity.
             </p>
           </div>

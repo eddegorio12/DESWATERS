@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { BillStatus, ReadingStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ApprovedReadingBillQueue } from "@/features/billing/components/approved-reading-bill-queue";
 import { UnpaidBillList } from "@/features/billing/components/unpaid-bill-list";
 import { prisma } from "@/lib/prisma";
@@ -87,26 +88,19 @@ export default async function AdminBillingPage() {
   ]);
 
   return (
-    <main className="min-h-screen bg-muted/30 px-6 py-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <header className="flex flex-col gap-4 rounded-3xl border border-border bg-background px-6 py-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-              Billing
-            </h1>
-            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-              Generate unpaid bills from approved readings using the active progressive
-              tariff, review open bill records, and open printable consumer bill copies
-              for distribution.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
+    <AdminPageShell
+      eyebrow="Billing Control"
+      title="Turn approved usage into receivables with the active tariff and a printable bill trail."
+      description="Generate bills from approved readings, keep open receivables visible, and move directly into statement printing and cashier follow-up without leaving the billing workspace."
+      actions={
+        <>
             <Link
               href="/admin/payments"
               className={cn(
                 buttonVariants({
                   variant: "outline",
-                  className: "h-10 rounded-xl px-4",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
                 })
               )}
             >
@@ -117,7 +111,8 @@ export default async function AdminBillingPage() {
               className={cn(
                 buttonVariants({
                   variant: "outline",
-                  className: "h-10 rounded-xl px-4",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
                 })
               )}
             >
@@ -128,19 +123,42 @@ export default async function AdminBillingPage() {
               className={cn(
                 buttonVariants({
                   variant: "outline",
-                  className: "h-10 rounded-xl px-4",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
                 })
               )}
             >
               Back to dashboard
             </Link>
             <UserButton />
-          </div>
-        </header>
+        </>
+      }
+      stats={[
+        {
+          label: "Active tariff",
+          value: activeTariff ? activeTariff.name : "Not set",
+          detail: activeTariff
+            ? "Current tariff driving bill calculations"
+            : "Create or activate a tariff before billing",
+          accent: "violet",
+        },
+        {
+          label: "Ready to bill",
+          value: approvedReadings.length.toString(),
+          detail: "Approved readings still waiting for bill generation",
+          accent: "amber",
+        },
+        {
+          label: "Open receivables",
+          value: unpaidBills.length.toString(),
+          detail: "Bills that still require full settlement",
+          accent: "rose",
+        },
+      ]}
+    >
 
         <ApprovedReadingBillQueue activeTariff={activeTariff} readings={approvedReadings} />
         <UnpaidBillList bills={unpaidBills} />
-      </div>
-    </main>
+    </AdminPageShell>
   );
 }

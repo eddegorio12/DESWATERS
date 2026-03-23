@@ -11,7 +11,7 @@ export function AuthShell({ title, description, children }: AuthShellProps) {
         <section className="flex flex-col justify-between border-b border-border bg-card px-8 py-10 lg:border-r lg:border-b-0 lg:px-12 lg:py-14">
           <div className="space-y-5">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-              DESWATERS
+              DEGORIO WATER DISTRIBUTION SERVICES
             </p>
             <div className="space-y-3">
               <h1 className="max-w-md text-4xl font-semibold tracking-tight text-balance text-foreground">

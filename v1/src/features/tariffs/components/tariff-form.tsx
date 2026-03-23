@@ -64,7 +64,7 @@ export function TariffForm() {
   });
 
   return (
-    <section className="rounded-3xl border border-border bg-background p-6 shadow-sm">
+    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
       <div className="space-y-2">
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           Active Tariff
@@ -87,7 +87,7 @@ export function TariffForm() {
             <input
               id="name"
               type="text"
-              className={fieldClassName}
+              className={`${fieldClassName} bg-white`}
               placeholder="Residential March 2026 Tariff"
               {...form.register("name")}
             />
@@ -102,7 +102,7 @@ export function TariffForm() {
               id="minimumCharge"
               type="number"
               step="0.01"
-              className={fieldClassName}
+              className={`${fieldClassName} bg-white`}
               {...form.register("minimumCharge", { valueAsNumber: true })}
             />
             <p className="mt-2 text-sm text-destructive">
@@ -118,7 +118,7 @@ export function TariffForm() {
               id="minimumUsage"
               type="number"
               step="0.01"
-              className={fieldClassName}
+              className={`${fieldClassName} bg-white`}
               {...form.register("minimumUsage", { valueAsNumber: true })}
             />
             <p className="mt-2 text-sm text-destructive">
@@ -134,7 +134,7 @@ export function TariffForm() {
               id="installationFee"
               type="number"
               step="0.01"
-              className={fieldClassName}
+              className={`${fieldClassName} bg-white`}
               {...form.register("installationFee", { valueAsNumber: true })}
             />
             <p className="mt-2 text-sm text-destructive">
@@ -143,7 +143,7 @@ export function TariffForm() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border p-4">
+        <div className="rounded-[1.5rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#fbfdfc,#f4f8f7)] p-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-lg font-semibold text-foreground">Progressive tiers</h3>
@@ -167,7 +167,7 @@ export function TariffForm() {
             {fields.map((field, index) => (
               <div
                 key={field.id}
-                className="rounded-2xl border border-border bg-muted/20 p-4"
+                className="rounded-[1.35rem] border border-[#dbe9e5] bg-white p-4"
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-medium text-foreground">Tier {index + 1}</p>
@@ -195,7 +195,7 @@ export function TariffForm() {
                       id={`tiers.${index}.minVolume`}
                       type="number"
                       step="0.01"
-                      className={fieldClassName}
+                      className={`${fieldClassName} bg-white`}
                       {...form.register(`tiers.${index}.minVolume`, {
                         valueAsNumber: true,
                       })}
@@ -216,7 +216,7 @@ export function TariffForm() {
                       id={`tiers.${index}.maxVolume`}
                       type="number"
                       step="0.01"
-                      className={fieldClassName}
+                      className={`${fieldClassName} bg-white`}
                       placeholder="Leave blank for no limit"
                       {...form.register(`tiers.${index}.maxVolume`, {
                         setValueAs: (value) => (value === "" ? undefined : Number(value)),
@@ -238,7 +238,7 @@ export function TariffForm() {
                       id={`tiers.${index}.ratePerCuM`}
                       type="number"
                       step="0.01"
-                      className={fieldClassName}
+                      className={`${fieldClassName} bg-white`}
                       {...form.register(`tiers.${index}.ratePerCuM`, {
                         valueAsNumber: true,
                       })}

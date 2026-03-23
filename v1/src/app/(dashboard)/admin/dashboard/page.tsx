@@ -207,7 +207,7 @@ export default async function AdminDashboardPage() {
                   Operations Workspace
                 </span>
                 <span className="rounded-full border border-[#8ce1d5]/25 bg-[#8ce1d5]/12 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#d9fff6]">
-                  DESWATERS
+                  DWDS
                 </span>
               </div>
 
@@ -217,7 +217,7 @@ export default async function AdminDashboardPage() {
                   room.
                 </h1>
                 <p className="max-w-2xl text-sm leading-7 text-white/76 sm:text-base">
-                  Monitor the full DESWATERS workflow from account setup to cashier
+                  Monitor the full DWDS workflow from account setup to cashier
                   settlement, with billing review, printable statements, and same-day
                   collections visibility in one protected surface.
                 </p>

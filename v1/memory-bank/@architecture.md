@@ -2,108 +2,143 @@
 
 ## Core Architectural Principles
 
-1. **Modularity Preferred over Monoliths**
-   - **Highly Modular Structure:** Break down features into separate files and directories (e.g., `features/customers`, `features/billing`, `features/meters`). 
-   - **Discourage Monoliths:** Avoid giant, single-file implementations. Each file should have a single responsibility.
-   - **Shared Components:** UI components should be isolated in `components/ui` (shadcn/ui), while feature-specific components stay within their feature directory.
+1. **Modularity over monoliths**
+   - Organize by domain under `src/features/<domain>/...`
+   - Keep route files focused on composition
+   - Isolate server mutations, validation, and calculation logic into dedicated modules
 
-2. **Tech Stack**
-   - **Framework:** Next.js (App Router) + TypeScript
-   - **Database:** PostgreSQL via Prisma ORM
-   - **Auth:** Clerk (role-based access management locally in DB)
-   - **Styling:** Tailwind CSS + shadcn/ui (guided by `ui-ux-pro-max` skill)
-   - **Forms:** React Hook Form + Zod
-   - **Storage:** Supabase Storage (pdfs, receipts, photos)
-   - **Payments:** Xendit (online) + Manual Cashier encoding
+2. **One codebase, multiple surfaces**
+   - Public marketing pages and protected staff operations live in the same Next.js app
+   - Future consumer-facing routes should remain in the same repository unless a later decision explicitly changes that
 
-## Physical Architecture Insights (Phase 1.1 Setup)
-- **`src/app/`**: Contains the Next.js App Router. We will keep this lean. Any major business logic should be deferred to `src/features/`.
-- **`src/components/ui/`**: Reserved exclusively for `shadcn/ui` primitive components (like `button`, `input`, `card`). Do not pollute this with feature-specific components.
-- **`prisma/`**: Contains the Prisma schema. It is the single source of truth for our database definitions.
+3. **Server-authoritative business rules**
+   - Billing math, payment settlement, reading approval, and any future authorization checks must be enforced on the server
+   - Client components should guide input, not define business truth
 
-## Physical Architecture Insights (Phase 1.3 Auth Integration)
-- **`src/proxy.ts`**: Route protection for Clerk on Next.js 16 lives here. All `/admin/*` routes are guarded through `clerkMiddleware()` and `createRouteMatcher()`.
-- **`src/app/(auth)/`**: Contains the custom authentication routes (`/sign-in`, `/sign-up`) rendered with Clerk UI components.
-- **`src/app/(dashboard)/admin/dashboard/page.tsx`**: Now serves as the final operations hub for the MVP. It still hosts the first-login sync trigger, but also aggregates current operational counts and links to all live admin modules.
-- **`src/features/auth/`**: Holds authentication-specific modules. Shared auth UI wrappers live under `components/`, Clerk styling is isolated in `lib/`, and first-login provisioning lives in `actions/`.
-- **`src/features/auth/actions/sync-current-user.ts`**: The first-login sync now reconciles local staff records by `clerkId` first and by unique `email` second. This prevents duplicate-user failures when a local staff row already exists before Clerk is linked.
-- **`src/lib/prisma.ts`**: Central Prisma singleton for App Router server components and server actions. Reuse this instead of instantiating `PrismaClient` ad hoc in features. In the current local SQLite mode, it is configured with Prisma v7's `@prisma/adapter-better-sqlite3` driver adapter.
+4. **Memory-bank-driven architecture**
+   - This file records both the implemented system structure and the intended direction of named enhancement phases
+   - Any major feature, schema, or workflow change must update this document
 
-## Physical Architecture Insights (Dashboard Design Pass)
-- **`src/app/(dashboard)/admin/dashboard/page.tsx`**: The admin dashboard now uses a more intentional operations-control layout with a branded hero, grouped KPI cards, a workflow pulse section, and modular navigation cards instead of a plain stats-and-links screen.
-- **Design Guidance Source:** This redesign followed the installed `ui-ux-pro-max` skill in fallback mode using the skill's written rules because the local Python search script could not execute in this environment.
+## Product Naming Convention
+- **Formal name:** `DEGORIO WATER DISTRIBUTION SERVICES`
+- **Short name:** `DWDS`
 
-## Physical Architecture Insights (Final MVP Shell)
-- **`src/app/(marketing)/page.tsx`**: Public entry page for the finished MVP. It now presents the DESWATERS admin system as a complete operations product rather than a setup validation screen.
-- **Dashboard Aggregation Pattern:** The admin dashboard now performs lightweight server-side aggregation for counts and today’s collections summary. This is acceptable for the MVP shell, but heavier analytics should move into dedicated reporting modules if reporting scope expands later.
+## Current Runtime State
 
-## Physical Architecture Insights (Public Marketing Surface)
-- **`src/app/(marketing)/`**: Public route group for the DESWATERS marketing site. It now owns the root landing page plus supporting public pages like `/platform`, `/workflows`, and `/rollout` without affecting the protected admin route URLs.
-- **`src/features/marketing/components/`**: Shared marketing shell, header, footer, and section primitives. Public site composition stays out of `src/components/ui/` so shared primitive components remain focused on app-wide building blocks.
-- **`src/features/marketing/lib/site-content.ts`**: Centralized marketing copy and navigation data used across public routes. This keeps page files slimmer and makes future copy updates less error-prone.
-- **Admin UI Language Update:** The protected operations pages now use production-facing section labels instead of step-based milestone copy, separating internal build history from live product language.
+### Framework & App Structure
+- **Framework:** Next.js 16 App Router + TypeScript
+- **Styling:** Tailwind CSS + `shadcn/ui`
+- **Auth:** Clerk for authentication and session handling
+- **ORM:** Prisma v7
+- **Current local DB runtime:** SQLite with `@prisma/adapter-better-sqlite3`
 
-## Physical Architecture Insights (Phase 2.1 Customer Module)
-- **`src/app/(dashboard)/admin/customers/page.tsx`**: Protected customer management route for Step 2.1. It stays server-rendered and fetches the current customer list directly from Prisma.
-- **`src/features/customers/actions.ts`**: Contains the `createCustomer` Server Action. Authentication is verified inside the action before any mutation, and the customers page is revalidated after a successful create.
-- **`src/features/customers/components/`**: Holds the client-side `CustomerForm` and the presentational `CustomerList`, keeping the route file focused on composition and data loading.
-- **`src/features/customers/lib/customer-schema.ts`**: Shared Zod schema for both client-side form validation and server-side input validation to keep the Customer create flow consistent.
-- **Direct Dependencies Added:** `react-hook-form`, `@hookform/resolvers`, and `zod` are now first-class dependencies for form handling and validation in feature modules.
+### Important Runtime Clarification
+- The current repository is **not yet running the intended PostgreSQL-first architecture**.
+- SQLite is a temporary local-development compromise that kept MVP implementation moving.
+- The migration back to PostgreSQL is tracked as **EH1: Data Platform Hardening**.
 
-## Physical Architecture Insights (Phase 2.2 Meter Module)
-- **`src/app/(dashboard)/admin/meters/page.tsx`**: Protected meter management route for Step 2.2. It server-renders the meter registry, current customers, and the unassigned meter pool needed by the assignment form.
-- **`src/features/meters/actions.ts`**: Contains `registerMeter` and `assignMeterToCustomer`. Both Server Actions verify authentication internally, validate input via Zod, and revalidate `/admin/meters`, `/admin/customers`, and `/admin/dashboard` after mutation.
-- **`src/features/meters/components/`**: Holds the client-side registration and assignment forms plus the presentational meter registry table. This keeps the route file focused on loading and composition.
-- **`src/features/meters/lib/meter-schema.ts`**: Shared Zod schemas for meter registration and meter assignment so client and server validation stay aligned.
-- **Customer Registry Extension:** `src/features/customers/components/customer-list.tsx` now displays linked meter numbers pulled from Prisma, making Step 2.2 assignments visible from the customer module immediately after revalidation.
+## Physical Architecture: Implemented Surfaces
 
-## Physical Architecture Insights (Phase 2.3 Tariff Module)
-- **`src/app/(dashboard)/admin/tariffs/page.tsx`**: Protected tariff configuration route for Step 2.3. It server-renders the tariff registry and the current active tariff creation form.
-- **`src/features/tariffs/actions.ts`**: Contains `createTariff`. The Server Action verifies authentication internally, validates the tariff payload via Zod, deactivates any existing active tariff, creates the new tariff plus nested tiers inside a transaction, and revalidates `/admin/tariffs` plus `/admin/dashboard`.
-- **`src/features/tariffs/components/`**: Holds the client-side tariff form with dynamic tier inputs and the presentational tariff registry. The page file remains focused on loading and composition.
-- **`src/features/tariffs/lib/tariff-schema.ts`**: Shared Zod schema for tariff metadata and tier validation. It enforces sequential progressive tiers, prevents non-terminal open-ended ranges, and keeps client/server validation aligned for later billing math.
-- **Dashboard Navigation Extension:** `src/app/(dashboard)/admin/dashboard/page.tsx` now links directly to `/admin/tariffs`, making Step 2.3 the current validated slice.
+### Routing
+- `src/app/(marketing)/`
+  - Public marketing surface for `/`, `/platform`, `/workflows`, and `/rollout`
+- `src/app/(auth)/`
+  - Clerk-powered sign-in and sign-up routes
+- `src/app/(dashboard)/admin/`
+  - Protected staff operations area for dashboard, customers, meters, tariffs, readings, billing, payments, and collections
 
-## Physical Architecture Insights (Phase 3.1 Reading Module)
-- **`src/app/(dashboard)/admin/readings/page.tsx`**: Protected meter reading route for Step 3.1. It server-renders the assigned active meter pool together with the recent reading queue needed for validation.
-- **`src/features/readings/actions.ts`**: Contains `createReading`. The Server Action verifies the Clerk session, resolves the matching local Prisma `User` by `clerkId`, reloads the selected meter's latest reading to derive `previousReading`, calculates `consumption`, persists a new `Reading` with `PENDING_REVIEW`, and revalidates `/admin/readings` plus `/admin/dashboard`.
-- **`src/features/readings/components/`**: Holds the client-side meter reading form and the presentational reading registry, keeping the route file focused on loading and composition.
-- **`src/features/readings/lib/reading-schema.ts`**: Shared Zod schema for meter reading input so client and server validation remain aligned on meter identity and reading values.
-- **Dashboard Navigation Extension:** `src/app/(dashboard)/admin/dashboard/page.tsx` now links directly to `/admin/readings`, making Step 3.1 the current validation surface after tariff setup.
+### Cross-Cutting Modules
+- `src/proxy.ts`
+  - Clerk route protection for `/admin/*` in Next.js 16
+- `src/lib/prisma.ts`
+  - Central Prisma singleton used by server components and server actions
+- `src/components/ui/`
+  - Shared `shadcn/ui` primitives only
 
-## Physical Architecture Insights (Phase 3.2 Reading Approval Workflow)
-- **`src/app/(dashboard)/admin/readings/page.tsx`**: Now composes three reading sub-surfaces on one protected route: encoding, pending approval review, and recent reading history.
-- **`src/features/readings/actions.ts`**: Now also contains `approveReading` and `approveReadings`. Both Server Actions verify authentication internally, confirm every targeted reading still has `PENDING_REVIEW` status, update the status to `APPROVED`, and revalidate `/admin/readings` plus `/admin/dashboard`.
-- **`src/features/readings/components/pending-reading-approvals.tsx`**: Owns the Step 3.2 billing review table, including client-side selection state for bulk approval and row-level approval/delete controls.
-- **`src/features/readings/components/approve-reading-button.tsx`**: Isolated client control for individual approval, keeping mutation wiring separate from the approval table layout.
-- **Approval Queue Boundary:** Step 3.2 only changes reading status from `PENDING_REVIEW` to `APPROVED`. No bill generation logic is attached yet; Step 3.3 remains a separate workflow after user validation.
+### Feature Modules
+- `src/features/auth/`
+  - Auth-shell components, Clerk styling helpers, and first-login sync action
+- `src/features/customers/`
+  - Customer creation validation, action logic, and listing UI
+- `src/features/meters/`
+  - Meter registration, assignment, validation, and list UI
+- `src/features/tariffs/`
+  - Tariff creation, tier validation, and tariff registry UI
+- `src/features/readings/`
+  - Reading intake, deletion guardrails, approval actions, and approval/history UI
+- `src/features/billing/`
+  - Billing math, bill generation, unpaid-bill surfaces, and printable bill actions/UI
+- `src/features/payments/`
+  - Manual payment validation, cashier entry UI, and payment history UI
+- `src/features/reports/`
+  - Current-day collections date-range logic and reporting components
+- `src/features/marketing/`
+  - Shared public-site layout, navigation, footer, and centralized site content
 
-## Physical Architecture Insights (Phase 3.3 Billing Module)
-- **`src/app/(dashboard)/admin/billing/page.tsx`**: Protected billing route for Step 3.3. It server-renders the active tariff summary, the queue of approved unbilled readings, and the current open bills list.
-- **`src/features/billing/actions.ts`**: Contains `generateBill`. The Server Action verifies the Clerk session and local staff profile, ensures the selected reading is `APPROVED` and still unbilled, fetches the active tariff, computes `totalCharges`, creates a new `Bill` with `UNPAID` status, and revalidates `/admin/billing`, `/admin/readings`, and `/admin/dashboard`.
-- **`src/features/billing/lib/billing-calculations.ts`**: Centralizes progressive tariff math, billing period formatting, due-date derivation, and currency formatting so billing behavior stays aligned across actions and UI.
-- **`src/features/billing/components/approved-reading-bill-queue.tsx`**: Presents the approved-reading work queue for manual bill generation and surfaces the currently active tariff being used for computation.
-- **`src/features/billing/components/generate-bill-button.tsx`**: Isolated client control that invokes bill generation from the approved reading queue.
-- **`src/features/billing/components/unpaid-bill-list.tsx`**: Presents generated bills whose statuses are still open (`UNPAID`, `PARTIALLY_PAID`, or `OVERDUE`) so Step 3.3 has a visible accounts-receivable surface before payments are built.
-- **`src/app/(dashboard)/admin/billing/[billId]/page.tsx`**: Adds a printable consumer bill statement view for individual bill distribution. It renders customer identity, service address, meter reading summary, billing schedule, grace period, and the disconnection penalty notice.
-- **Billing Schedule Rule:** The current billing schedule assumes the bill is issued on the `5th day of the month following the reading month`, the due date is `10` days after that issue date, and the grace period ends `5` days after the due date.
+## Implemented Workflow Boundaries
 
-## Physical Architecture Insights (Phase 3.4 Payments Module)
-- **`src/app/(dashboard)/admin/payments/page.tsx`**: Protected payments route for Step 3.4. It server-renders the open-bill cashier queue together with recent payment history for manual encoding review.
-- **`src/features/payments/actions.ts`**: Contains `recordPayment`. The Server Action verifies the Clerk session and local staff profile, validates the payment payload via Zod, ensures the selected bill is still open, creates a `COMPLETED` `Payment`, recalculates bill settlement using cumulative completed payments, and revalidates `/admin/payments`, `/admin/billing`, and `/admin/dashboard`.
-- **`src/features/payments/lib/payment-schema.ts`**: Shared Zod schema for manual payment entry so client and server validation stay aligned on bill identity, amount, method, and optional reference ID.
-- **`src/features/payments/components/payment-form.tsx`**: Owns the cashier entry workflow and surfaces the currently selected bill's customer, meter, and remaining balance before submission.
-- **`src/features/payments/components/payment-history-list.tsx`**: Presents recent payment records with their linked bill statuses so Step 3.4 has an immediate audit surface after manual encoding.
-- **Receivables Settlement Rule:** Bill status is now driven by cumulative `Payment.status === COMPLETED` amounts: open bills remain `UNPAID` until the first completed payment, become `PARTIALLY_PAID` while a balance remains, and flip to `PAID` once the running total reaches the bill total. Overpayments are currently rejected because V1 has no credit ledger yet.
+### Authentication
+- Clerk proves identity.
+- Local staff records are synchronized on first login.
+- Local role data exists in Prisma, but authorization remains incomplete.
 
-## Physical Architecture Insights (Phase 4.1 Collections Dashboard)
-- **`src/app/(dashboard)/admin/collections/page.tsx`**: Protected reporting route for Step 4.1. It server-renders the current-day collections summary and the payment records included in that daily total.
-- **`src/features/reports/lib/collections.ts`**: Centralizes current operating-day range calculation and label formatting for the collections dashboard, currently aligned to the Manila business timezone.
-- **`src/features/reports/components/collections-summary.tsx`**: Presents the reporting date, completed payment count, and summed total collections for the day.
-- **`src/features/reports/components/daily-collections-list.tsx`**: Presents the completed payments included in the report so the Step 4.1 total is auditable from the same surface.
-- **Daily Reporting Rule:** Step 4.1 only reports `Payment.status === COMPLETED` rows whose `paymentDate` falls within the current operating day window. It does not yet include historical filtering, charts, or unpaid-account analytics.
+### Meter Reading Workflow
+- Readings are encoded as `PENDING_REVIEW`.
+- Approval transitions readings to `APPROVED`.
+- Billing only occurs from approved, still-unbilled readings.
 
-## Database Schema (Prisma Draft)
+### Billing Workflow
+- Bills are generated from approved readings using the active tariff.
+- Printable bill views expose issue date, due date, grace period, and display-only disconnection notice.
+
+### Payment Workflow
+- Payments are recorded manually against open bills.
+- Settlement is derived from cumulative `COMPLETED` payments.
+- Exact-balance discipline is enforced because customer credit handling does not yet exist.
+
+### Reporting Workflow
+- Current reporting is limited to completed payments within the current Manila operating day.
+- Historical reporting and broader receivables analytics are not implemented yet.
+
+## Enhancement Architecture Targets
+
+### EH1: Data Platform Hardening
+- Replace the temporary SQLite-first local runtime with a PostgreSQL-aligned workflow.
+- Reconfirm schema compatibility for all existing models and relations.
+- Preserve a single Prisma access layer in `src/lib/prisma.ts`.
+- Keep environment-specific connection logic centralized in `prisma.config.ts` and related config, not scattered across features.
+
+### EH2: Authorization & Staff Controls
+- Introduce explicit authorization checks in server actions and route-level data access.
+- Keep authorization logic close to feature boundaries instead of embedding it into client UI.
+- If permissions outgrow the current role enum, introduce a permission layer without collapsing feature modularity.
+
+### EH3: Reporting & Receivables Intelligence
+- Expand `src/features/reports/` into a broader reporting domain rather than placing analytics directly in route files.
+- Keep date filtering, receivables calculations, and overdue summaries in dedicated reporting libs.
+- Add charts only when they serve an operational use case, not for decoration.
+
+### EH4: Cashiering & Settlement Expansion
+- Extend `src/features/payments/` for receipts, installment policies, or customer credit handling.
+- Add receipt generation as a dedicated submodule instead of mixing it directly into the current payment form component.
+- Keep settlement rules centralized so bill status logic remains consistent.
+
+### EH5: Overdue & Disconnection Workflow
+- Introduce dedicated receivables-follow-up or account-status modules rather than overloading billing page logic.
+- Treat overdue evaluation, disconnection tracking, and reinstatement as explicit workflow states if they are built.
+- Avoid making printed bill language the source of truth for enforcement logic.
+
+### EH6: Product Surface Expansion
+- Keep future consumer-portal routes separate from admin routes by route group, not by repository split.
+- Public marketing content should stay under `src/features/marketing/` unless a future consumer domain becomes large enough to justify its own feature tree.
+- Online payment or notification integrations should be attached to explicit feature modules when those channels are approved.
+
+### EH7: Tooling & Design Workflow Recovery
+- The installed `ui-ux-pro-max` skill remains the design guidance source.
+- If local Python execution is restored, use the searchable workflow before major new design passes.
+- Do not let tooling failure push design logic into giant page files or ad hoc styling sprawl.
+
+## Database Schema: Current Repository Snapshot
 
 ```prisma
 generator client {
@@ -111,41 +146,32 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
 }
 
-// Configurable Tariffs
 model Tariff {
   id              String      @id @default(uuid())
-  name            String      @unique // e.g., "Standard Residential Tariff"
+  name            String      @unique
   isActive        Boolean     @default(false)
-  
-  minimumCharge   Float       // Base fee for 0 usage (e.g., 25)
-  minimumUsage    Float       // Usage covered by base fee (e.g., 1 cu.m)
-  
-  installationFee Float       // One-time fee (e.g., 3000)
-  
+  minimumCharge   Float
+  minimumUsage    Float
+  installationFee Float
   tiers           TariffTier[]
-  
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 }
 
 model TariffTier {
-  id          String   @id @default(uuid())
-  tariffId    String
-  tariff      Tariff   @relation(fields: [tariffId], references: [id])
-  
-  minVolume   Float    // Lower bound of tier (inclusive)
-  maxVolume   Float?   // Upper bound of tier (null = no limit/22+)
-  ratePerCuM  Float    // Cost per cubic meter in this tier
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  tariffId   String
+  tariff     Tariff   @relation(fields: [tariffId], references: [id])
+  minVolume  Float
+  maxVolume  Float?
+  ratePerCuM Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 }
 
-// System Users (Staff)
 model User {
   id        String   @id @default(uuid())
   clerkId   String   @unique
@@ -153,8 +179,7 @@ model User {
   name      String
   role      Role     @default(CUSTOMER_SERVICE)
   active    Boolean  @default(true)
-  
-  readings  Reading[] // Meter readings performed by this user (if METER_READER)
+  readings  Reading[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -168,20 +193,17 @@ enum Role {
   MANAGER
 }
 
-// Customers (Residential)
 model Customer {
-  id            String   @id @default(uuid())
-  accountNumber String   @unique // Generated account number
+  id            String         @id @default(uuid())
+  accountNumber String         @unique
   name          String
   address       String
   contactNumber String?
   status        CustomerStatus @default(ACTIVE)
-  
   meters        Meter[]
   bills         Bill[]
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 }
 
 enum CustomerStatus {
@@ -190,20 +212,16 @@ enum CustomerStatus {
   DISCONNECTED
 }
 
-// Water Meters
 model Meter {
-  id            String   @id @default(uuid())
-  meterNumber   String   @unique
-  installDate   DateTime
-  status        MeterStatus @default(ACTIVE)
-  
-  customerId    String?
-  customer      Customer? @relation(fields: [customerId], references: [id])
-  
-  readings      Reading[]
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String      @id @default(uuid())
+  meterNumber String      @unique
+  installDate DateTime
+  status      MeterStatus @default(ACTIVE)
+  customerId  String?
+  customer    Customer?   @relation(fields: [customerId], references: [id])
+  readings    Reading[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
 }
 
 enum MeterStatus {
@@ -212,26 +230,20 @@ enum MeterStatus {
   REPLACED
 }
 
-// Meter Readings
 model Reading {
-  id              String   @id @default(uuid())
+  id              String        @id @default(uuid())
   meterId         String
-  meter           Meter    @relation(fields: [meterId], references: [id])
-  
+  meter           Meter         @relation(fields: [meterId], references: [id])
   readerId        String
-  reader          User     @relation(fields: [readerId], references: [id])
-  
-  readingDate     DateTime @default(now())
+  reader          User          @relation(fields: [readerId], references: [id])
+  readingDate     DateTime      @default(now())
   previousReading Float
   currentReading  Float
-  consumption     Float    // Auto-calculated
-  
+  consumption     Float
   status          ReadingStatus @default(PENDING_REVIEW)
-  
-  bill            Bill?    // The bill generated for this reading
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  bill            Bill?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 enum ReadingStatus {
@@ -240,26 +252,20 @@ enum ReadingStatus {
   FLAGGED
 }
 
-// Bills generated from Readings
 model Bill {
-  id            String   @id @default(uuid())
-  billingPeriod String   // e.g., "Oct 2026"
+  id            String     @id @default(uuid())
+  billingPeriod String
   dueDate       DateTime
-  
   customerId    String
-  customer      Customer @relation(fields: [customerId], references: [id])
-  
-  readingId     String   @unique
-  reading       Reading  @relation(fields: [readingId], references: [id])
-  
+  customer      Customer   @relation(fields: [customerId], references: [id])
+  readingId     String     @unique
+  reading       Reading    @relation(fields: [readingId], references: [id])
   usageAmount   Float
   totalCharges  Float
   status        BillStatus @default(UNPAID)
-  
   payments      Payment[]
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 }
 
 enum BillStatus {
@@ -269,21 +275,17 @@ enum BillStatus {
   OVERDUE
 }
 
-// Payments applied to Bills
 model Payment {
-  id            String   @id @default(uuid())
-  amount        Float
-  paymentDate   DateTime @default(now())
-  method        PaymentMethod
-  referenceId   String?  // Xendit ref, check number, etc.
-  
-  billId        String
-  bill          Bill     @relation(fields: [billId], references: [id])
-  
-  status        PaymentStatus @default(COMPLETED)
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id          String        @id @default(uuid())
+  amount      Float
+  paymentDate DateTime      @default(now())
+  method      PaymentMethod
+  referenceId String?
+  billId      String
+  bill        Bill          @relation(fields: [billId], references: [id])
+  status      PaymentStatus @default(COMPLETED)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
 }
 
 enum PaymentMethod {
@@ -303,4 +305,5 @@ enum PaymentStatus {
 ```
 
 ## Update Rules
-> **IMPORTANT:** After adding a major feature or completing a milestone, you **must** update this `@architecture.md` file to reflect any schema changes, new modular structures, or new integrations.
+- Update this document after any major schema, module-structure, runtime, or workflow change.
+- If future work belongs to an enhancement phase, reflect the architectural implications here at the same time.

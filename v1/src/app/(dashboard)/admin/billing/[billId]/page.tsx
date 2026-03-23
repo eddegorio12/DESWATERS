@@ -76,17 +76,18 @@ export default async function AdminBillTemplatePage({
   const penaltyNotice = formatPenaltyNotice();
 
   return (
-    <main className="min-h-screen bg-muted/30 px-6 py-8 print:bg-white print:px-0 print:py-0">
+    <main className="min-h-screen bg-transparent px-5 py-6 print:bg-white print:px-0 print:py-0 sm:px-6 sm:py-8">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 print:max-w-none print:gap-0">
-        <header className="flex flex-col gap-4 rounded-3xl border border-border bg-background px-6 py-5 shadow-sm print:hidden lg:flex-row lg:items-center lg:justify-between">
+        <header className="overflow-hidden rounded-[2rem] border border-[#d4e7e3] bg-[linear-gradient(135deg,#0f3f43,#19545a_52%,#2f7b82)] px-6 py-6 text-white shadow-[0_32px_90px_-48px_rgba(16,63,67,0.9)] print:hidden lg:px-8 lg:py-8">
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
           <div className="space-y-2">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-white/70">
               Consumer Bill Template
             </p>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+            <h1 className="font-heading text-4xl tracking-tight text-white">
               Printable bill copy
             </h1>
-            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+            <p className="max-w-3xl text-sm leading-7 text-white/76">
               Print and distribute this billing statement to the consumer. Due date is
               ten days after issue, with a five-day grace period before disconnection
               applies.
@@ -99,7 +100,8 @@ export default async function AdminBillTemplatePage({
               className={cn(
                 buttonVariants({
                   variant: "outline",
-                  className: "h-10 rounded-xl px-4",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
                 })
               )}
             >
@@ -107,14 +109,15 @@ export default async function AdminBillTemplatePage({
             </Link>
             <UserButton />
           </div>
+          </div>
         </header>
 
-        <section className="rounded-[2rem] border border-border bg-background p-8 shadow-sm print:rounded-none print:border-0 print:p-0 print:shadow-none">
+        <section className="rounded-[2rem] border border-[#dbe9e5] bg-white/92 p-8 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)] print:rounded-none print:border-0 print:bg-white print:p-0 print:shadow-none">
           <div className="border-b border-border pb-6">
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">
-                  DESWATERS
+                  DEGORIO WATER DISTRIBUTION SERVICES
                 </p>
                 <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
                   Water Billing Statement
@@ -124,7 +127,7 @@ export default async function AdminBillTemplatePage({
                   after the grace period is subject to {penaltyNotice.toLowerCase()}.
                 </p>
               </div>
-              <div className="rounded-2xl border border-border bg-muted/30 px-5 py-4 text-sm">
+              <div className="rounded-[1.5rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#f8fbfa,#eff7f5)] px-5 py-4 text-sm shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
                 <p className="font-medium text-foreground">Bill ID</p>
                 <p className="mt-2 font-mono text-xs text-muted-foreground">{bill.id}</p>
                 <p className="mt-4 font-medium text-foreground">Billing period</p>
@@ -134,7 +137,7 @@ export default async function AdminBillTemplatePage({
           </div>
 
           <div className="grid gap-6 py-6 md:grid-cols-2">
-            <div className="rounded-2xl border border-border bg-muted/20 p-5">
+            <div className="rounded-[1.6rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#f9fcfb,#f2f8f6)] p-5">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Consumer
               </p>
@@ -158,7 +161,7 @@ export default async function AdminBillTemplatePage({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border bg-muted/20 p-5">
+            <div className="rounded-[1.6rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#f9fcfb,#f2f8f6)] p-5">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Billing Schedule
               </p>
@@ -189,9 +192,9 @@ export default async function AdminBillTemplatePage({
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-2xl border border-border">
+          <div className="overflow-hidden rounded-[1.6rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
             <table className="min-w-full divide-y divide-border text-left">
-              <thead className="bg-muted/50">
+              <thead className="bg-secondary/55">
                 <tr className="text-sm text-muted-foreground">
                   <th className="px-4 py-3 font-medium">Reading date</th>
                   <th className="px-4 py-3 font-medium">Previous</th>
@@ -221,7 +224,7 @@ export default async function AdminBillTemplatePage({
           </div>
 
           <div className="mt-6 grid gap-6 md:grid-cols-[minmax(0,1fr)_18rem]">
-            <div className="rounded-2xl border border-border bg-muted/20 p-5">
+            <div className="rounded-[1.6rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#f9fcfb,#f2f8f6)] p-5">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Important Notice
               </p>
@@ -233,7 +236,7 @@ export default async function AdminBillTemplatePage({
               </ul>
             </div>
 
-            <div className="rounded-2xl border border-border bg-primary/5 p-5">
+            <div className="rounded-[1.6rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,rgba(32,115,123,0.08),rgba(32,115,123,0.02))] p-5">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-muted-foreground">
                 Settlement
               </p>

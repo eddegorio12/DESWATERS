@@ -4,6 +4,7 @@ import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { CustomerForm } from "@/features/customers/components/customer-form";
 import { CustomerList } from "@/features/customers/components/customer-list";
 import { prisma } from "@/lib/prisma";
@@ -37,29 +38,23 @@ export default async function AdminCustomersPage() {
     },
   });
 
+  const linkedMeterCount = customers.reduce((sum, customer) => sum + customer.meters.length, 0);
+  const customersWithoutMeter = customers.filter((customer) => customer.meters.length === 0).length;
+
   return (
-    <main className="min-h-screen bg-muted/30 px-6 py-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <header className="flex flex-col gap-4 rounded-3xl border border-border bg-background px-6 py-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-              Customer Operations
-            </p>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-              Customer Management
-            </h1>
-            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-              Create customer records and review linked service meters from the same
-              registry alongside current meter assignments.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
+    <AdminPageShell
+      eyebrow="Customer Operations"
+      title="Build and audit the active consumer registry from one operations view."
+      description="Create customer records, inspect service addresses and contact details, and verify which accounts still need a linked water meter before downstream reading and billing work starts."
+      actions={
+        <>
             <Link
               href="/admin/meters"
               className={cn(
                 buttonVariants({
                   variant: "outline",
-                  className: "h-10 rounded-xl px-4",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
                 })
               )}
             >
@@ -70,21 +65,41 @@ export default async function AdminCustomersPage() {
               className={cn(
                 buttonVariants({
                   variant: "outline",
-                  className: "h-10 rounded-xl px-4",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
                 })
               )}
             >
               Back to dashboard
             </Link>
             <UserButton />
-          </div>
-        </header>
-
+        </>
+      }
+      stats={[
+        {
+          label: "Accounts",
+          value: customers.length.toString(),
+          detail: "Registered residential customer records",
+          accent: "teal",
+        },
+        {
+          label: "Linked meters",
+          value: linkedMeterCount.toString(),
+          detail: "Meters already assigned to customer accounts",
+          accent: "sky",
+        },
+        {
+          label: "Needs setup",
+          value: customersWithoutMeter.toString(),
+          detail: "Accounts still waiting for a service meter",
+          accent: "amber",
+        },
+      ]}
+    >
         <section className="grid gap-6 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
           <CustomerForm />
           <CustomerList customers={customers} />
         </section>
-      </div>
-    </main>
+    </AdminPageShell>
   );
 }

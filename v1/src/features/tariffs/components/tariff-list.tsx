@@ -25,7 +25,7 @@ function formatCurrency(value: number) {
 
 export function TariffList({ tariffs }: TariffListProps) {
   return (
-    <section className="rounded-3xl border border-border bg-background p-6 shadow-sm">
+    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -43,7 +43,10 @@ export function TariffList({ tariffs }: TariffListProps) {
       <div className="mt-6 space-y-4">
         {tariffs.length ? (
           tariffs.map((tariff) => (
-            <article key={tariff.id} className="rounded-2xl border border-border p-5">
+            <article
+              key={tariff.id}
+              className="rounded-[1.5rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#fbfdfc,#f4f8f7)] p-5 shadow-[0_18px_40px_-38px_rgba(16,63,67,0.4)]"
+            >
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-3">
@@ -64,19 +67,19 @@ export function TariffList({ tariffs }: TariffListProps) {
                 </div>
 
                 <dl className="grid gap-3 text-sm sm:grid-cols-3">
-                  <div className="rounded-2xl bg-muted/40 px-4 py-3">
+                  <div className="rounded-[1.2rem] bg-white px-4 py-3">
                     <dt className="text-muted-foreground">Minimum charge</dt>
                     <dd className="mt-1 font-semibold text-foreground">
                       {formatCurrency(tariff.minimumCharge)}
                     </dd>
                   </div>
-                  <div className="rounded-2xl bg-muted/40 px-4 py-3">
+                  <div className="rounded-[1.2rem] bg-white px-4 py-3">
                     <dt className="text-muted-foreground">Minimum usage</dt>
                     <dd className="mt-1 font-semibold text-foreground">
                       {tariff.minimumUsage} cu.m
                     </dd>
                   </div>
-                  <div className="rounded-2xl bg-muted/40 px-4 py-3">
+                  <div className="rounded-[1.2rem] bg-white px-4 py-3">
                     <dt className="text-muted-foreground">Installation fee</dt>
                     <dd className="mt-1 font-semibold text-foreground">
                       {formatCurrency(tariff.installationFee)}
@@ -85,10 +88,10 @@ export function TariffList({ tariffs }: TariffListProps) {
                 </dl>
               </div>
 
-              <div className="mt-5 overflow-hidden rounded-2xl border border-border">
+              <div className="mt-5 overflow-hidden rounded-[1.4rem] border border-[#dbe9e5]">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-border text-left">
-                    <thead className="bg-muted/50">
+                    <thead className="bg-secondary/55">
                       <tr className="text-sm text-muted-foreground">
                         <th className="px-4 py-3 font-medium">Tier</th>
                         <th className="px-4 py-3 font-medium">Usage band</th>

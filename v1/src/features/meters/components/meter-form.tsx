@@ -46,7 +46,7 @@ export function MeterForm() {
   });
 
   return (
-    <section className="rounded-3xl border border-border bg-background p-6 shadow-sm">
+    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
       <div className="space-y-2">
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           Register Meter
@@ -67,7 +67,7 @@ export function MeterForm() {
           <input
             id="meterNumber"
             type="text"
-            className={fieldClassName}
+            className={`${fieldClassName} bg-white`}
             placeholder="MTR-000123"
             {...form.register("meterNumber")}
           />
@@ -83,7 +83,7 @@ export function MeterForm() {
           <input
             id="installDate"
             type="date"
-            className={fieldClassName}
+            className={`${fieldClassName} bg-white`}
             {...form.register("installDate")}
           />
           <p className="mt-2 text-sm text-destructive">

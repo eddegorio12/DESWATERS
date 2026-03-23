@@ -4,6 +4,7 @@ import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { MeterAssignmentForm } from "@/features/meters/components/meter-assignment-form";
 import { MeterForm } from "@/features/meters/components/meter-form";
 import { MeterList } from "@/features/meters/components/meter-list";
@@ -53,29 +54,23 @@ export default async function AdminMetersPage() {
     }),
   ]);
 
+  const assignedMeterCount = meters.filter((meter) => meter.customer).length;
+  const activeMeterCount = meters.filter((meter) => meter.status === "ACTIVE").length;
+
   return (
-    <main className="min-h-screen bg-muted/30 px-6 py-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <header className="flex flex-col gap-4 rounded-3xl border border-border bg-background px-6 py-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-              Meter Operations
-            </p>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-              Meter Management
-            </h1>
-            <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-              Register service meters, assign unlinked meters to existing customers, and
-              verify the assignment appears in the registries immediately.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
+    <AdminPageShell
+      eyebrow="Meter Operations"
+      title="Keep every service connection visible from registration through assignment."
+      description="Register new hardware, link unassigned meters to active customer accounts, and confirm which installed units are already in service versus still waiting for deployment."
+      actions={
+        <>
             <Link
               href="/admin/customers"
               className={cn(
                 buttonVariants({
                   variant: "outline",
-                  className: "h-10 rounded-xl px-4",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
                 })
               )}
             >
@@ -86,15 +81,43 @@ export default async function AdminMetersPage() {
               className={cn(
                 buttonVariants({
                   variant: "outline",
-                  className: "h-10 rounded-xl px-4",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
                 })
               )}
             >
               Back to dashboard
             </Link>
             <UserButton />
-          </div>
-        </header>
+        </>
+      }
+      stats={[
+        {
+          label: "Registered",
+          value: meters.length.toString(),
+          detail: "Meters recorded in the utility registry",
+          accent: "teal",
+        },
+        {
+          label: "In service",
+          value: assignedMeterCount.toString(),
+          detail: "Meters already linked to a customer account",
+          accent: "sky",
+        },
+        {
+          label: "Active units",
+          value: activeMeterCount.toString(),
+          detail: "Meters currently marked active",
+          accent: "violet",
+        },
+        {
+          label: "Unassigned",
+          value: unassignedMeters.length.toString(),
+          detail: "Meters still available for customer linkage",
+          accent: "amber",
+        },
+      ]}
+    >
 
         <section className="grid gap-6 xl:grid-cols-2">
           <MeterForm />
@@ -102,7 +125,6 @@ export default async function AdminMetersPage() {
         </section>
 
         <MeterList meters={meters} />
-      </div>
-    </main>
+    </AdminPageShell>
   );
 }

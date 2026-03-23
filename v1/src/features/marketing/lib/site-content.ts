@@ -112,7 +112,7 @@ export const platformPillars = [
   {
     title: "Modular by default",
     description:
-      "DESWATERS keeps major concerns in separate modules so billing logic, reporting, and account operations can evolve cleanly.",
+      "DWDS keeps major concerns in separate modules so billing logic, reporting, and account operations can evolve cleanly.",
   },
   {
     title: "Protected operational access",

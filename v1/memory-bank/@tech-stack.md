@@ -1,371 +1,91 @@
-# DESWATERS Tech Stack Recommendation
+# DWDS Tech Stack
 
 ## Goal
-Choose the **simplest yet most robust** stack for a water utility management system that starts with an **admin web app** and later expands into a **mobile-friendly consumer portal**.
+Document the stack that is actually implemented today, the target production stack, and the technologies implied by the enhancement backlog.
 
-## Recommendation in One Line
-Use **Next.js + TypeScript + PostgreSQL + Prisma + Clerk + Tailwind CSS + shadcn/ui**, deploy on **Railway**, use **Xendit** for online payments, **Supabase Storage** for uploads, and **ui-ux-pro-max-skill** as the **design guidance layer** for Codex.
+## Current Implemented Stack
 
----
-
-## Architecture Principle
-Keep the system in **one codebase**.
-
-That means:
-- one web app for the admin system
-- one future consumer portal inside the same project
-- one database
-- one deployment workflow
-- no microservices
-- no separate frontend/backend repos for v1
-
-This keeps development faster, cheaper, and easier to maintain.
-
----
-
-## Recommended Stack
-
-### 1) App Framework
-**Next.js + TypeScript**
-
-Use **one Next.js codebase** for both frontend and backend.
-
-Why this fits DESWATERS:
-- One repository for admin and future consumer portal
-- Good for dashboards, forms, reports, billing pages, and account portals
-- Supports server-rendered pages, API routes, and server actions in one app
-- Easier for a solo founder or small team to maintain
-
-**Recommendation:**
-- Next.js App Router
-- TypeScript
-
----
-
-### 2) Database
-**PostgreSQL**
-
-Why:
-- Reliable for structured billing data
-- Strong fit for relational records like customers, meters, readings, bills, payments, receipts, and staff roles
-- Better fit than a document database for ledgers, reporting, and billing workflows
-
-**Recommendation:**
-- PostgreSQL as the main production database
-
----
-
-### 3) ORM + Migrations
-**Prisma**
-
-Why:
-- Strong TypeScript support
-- Clean schema management
-- Easy migrations
-- Good developer experience for structured business systems
-
-**Recommendation:**
-- Prisma ORM
-- Prisma Migrate
-
----
-
-### 4) Authentication
-**Clerk**
-
-Why:
-- Fastest secure setup for login and account sessions
-- Reduces auth complexity in version 1
-- Works well with Next.js
-- Lets you focus on billing logic instead of building authentication from scratch
-
-How to use it:
-- Use Clerk for authentication
-- Store business roles in your own database
-- Enforce role-based access control inside the app
-
-**Roles for DESWATERS:**
-- admin
-- billing staff
-- cashier
-- meter reader
-- customer service
-- manager
-
-**Alternative later:**
-- Better Auth, if you want more direct ownership of authentication
-
-For **version 1**, Clerk is the simpler choice.
-
----
-
-### 5) Core UI Layer
-**Tailwind CSS + shadcn/ui + lucide-react**
-
-Why:
-- Fast to build clean admin dashboards and forms
-- Easy to customize
-- Works well for tables, dialogs, filters, forms, cards, and reports
-- Good balance of speed and maintainability
-
-**Recommendation:**
-- Tailwind CSS
-- shadcn/ui
-- lucide-react
-
----
-
-### 6) Design Guidance Layer
-**ui-ux-pro-max-skill**
-
-Use this as a **design intelligence layer for Codex**, not as your main frontend framework.
-
-What it should do in this project:
-- generate the DESWATERS design system
-- guide layout, spacing, color choices, typography, and component consistency
-- improve dashboards, forms, data tables, and workflow screens
-- help Codex avoid messy or overly flashy UI decisions
-
-How to position it:
-- **Framework:** Next.js
-- **Styling:** Tailwind CSS
-- **Components:** shadcn/ui
-- **Design guidance:** ui-ux-pro-max-skill
-
-**Recommended design direction for DESWATERS:**
-- light mode
-- clean enterprise dashboard
-- strong readability
-- minimal clutter
-- professional utility/business style
-- optimized for billing, tables, reports, and forms
-
-**Do not use it as:**
-- a replacement for Next.js
-- a replacement for shadcn/ui
-- a replacement for Tailwind CSS
-
----
-
-### 7) Forms + Validation
-**React Hook Form + Zod**
-
-Why:
-- Good for customer forms, billing settings, meter readings, and payments
-- Strong validation for business-critical inputs
-- Helps reduce bad data entry
-
-**Recommendation:**
-- React Hook Form
-- Zod
-
----
-
-### 8) Tables + Reporting UI
-**TanStack Table + Recharts**
-
-Why:
-- Admin systems rely heavily on searchable and filterable tables
-- Recharts is enough for billing summaries, usage trends, and collections charts
-
-**Recommendation:**
-- TanStack Table
-- Recharts
-
----
-
-### 9) File Storage
-**Supabase Storage**
-
-Use this for:
-- proof of payment uploads
-- complaint attachments
-- meter reading photos
-- generated PDFs such as bills and receipts
-
-Why:
-- Easy to integrate
-- Reliable managed storage
-- Works fine even if your main database is hosted elsewhere
-
-**Recommendation:**
-- Supabase Storage only
-- Keep PostgreSQL as the main app database
-
----
-
-### 10) Payments
-**Xendit**
-
-Why:
-- Good fit for Philippine payment methods
-- Supports the payment options you want, such as GCash, Maya, bank-related flows, and cards
-- Easier than integrating multiple payment methods separately
-
-Use it for:
-- future consumer portal online payments
-- payment status webhooks
-- payment reconciliation
-
-**Recommendation:**
-- Cash payments can still be encoded manually by cashier
-- Xendit handles online payments
-
----
-
-### 11) Email / Notifications
-**Resend** for email
-
-Why:
-- Easy setup
-- Good for future billing notices, receipts, password resets, and alerts
-
-For SMS:
-- add later
-- choose a separate SMS provider based on local pricing and delivery quality
-
-For version 1, keep notifications minimal unless they are truly required.
-
----
-
-### 12) Hosting / Deployment
-**Railway**
-
-Why:
-- Simple deployment flow for a Next.js app
-- Easy environment variable management
-- Easy PostgreSQL provisioning
-- Good for early-stage deployment and iteration
-- Matches your current setup direction
-
-**Production setup:**
-- Railway for app hosting
-- Railway PostgreSQL or another managed PostgreSQL provider
-- separate staging and production environments
-- scheduled database backups
-
----
-
-## Final Recommended Stack
-
-### Core Stack
-- **Next.js**
+### App Framework
+- **Next.js 16 App Router**
 - **TypeScript**
-- **PostgreSQL**
-- **Prisma**
-- **Clerk**
+- Single-repo application for both public marketing pages and protected admin workflows
+
+### UI Layer
 - **Tailwind CSS**
 - **shadcn/ui**
-- **ui-ux-pro-max-skill**
-
-### Supporting Stack
-- **React Hook Form**
-- **Zod**
-- **TanStack Table**
-- **Recharts**
-- **Supabase Storage**
-- **Xendit**
-- **Resend**
-- **Railway**
 - **lucide-react**
 
----
+### Forms & Validation
+- **React Hook Form**
+- **Zod**
 
-## Why this is the best stack for DESWATERS
-This stack gives you the best balance of:
-- simplicity
-- speed of development
-- billing-system reliability
-- maintainability for a small team
-- future expansion into a consumer portal
+### Authentication
+- **Clerk** for identity and session management
+- Local staff role data stored in Prisma `User.role`
+- Fine-grained authorization is **not fully implemented yet**
 
-It avoids overengineering while still being strong enough for:
-- customer records
-- meter reading workflows
-- billing generation
-- payment recording
-- receipts
-- role-based access control
-- reports
-- future customer self-service
-- future chatbot integration
+### Database Runtime in Repo Today
+- **Prisma v7**
+- **SQLite** for the current local development runtime
+- **`@prisma/adapter-better-sqlite3`** in the server runtime
 
----
+This is a temporary development compromise, not the long-term data-platform target.
 
-## What I Do Not Recommend for Version 1
+## Target Production Stack
 
-### Do not use microservices
-Too complex for your current stage.
+### Core Platform
+- **Next.js + TypeScript**
+- **Prisma**
+- **PostgreSQL**
+- **Clerk**
+- **Tailwind CSS + shadcn/ui**
 
-### Do not split frontend and backend into separate repos
-One codebase is faster and easier to maintain.
+### Planned Supporting Stack
+- **Railway** or another managed platform for app hosting and PostgreSQL
+- **Supabase Storage** for uploaded files if receipt, proof, or document storage is formally added
+- **Resend** or a similar email provider if notices become a scoped feature
+- **Xendit** only when online consumer payments are explicitly added in a later phase
 
-### Do not build a native mobile app first
-Use a mobile-friendly web portal later.
+## Current Recommendations by Enhancement Phase
 
-### Do not use Firebase as the main database
-It is less natural for a billing-heavy relational system.
+### EH1: Data Platform Hardening
+- Standardize on **PostgreSQL** for non-local environments
+- Use **Prisma Migrate** as the canonical migration workflow
+- Keep `prisma.config.ts` as the datasource binding layer for Prisma v7
 
-### Do not build custom authentication from scratch
-Use a proven auth solution first.
+### EH2: Authorization & Staff Controls
+- Keep **Clerk** for auth
+- Build authorization in app logic using the existing Prisma `Role` enum or a future permission layer if the role model becomes too coarse
 
-### Do not build the AI chatbot first
-Build stable billing and admin workflows first.
-Then add the chatbot once the business rules and data are reliable.
+### EH3: Reporting & Receivables Intelligence
+- The current repo does **not** yet include reporting-specific chart or table libraries beyond the base UI stack
+- Add reporting libraries only when a concrete enhancement requires them
+- Avoid speculative dependencies until reporting requirements are stable
 
----
+### EH4: Cashiering & Settlement Expansion
+- Existing payment flow is sufficient for manual encoding
+- Add PDF or receipt-generation tooling only when official receipts are formally implemented
 
-## Suggested Build Order
-1. Authentication and roles
-2. Customer accounts
-3. Meter records
-4. Meter reading module
-5. Billing engine
-6. Payments and receipts
-7. Reports dashboard
-8. Consumer portal
-9. Notifications
-10. AI chatbot
+### EH5: Overdue & Disconnection Workflow
+- This should remain within the main app and database, not a separate service
+- Prefer scheduled jobs or explicit server-side evaluation over client-driven status logic
 
----
+### EH6: Product Surface Expansion
+- Keep marketing, future consumer routes, and admin routes in the same codebase
+- Add online-payment or notification vendors only when those channels are actively scoped
 
-## UI Guidance for Codex
-Use this instruction in your project:
+### EH7: Tooling & Design Workflow Recovery
+- The installed `ui-ux-pro-max` skill remains the design guidance layer
+- The skill’s local searchable Python workflow is currently blocked by the environment and should be restored before future heavy UI redesign work
 
-```text
-Use ui-ux-pro-max-skill as the design guidance layer for this project.
+## Decisions to Keep
+- One codebase
+- No microservices
+- No separate frontend/backend repos
+- No native mobile app in the current phase
+- No custom auth build while Clerk is sufficient
 
-Project: DESWATERS
-Type: Water utility billing and administration system
-Stack: Next.js + TypeScript + Tailwind CSS + shadcn/ui
-
-Design direction:
-- Clean enterprise dashboard
-- Light mode
-- Professional and easy on the eyes
-- Optimized for tables, billing records, reports, forms, and role-based admin workflows
-- Strong readability and accessibility
-- Minimal visual clutter
-- Mobile-friendly where appropriate
-
-Use ui-ux-pro-max-skill to generate a design system first, then apply it consistently across:
-- login
-- dashboard
-- customer accounts
-- meter readings
-- billing
-- payments
-- reports
-- customer service pages
-
-Avoid flashy landing-page styling, heavy gradients, or decorative effects that reduce readability.
-```
-
----
-
-## Short Version
-If you want the shortest answer:
-
-> **Use Next.js + TypeScript + PostgreSQL + Prisma + Clerk + Tailwind CSS + shadcn/ui for the app, use ui-ux-pro-max-skill to guide the design, deploy on Railway, use Xendit for online payments, and add Supabase Storage for uploads.**
-
-That is the simplest stack I would recommend that is still robust enough for a real water utility system.
+## Practical Summary
+- **Implemented now:** Next.js, TypeScript, Prisma v7, Clerk, Tailwind CSS, shadcn/ui, React Hook Form, Zod, SQLite local runtime
+- **Target next for platform hardening:** PostgreSQL migration and environment parity
+- **Deferred until explicitly scoped:** Xendit, storage-backed uploads, notifications, advanced reporting libraries, receipt-generation tooling

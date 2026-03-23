@@ -1,24 +1,46 @@
 # AI Agent Rules & Persona
 
-These rules define how any AI agent (like Antigravity, RooCode, or Cursor) should behave when interacting with the DESWATERS codebase. The memory bank serves as the source of truth for the project.
+These rules define how any AI agent should behave when working in the DWDS codebase. The memory-bank is the project source of truth and must stay aligned with the live repository.
+
+## Brand Naming Convention
+- **Formal name:** `DEGORIO WATER DISTRIBUTION SERVICES`
+- **Short name:** `DWDS`
+- Use `DWDS` for product, UI, repo, and internal documentation references.
+- Reserve the full formal name for legal, billing statement, auth, metadata, or other explicitly formal contexts.
 
 ## 1. Prime Directives
-> **CRITICAL:** You must follow these directives before taking any coding action.
-- **Always read** `memory-bank/@architecture.md` before writing or modifying any code. It contains the database schema and structural rules.
-- **Always read** `memory-bank/@product-requirements-document.md` before starting a new feature to ensure alignment with the product vision.
-- **Mandatory Updates:** After adding a major feature or completing a milestone, you **must update** `memory-bank/@architecture.md` to reflect the new state of the system (e.g. schema changes, new modules).
+- **Always read** [@architecture.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\@architecture.md) before writing or modifying code.
+- **Always read** [@product-requirements-document.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\@product-requirements-document.md) before starting a new feature.
+- **Always check** [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md) to confirm whether the work belongs to the completed MVP, an active enhancement phase, or a future backlog item.
+- **Mandatory updates:** After any major feature, schema change, workflow change, or roadmap shift, update the relevant memory-bank files in the same task.
 
-## 2. Architectural Coding Standards
-- **Modularity Focus:** You are strictly forbidden from creating monolithic files (e.g. a 1,000-line `page.tsx`). Break down features into separate files and directories immediately (such as specific actions, reusable hooks, sub-components, Prisma queries).
-- **Domain-Driven Grouping:** Group files by feature/domain (e.g. `features/billing/components`, `features/meters/actions`) rather than dumping everything in generic `components/` or `app/` roots.
-- **Clean Next.js Practices:** Use Server Actions and API Routes appropriately. Keep Client Components (`"use client"`) as small and lean as possible, delegating business logic to the server.
+## 2. Current Product State
+- The MVP is implemented.
+- The live admin surface covers authentication, customers, meters, tariffs, readings, billing, payments, printable bills, collections reporting, and the marketing site.
+- The current local development database runtime is **SQLite via Prisma v7 + `@prisma/adapter-better-sqlite3`**.
+- **PostgreSQL remains the target production data platform**, but the migration is still an enhancement item and not yet complete in the repo.
 
-## 3. Design & UI/UX Guidelines
-- **Use `ui-ux-pro-max-skill`:** Defer to the installed UI/UX skill (`.agent/skills/ui-ux-pro-max`) for design intelligence and guidance.
-- **Aesthetic Direction:** Maintain a clean, professional, enterprise dashboard feel (light mode). Avoid flashy gradients, heavily animated backgrounds, or landing-page aesthetics for internal operations.
-- **Consistency:** Use Tailwind CSS and `shadcn/ui` components. Ensure all tables, forms, and buttons adhere to the established design system tokens.
+## 3. Enhancement Backlog Handling
+- Treat the enhancement roadmap in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md) as the canonical backlog instead of inventing new unnamed phases.
+- When a request maps to an enhancement track, update:
+  - [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md) for status and scope
+  - [@architecture.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\@architecture.md) for structural or schema changes
+  - [progress.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\progress.md) for completed work and constraints
+- If new future work is discovered, add it as a clearly named enhancement phase with dependencies and rationale instead of a loose bullet.
 
-## 4. Communication Protocol
-- Be concise and direct in your responses and commit messages. 
-- Ask clarifying questions if a requested feature violates the architecture or PRD.
-- Do not assume you know the database schema without checking `@architecture.md` first.
+## 4. Architectural Coding Standards
+- **Modularity over monoliths:** Break features into focused files and domain directories immediately.
+- **Domain-driven grouping:** Prefer `src/features/<domain>/...` over dumping logic into generic roots.
+- **Lean route files:** Keep route segments compositional. Push business logic into server actions, feature libs, and data-access helpers.
+- **Server-first business logic:** Keep client components small. Sensitive logic belongs on the server.
+- **Auth and authorization are separate concerns:** Clerk protects identity/session flow, while role-based authorization must be enforced in app logic when that enhancement track is implemented.
+
+## 5. Design & UI/UX Guidelines
+- Use the installed `ui-ux-pro-max` skill when the task is design-heavy.
+- Preserve the existing DWDS direction: clean enterprise operations UI, light mode, high readability, restrained motion, and clear workflow hierarchy.
+- Continue using Tailwind CSS and `shadcn/ui` primitives. Feature-specific UI belongs in feature directories, not in `src/components/ui`.
+
+## 6. Communication Protocol
+- Be direct and concise.
+- Do not assume the schema, runtime, or backlog state without checking the memory-bank and repo first.
+- If requested work conflicts with architecture, product scope, or the enhancement roadmap, call that out explicitly and propose the cleanest path forward.

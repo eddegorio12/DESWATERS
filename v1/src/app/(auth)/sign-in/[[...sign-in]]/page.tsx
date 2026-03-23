@@ -6,7 +6,7 @@ import { clerkAppearance } from "@/features/auth/lib/clerk-appearance";
 export default function SignInPage() {
   return (
     <AuthShell
-      title="Sign in to the DESWATERS admin system."
+      title="Sign in to the DEGORIO WATER DISTRIBUTION SERVICES admin system."
       description="Use your Clerk account to access protected operations screens for billing, customer records, and metering workflows."
     >
       <SignIn

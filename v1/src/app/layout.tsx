@@ -5,11 +5,11 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: {
-    default: "DESWATERS",
+    default: "DEGORIO WATER DISTRIBUTION SERVICES",
     template: "%s",
   },
   description:
-    "DESWATERS is a water utility operations platform for customer records, metering, billing, cashiering, and collections reporting.",
+    "DEGORIO WATER DISTRIBUTION SERVICES is a water utility operations platform for customer records, metering, billing, cashiering, and collections reporting.",
 };
 
 export default function RootLayout({

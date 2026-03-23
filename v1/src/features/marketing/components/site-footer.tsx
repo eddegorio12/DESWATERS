@@ -7,7 +7,7 @@ export function SiteFooter() {
     <footer className="border-t border-border/70 bg-white/70">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-5 py-10 sm:px-8 lg:flex-row lg:items-end lg:justify-between">
         <div className="max-w-xl">
-          <p className="font-heading text-2xl text-foreground">DESWATERS</p>
+          <p className="font-heading text-2xl text-foreground">DWDS</p>
           <p className="mt-3 text-sm leading-7 text-muted-foreground">
             Water utility operations software for customer management, metering,
             billing, payments, and collections review.

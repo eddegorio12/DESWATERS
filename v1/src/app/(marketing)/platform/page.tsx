@@ -17,9 +17,9 @@ import {
 } from "@/features/marketing/lib/site-content";
 
 export const metadata: Metadata = {
-  title: "Platform | DESWATERS",
+  title: "Platform | DEGORIO WATER DISTRIBUTION SERVICES",
   description:
-    "A closer look at the DESWATERS platform architecture, modular workflow design, and utility operations coverage.",
+    "A closer look at the DEGORIO WATER DISTRIBUTION SERVICES platform architecture, modular workflow design, and utility operations coverage.",
 };
 
 const pillarIcons = [Layers3, ShieldCheck, FolderKanban];
@@ -31,7 +31,7 @@ export default function PlatformPage() {
       <PageHero
         eyebrow="Platform"
         title="A modular utility platform with a clear operating model."
-        description="DESWATERS is structured around the work staff actually perform, with separate modules for records, billing, cashiering, and reports instead of one overcrowded screen."
+        description="DWDS is structured around the work staff actually perform, with separate modules for records, billing, cashiering, and reports instead of one overcrowded screen."
       />
 
       <section className="grid gap-5 lg:grid-cols-3">
@@ -60,7 +60,7 @@ export default function PlatformPage() {
           <SectionHeading
             eyebrow="Module Map"
             title="Each business function has a dedicated surface."
-            description="That separation keeps DESWATERS easier to extend, easier to maintain, and safer for role-based work."
+            description="That separation keeps DWDS easier to extend, easier to maintain, and safer for role-based work."
           />
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             {moduleHighlights.map((item) => (
