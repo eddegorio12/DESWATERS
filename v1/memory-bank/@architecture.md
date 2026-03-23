@@ -49,6 +49,13 @@
 - **`src/features/tariffs/lib/tariff-schema.ts`**: Shared Zod schema for tariff metadata and tier validation. It enforces sequential progressive tiers, prevents non-terminal open-ended ranges, and keeps client/server validation aligned for later billing math.
 - **Dashboard Navigation Extension:** `src/app/(dashboard)/admin/dashboard/page.tsx` now links directly to `/admin/tariffs`, making Step 2.3 the current validated slice.
 
+## Physical Architecture Insights (Phase 3.1 Reading Module)
+- **`src/app/(dashboard)/admin/readings/page.tsx`**: Protected meter reading route for Step 3.1. It server-renders the assigned active meter pool together with the recent reading queue needed for validation.
+- **`src/features/readings/actions.ts`**: Contains `createReading`. The Server Action verifies the Clerk session, resolves the matching local Prisma `User` by `clerkId`, reloads the selected meter's latest reading to derive `previousReading`, calculates `consumption`, persists a new `Reading` with `PENDING_REVIEW`, and revalidates `/admin/readings` plus `/admin/dashboard`.
+- **`src/features/readings/components/`**: Holds the client-side meter reading form and the presentational reading registry, keeping the route file focused on loading and composition.
+- **`src/features/readings/lib/reading-schema.ts`**: Shared Zod schema for meter reading input so client and server validation remain aligned on meter identity and reading values.
+- **Dashboard Navigation Extension:** `src/app/(dashboard)/admin/dashboard/page.tsx` now links directly to `/admin/readings`, making Step 3.1 the current validation surface after tariff setup.
+
 ## Database Schema (Prisma Draft)
 
 ```prisma

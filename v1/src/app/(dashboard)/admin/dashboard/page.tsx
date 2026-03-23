@@ -67,8 +67,8 @@ export default async function AdminDashboardPage() {
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">Next validated slice</p>
               <p className="text-sm leading-6 text-muted-foreground">
-                Step 2.3 adds tariff configuration so billing rules are managed from the
-                database instead of hardcoded values.
+                Step 3.1 adds the meter reading encoding workflow so field readings can be
+                captured with an authenticated staff reader and queued for review.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -94,6 +94,12 @@ export default async function AdminDashboardPage() {
                 className={cn(buttonVariants({ className: "h-10 rounded-xl px-4" }))}
               >
                 Tariff module
+              </Link>
+              <Link
+                href="/admin/readings"
+                className={cn(buttonVariants({ className: "h-10 rounded-xl px-4" }))}
+              >
+                Reading module
               </Link>
             </div>
           </div>

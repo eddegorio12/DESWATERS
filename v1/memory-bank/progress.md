@@ -65,19 +65,34 @@
 - **Cross-Module Visibility:** Meter assignment revalidates both `/admin/meters` and `/admin/customers` so the linked meter appears immediately in the customer registry without manual cache work.
 - **Step Boundary (Historical):** Step 2.2 is now closed. Continue with Step 2.3 tariff configuration, but do not start Step 2.4 until the user validates the tariff flow.
 
-### Step 2.3: Tariff Configuration (Admin) - **[IMPLEMENTED - PENDING USER VALIDATION]**
+### Step 2.3: Tariff Configuration (Admin) - **[IMPLEMENTED - USER VALIDATED]**
 - Added `src/features/tariffs/actions.ts` with an authenticated Server Action that validates tariff inputs, deactivates any previously active tariff, and creates a new active tariff with nested tiers in a single database transaction.
 - Added `src/features/tariffs/lib/tariff-schema.ts` to centralize Zod validation for tariff metadata and progressive tier rules, including guardrails for sequential ranges and open-ended final tiers.
 - Added `src/features/tariffs/components/tariff-form.tsx` for configuring `minimumCharge`, `minimumUsage`, `installationFee`, and a dynamic list of tariff tiers from the admin UI.
 - Added `src/features/tariffs/components/tariff-list.tsx` and the protected route `src/app/(dashboard)/admin/tariffs/page.tsx` to review configured tariffs and identify the active computing tariff.
 - Updated `src/app/(dashboard)/admin/dashboard/page.tsx` to link directly to the new tariff module.
-- **Pending User Verification:** Open `/admin/tariffs`, create a tariff matching the PRD sample rules, and verify the saved record is marked as the active computing tariff.
+- **User Verification:** User confirmed Step 2.3 was validated and work could proceed to Step 3.1.
 
 #### Notes for Future Developers (Step 2.3)
 - **Single Active Tariff Rule:** Creating a new tariff automatically deactivates any currently active tariff before persisting the new one. Billing logic in later steps should resolve the active tariff from the database, not hardcode rates.
 - **Tier Validation:** Tariff tiers are validated in shared Zod logic to prevent overlaps, gaps, and non-terminal open-ended tiers. Keep any future billing assumptions aligned with this structure.
 - **Step Boundary:** Do not start Step 2.4 or later billing work until the user validates the Step 2.3 tariff test.
 
+### Step 3.1: Meter Reading Encoding - **[IMPLEMENTED - PENDING USER VALIDATION]**
+- Added `src/features/readings/actions.ts` with an authenticated Server Action that resolves the current Clerk session, looks up the matching local Prisma `User`, derives the selected meter's previous reading from the latest saved reading, calculates `consumption`, and saves the new reading with `PENDING_REVIEW` status.
+- Added `src/features/readings/lib/reading-schema.ts` to centralize Zod validation for meter selection and current reading input.
+- Added `src/features/readings/components/reading-form.tsx` as the specialized meter reading entry form showing the selected meter's customer, previous reading, and minimum valid next value before submission.
+- Added `src/features/readings/components/reading-list.tsx` and the protected route `src/app/(dashboard)/admin/readings/page.tsx` to review the latest encoded readings and confirm they are queued for approval.
+- Added a guarded delete action for mistaken encodings so staff can remove unbilled `PENDING_REVIEW` readings directly from the Step 3.1 queue before approval.
+- Updated `src/app/(dashboard)/admin/dashboard/page.tsx` to link directly to the new reading module.
+- **Pending User Verification:** Open `/admin/readings`, submit a reading where the current reading is greater than the displayed previous reading, and verify the saved record has the correct `consumption`, the correct local `readerId`, and a status of `PENDING_REVIEW`.
+
+#### Notes for Future Developers (Step 3.1)
+- **Reader Identity Resolution:** The reading form never accepts `readerId` from the client. The server action always derives it from the authenticated Clerk user and the synced local Prisma `User` record.
+- **Previous Reading Source of Truth:** The client shows the latest saved reading for guidance, but the server action recalculates `previousReading` from the database again before persisting to prevent stale submissions.
+- **Mistake Correction Guardrail:** Deletion is only allowed while a reading is still `PENDING_REVIEW` and has no linked `Bill`, keeping Step 3.1 corrections separate from later approval and billing workflows.
+- **Step Boundary:** Do not start Step 3.2 reading approval until the user validates the Step 3.1 meter reading test.
+
 ### Blockers / Next Steps
-- Waiting for user to validate Step 2.3 by creating a tariff in `/admin/tariffs` and confirming it is marked active in the database/UI.
-- Do not start **Step 2.4** until the user validates the Step 2.3 test.
+- Waiting for user to validate Step 3.1 by creating a reading in `/admin/readings` and confirming the saved database record has the correct `readerId`, `consumption`, and `PENDING_REVIEW` status.
+- Do not start **Step 3.2** until the user validates the Step 3.1 test.
