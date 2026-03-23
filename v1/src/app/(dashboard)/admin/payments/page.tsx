@@ -2,69 +2,32 @@ import Link from "next/link";
 
 import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
-import { BillStatus, ReadingStatus } from "@prisma/client";
+import { BillStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
-import { ApprovedReadingBillQueue } from "@/features/billing/components/approved-reading-bill-queue";
-import { UnpaidBillList } from "@/features/billing/components/unpaid-bill-list";
+import { PaymentForm } from "@/features/payments/components/payment-form";
+import { PaymentHistoryList } from "@/features/payments/components/payment-history-list";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
-export default async function AdminBillingPage() {
+export default async function AdminPaymentsPage() {
   const { userId } = await auth();
 
   if (!userId) {
     return null;
   }
 
-  const [activeTariff, approvedReadings, unpaidBills] = await Promise.all([
-    prisma.tariff.findFirst({
-      where: {
-        isActive: true,
-      },
-      select: {
-        name: true,
-        minimumCharge: true,
-        minimumUsage: true,
-      },
-    }),
-    prisma.reading.findMany({
-      where: {
-        status: ReadingStatus.APPROVED,
-        bill: null,
-      },
-      orderBy: [{ readingDate: "asc" }],
-      select: {
-        id: true,
-        readingDate: true,
-        previousReading: true,
-        currentReading: true,
-        consumption: true,
-        meter: {
-          select: {
-            meterNumber: true,
-            customer: {
-              select: {
-                accountNumber: true,
-                name: true,
-              },
-            },
-          },
-        },
-      },
-    }),
+  const [openBills, payments] = await Promise.all([
     prisma.bill.findMany({
       where: {
         status: {
           in: [BillStatus.UNPAID, BillStatus.PARTIALLY_PAID, BillStatus.OVERDUE],
         },
       },
-      orderBy: [{ createdAt: "desc" }],
+      orderBy: [{ createdAt: "asc" }],
       select: {
         id: true,
         billingPeriod: true,
-        dueDate: true,
-        usageAmount: true,
         totalCharges: true,
         status: true,
         customer: {
@@ -82,9 +45,59 @@ export default async function AdminBillingPage() {
             },
           },
         },
+        payments: {
+          where: {
+            status: "COMPLETED",
+          },
+          select: {
+            amount: true,
+          },
+        },
+      },
+    }),
+    prisma.payment.findMany({
+      orderBy: [{ paymentDate: "desc" }],
+      take: 20,
+      select: {
+        id: true,
+        amount: true,
+        paymentDate: true,
+        method: true,
+        referenceId: true,
+        status: true,
+        bill: {
+          select: {
+            id: true,
+            billingPeriod: true,
+            totalCharges: true,
+            status: true,
+            customer: {
+              select: {
+                accountNumber: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     }),
   ]);
+
+  const billOptions = openBills
+    .map((bill) => {
+      const paidAmount = bill.payments.reduce((sum, payment) => sum + payment.amount, 0);
+      const outstandingBalance = Math.max(0, bill.totalCharges - paidAmount);
+
+      return {
+        id: bill.id,
+        billingPeriod: bill.billingPeriod,
+        totalCharges: bill.totalCharges,
+        outstandingBalance,
+        customer: bill.customer,
+        reading: bill.reading,
+      };
+    })
+    .filter((bill) => bill.outstandingBalance > 0);
 
   return (
     <main className="min-h-screen bg-muted/30 px-6 py-8">
@@ -92,19 +105,20 @@ export default async function AdminBillingPage() {
         <header className="flex flex-col gap-4 rounded-3xl border border-border bg-background px-6 py-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-              Step 3.3
+              Step 3.4
             </p>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-              Bill Generation Workflow
+              Manual Payment Recording
             </h1>
             <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-              Generate unpaid bills from approved readings using the active progressive
-              tariff, then review open bill records before payment encoding begins.
+              Encode cashier payments against open bills and automatically update each
+              bill&apos;s receivable status once the recorded payments cover the total
+              charges.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Link
-              href="/admin/payments"
+              href="/admin/billing"
               className={cn(
                 buttonVariants({
                   variant: "outline",
@@ -112,18 +126,7 @@ export default async function AdminBillingPage() {
                 })
               )}
             >
-              Payments module
-            </Link>
-            <Link
-              href="/admin/readings"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className: "h-10 rounded-xl px-4",
-                })
-              )}
-            >
-              Reading module
+              Billing module
             </Link>
             <Link
               href="/admin/dashboard"
@@ -140,8 +143,10 @@ export default async function AdminBillingPage() {
           </div>
         </header>
 
-        <ApprovedReadingBillQueue activeTariff={activeTariff} readings={approvedReadings} />
-        <UnpaidBillList bills={unpaidBills} />
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
+          <PaymentForm bills={billOptions} />
+          <PaymentHistoryList payments={payments} />
+        </section>
       </div>
     </main>
   );

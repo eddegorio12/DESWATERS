@@ -49,7 +49,11 @@ export function ReadingForm({ meters }: ReadingFormProps) {
 
   useEffect(() => {
     if (!selectedMeter) {
-      form.setValue("currentReading", undefined);
+      form.setValue("currentReading", 0, {
+        shouldDirty: false,
+        shouldTouch: false,
+        shouldValidate: false,
+      });
       return;
     }
 

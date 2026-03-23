@@ -71,6 +71,14 @@
 - **`src/features/billing/components/generate-bill-button.tsx`**: Isolated client control that invokes bill generation from the approved reading queue.
 - **`src/features/billing/components/unpaid-bill-list.tsx`**: Presents generated bills whose statuses are still open (`UNPAID`, `PARTIALLY_PAID`, or `OVERDUE`) so Step 3.3 has a visible accounts-receivable surface before payments are built.
 
+## Physical Architecture Insights (Phase 3.4 Payments Module)
+- **`src/app/(dashboard)/admin/payments/page.tsx`**: Protected payments route for Step 3.4. It server-renders the open-bill cashier queue together with recent payment history for manual encoding review.
+- **`src/features/payments/actions.ts`**: Contains `recordPayment`. The Server Action verifies the Clerk session and local staff profile, validates the payment payload via Zod, ensures the selected bill is still open, creates a `COMPLETED` `Payment`, recalculates bill settlement using cumulative completed payments, and revalidates `/admin/payments`, `/admin/billing`, and `/admin/dashboard`.
+- **`src/features/payments/lib/payment-schema.ts`**: Shared Zod schema for manual payment entry so client and server validation stay aligned on bill identity, amount, method, and optional reference ID.
+- **`src/features/payments/components/payment-form.tsx`**: Owns the cashier entry workflow and surfaces the currently selected bill's customer, meter, and remaining balance before submission.
+- **`src/features/payments/components/payment-history-list.tsx`**: Presents recent payment records with their linked bill statuses so Step 3.4 has an immediate audit surface after manual encoding.
+- **Receivables Settlement Rule:** Bill status is now driven by cumulative `Payment.status === COMPLETED` amounts: open bills remain `UNPAID` until the first completed payment, become `PARTIALLY_PAID` while a balance remains, and flip to `PAID` once the running total reaches the bill total. Overpayments are currently rejected because V1 has no credit ledger yet.
+
 ## Database Schema (Prisma Draft)
 
 ```prisma

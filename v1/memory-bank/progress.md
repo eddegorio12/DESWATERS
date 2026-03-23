@@ -106,14 +106,14 @@
 - **Bulk Review Scope:** The approval dashboard only lists `PENDING_REVIEW` readings, while the recent history table still shows mixed statuses so encoding and approval activity stay auditable on one page.
 - **Step Boundary (Historical):** Step 3.2 is now closed. Continue with Step 3.3 bill generation, but do not start Step 3.4 until the user validates the billing workflow.
 
-### Step 3.3: Bill Generation Workflow (Progressive Tier Computing) - **[IMPLEMENTED - PENDING USER VALIDATION]**
+### Step 3.3: Bill Generation Workflow (Progressive Tier Computing) - **[IMPLEMENTED - USER VALIDATED]**
 - Added `src/features/billing/actions.ts` with an authenticated Server Action that accepts an `APPROVED` reading, rejects duplicate billing attempts, fetches the active tariff, computes the bill total using progressive tiers, and creates an `UNPAID` `Bill`.
 - Added `src/features/billing/lib/billing-calculations.ts` to centralize progressive tier billing math, billing period formatting, due-date generation, and currency formatting for billing surfaces.
 - Added `src/features/billing/components/generate-bill-button.tsx` for manual bill generation directly from approved readings awaiting billing.
 - Added `src/features/billing/components/approved-reading-bill-queue.tsx` to show all approved readings without bills and surface the currently active tariff context during bill generation.
 - Added `src/features/billing/components/unpaid-bill-list.tsx` and the protected route `src/app/(dashboard)/admin/billing/page.tsx` to review open bill records after generation.
 - Updated `src/app/(dashboard)/admin/dashboard/page.tsx` and `src/app/(dashboard)/admin/readings/page.tsx` to link directly to the new billing module.
-- **Pending User Verification:** Open `/admin/billing`, generate a bill from an approved reading where `consumption` is `0` or `1` and verify the saved bill total is exactly the active tariff `minimumCharge` (for example, `25`). Then generate another bill where `consumption` is `8` and verify the saved bill total is exactly `390` when using the configured sample tariff tiers.
+- **User Verification:** User confirmed Step 3.3 was validated and work could proceed to Step 3.4.
 
 #### Notes for Future Developers (Step 3.3)
 - **Bill Generation Guardrail:** Billing is allowed only for readings with `APPROVED` status and no existing linked bill. The server action re-checks both conditions before writing.
@@ -121,6 +121,19 @@
 - **Current Billing Defaults:** Generated bills use the reading month as `billingPeriod`, set `usageAmount` from `Reading.consumption`, default to `UNPAID`, and currently assign a due date `15` days after the reading date.
 - **Step Boundary:** Do not start Step 3.4 payment recording until the user validates the Step 3.3 billing test.
 
+### Step 3.4: Manual Payment Recording - **[IMPLEMENTED - PENDING USER VALIDATION]**
+- Added `src/features/payments/actions.ts` with an authenticated Server Action that validates manual payment inputs, records a `COMPLETED` payment against an open bill, and updates the bill status to `PARTIALLY_PAID` or `PAID` based on the cumulative completed payments.
+- Added `src/features/payments/lib/payment-schema.ts` to centralize Zod validation for payment bill selection, amount, payment method, and optional manual reference ID.
+- Added `src/features/payments/components/payment-form.tsx` as the cashier-facing encoding form showing the selected bill's customer, meter, and remaining balance before submission.
+- Added `src/features/payments/components/payment-history-list.tsx` and the protected route `src/app/(dashboard)/admin/payments/page.tsx` to review recent payment activity and current bill status after encoding.
+- Updated `src/app/(dashboard)/admin/dashboard/page.tsx` and `src/app/(dashboard)/admin/billing/page.tsx` to link directly to the new payments module.
+- **Pending User Verification:** Open `/admin/payments`, select an unpaid bill, record a payment exactly matching its remaining balance, and verify the payment is saved and the bill status updates from `UNPAID` to `PAID`.
+
+#### Notes for Future Developers (Step 3.4)
+- **Status Transition Rule:** Bill status is recalculated from cumulative `COMPLETED` payments only. A positive payment that does not settle the remaining balance marks the bill `PARTIALLY_PAID`; a payment that exactly settles the balance marks it `PAID`.
+- **Overpayment Guardrail:** Step 3.4 rejects payments greater than the remaining balance because V1 does not yet model cashier change, wallet credit, or unapplied customer credits.
+- **Step Boundary:** Do not start Step 4.1 collections reporting until the user validates the Step 3.4 payment test.
+
 ### Blockers / Next Steps
-- Waiting for user to validate Step 3.3 by generating bills in `/admin/billing` and confirming the saved totals match the active progressive tariff.
-- Do not start **Step 3.4** until the user validates the Step 3.3 test.
+- Waiting for user to validate Step 3.4 by recording a payment in `/admin/payments` and confirming the target bill status changes to `PAID`.
+- Do not start **Step 4.1** until the user validates the Step 3.4 test.

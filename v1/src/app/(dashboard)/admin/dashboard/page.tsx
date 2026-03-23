@@ -67,8 +67,8 @@ export default async function AdminDashboardPage() {
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">Next validated slice</p>
               <p className="text-sm leading-6 text-muted-foreground">
-                Step 3.3 turns approved readings into unpaid bills using the active
-                progressive tariff, while keeping open bill records visible for review.
+                Step 3.4 records manual cashier payments against open bills and updates
+                receivable status once the payment covers the total charges.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -106,6 +106,12 @@ export default async function AdminDashboardPage() {
                 className={cn(buttonVariants({ className: "h-10 rounded-xl px-4" }))}
               >
                 Billing module
+              </Link>
+              <Link
+                href="/admin/payments"
+                className={cn(buttonVariants({ className: "h-10 rounded-xl px-4" }))}
+              >
+                Payments module
               </Link>
             </div>
           </div>
