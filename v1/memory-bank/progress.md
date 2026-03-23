@@ -51,20 +51,33 @@
 - **Generated Account Numbers:** Customer account numbers are generated server-side during creation using a `CUST-YYYY-XXXXXXXX` format. Do not move account number generation to the client.
 - **Step Boundary (Historical):** Step 2.1 originally stopped before meter assignment. That boundary has now been respected and closed by Step 2.2.
 
-### Step 2.2: Meter Entity Module - **[IMPLEMENTED - PENDING USER VALIDATION]**
+### Step 2.2: Meter Entity Module - **[IMPLEMENTED - USER VALIDATED]**
 - Added `src/features/meters/actions.ts` with authenticated Server Actions to register a `Meter` and assign an unassigned meter to an existing `Customer`.
 - Added `src/features/meters/lib/meter-schema.ts` to centralize Zod validation for meter registration and assignment inputs.
 - Added `src/features/meters/components/meter-form.tsx` and `src/features/meters/components/meter-assignment-form.tsx` for meter registration and customer assignment workflows.
 - Added `src/features/meters/components/meter-list.tsx` and the protected route `src/app/(dashboard)/admin/meters/page.tsx` to manage and review meters in the admin UI.
 - Updated `src/app/(dashboard)/admin/dashboard/page.tsx` to link directly to the new meter module.
 - Updated the customer registry to surface linked meter numbers so Step 2.2 assignment results are visible from `/admin/customers`.
-- **Pending User Verification:** Open `/admin/meters`, register a meter, assign it to a customer from Step 2.1, and verify the customer record now shows the linked meter.
+- **User Verification:** User confirmed Step 2.2 was validated and work could proceed to Step 2.3.
 
 #### Notes for Future Developers (Step 2.2)
 - **Assignment Guardrail:** The assignment flow only lists unassigned meters and also re-checks on the server that a selected meter still has no `customerId` before mutating data.
 - **Cross-Module Visibility:** Meter assignment revalidates both `/admin/meters` and `/admin/customers` so the linked meter appears immediately in the customer registry without manual cache work.
-- **Step Boundary:** Do not start Step 2.3 tariff configuration until the Step 2.2 UI flow has been validated by the user.
+- **Step Boundary (Historical):** Step 2.2 is now closed. Continue with Step 2.3 tariff configuration, but do not start Step 2.4 until the user validates the tariff flow.
+
+### Step 2.3: Tariff Configuration (Admin) - **[IMPLEMENTED - PENDING USER VALIDATION]**
+- Added `src/features/tariffs/actions.ts` with an authenticated Server Action that validates tariff inputs, deactivates any previously active tariff, and creates a new active tariff with nested tiers in a single database transaction.
+- Added `src/features/tariffs/lib/tariff-schema.ts` to centralize Zod validation for tariff metadata and progressive tier rules, including guardrails for sequential ranges and open-ended final tiers.
+- Added `src/features/tariffs/components/tariff-form.tsx` for configuring `minimumCharge`, `minimumUsage`, `installationFee`, and a dynamic list of tariff tiers from the admin UI.
+- Added `src/features/tariffs/components/tariff-list.tsx` and the protected route `src/app/(dashboard)/admin/tariffs/page.tsx` to review configured tariffs and identify the active computing tariff.
+- Updated `src/app/(dashboard)/admin/dashboard/page.tsx` to link directly to the new tariff module.
+- **Pending User Verification:** Open `/admin/tariffs`, create a tariff matching the PRD sample rules, and verify the saved record is marked as the active computing tariff.
+
+#### Notes for Future Developers (Step 2.3)
+- **Single Active Tariff Rule:** Creating a new tariff automatically deactivates any currently active tariff before persisting the new one. Billing logic in later steps should resolve the active tariff from the database, not hardcode rates.
+- **Tier Validation:** Tariff tiers are validated in shared Zod logic to prevent overlaps, gaps, and non-terminal open-ended tiers. Keep any future billing assumptions aligned with this structure.
+- **Step Boundary:** Do not start Step 2.4 or later billing work until the user validates the Step 2.3 tariff test.
 
 ### Blockers / Next Steps
-- Waiting for user to validate Step 2.2 by registering a meter, assigning it to a customer, and confirming the linked meter appears in the customer registry.
-- Do not start **Step 2.3: Tariff Configuration (Admin)** until the user validates the Step 2.2 test.
+- Waiting for user to validate Step 2.3 by creating a tariff in `/admin/tariffs` and confirming it is marked active in the database/UI.
+- Do not start **Step 2.4** until the user validates the Step 2.3 test.

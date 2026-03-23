@@ -67,8 +67,8 @@ export default async function AdminDashboardPage() {
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">Next validated slice</p>
               <p className="text-sm leading-6 text-muted-foreground">
-                Step 2.2 adds meter registration and customer assignment without starting
-                tariff configuration.
+                Step 2.3 adds tariff configuration so billing rules are managed from the
+                database instead of hardcoded values.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -88,6 +88,12 @@ export default async function AdminDashboardPage() {
                 className={cn(buttonVariants({ className: "h-10 rounded-xl px-4" }))}
               >
                 Meter module
+              </Link>
+              <Link
+                href="/admin/tariffs"
+                className={cn(buttonVariants({ className: "h-10 rounded-xl px-4" }))}
+              >
+                Tariff module
               </Link>
             </div>
           </div>

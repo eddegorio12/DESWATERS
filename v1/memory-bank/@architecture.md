@@ -42,6 +42,13 @@
 - **`src/features/meters/lib/meter-schema.ts`**: Shared Zod schemas for meter registration and meter assignment so client and server validation stay aligned.
 - **Customer Registry Extension:** `src/features/customers/components/customer-list.tsx` now displays linked meter numbers pulled from Prisma, making Step 2.2 assignments visible from the customer module immediately after revalidation.
 
+## Physical Architecture Insights (Phase 2.3 Tariff Module)
+- **`src/app/(dashboard)/admin/tariffs/page.tsx`**: Protected tariff configuration route for Step 2.3. It server-renders the tariff registry and the current active tariff creation form.
+- **`src/features/tariffs/actions.ts`**: Contains `createTariff`. The Server Action verifies authentication internally, validates the tariff payload via Zod, deactivates any existing active tariff, creates the new tariff plus nested tiers inside a transaction, and revalidates `/admin/tariffs` plus `/admin/dashboard`.
+- **`src/features/tariffs/components/`**: Holds the client-side tariff form with dynamic tier inputs and the presentational tariff registry. The page file remains focused on loading and composition.
+- **`src/features/tariffs/lib/tariff-schema.ts`**: Shared Zod schema for tariff metadata and tier validation. It enforces sequential progressive tiers, prevents non-terminal open-ended ranges, and keeps client/server validation aligned for later billing math.
+- **Dashboard Navigation Extension:** `src/app/(dashboard)/admin/dashboard/page.tsx` now links directly to `/admin/tariffs`, making Step 2.3 the current validated slice.
+
 ## Database Schema (Prisma Draft)
 
 ```prisma
