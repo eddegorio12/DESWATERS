@@ -26,10 +26,24 @@ export function formatBillingPeriod(date: Date) {
   }).format(date);
 }
 
-export function calculateBillDueDate(readingDate: Date) {
-  const dueDate = new Date(readingDate);
-  dueDate.setDate(dueDate.getDate() + 15);
+export function calculateBillIssueDate(readingDate: Date) {
+  return new Date(readingDate.getFullYear(), readingDate.getMonth() + 1, 5);
+}
+
+export function calculateBillDueDate(billIssueDate: Date) {
+  const dueDate = new Date(billIssueDate);
+  dueDate.setDate(dueDate.getDate() + 10);
   return dueDate;
+}
+
+export function calculateGracePeriodEnd(dueDate: Date) {
+  const gracePeriodEnd = new Date(dueDate);
+  gracePeriodEnd.setDate(gracePeriodEnd.getDate() + 5);
+  return gracePeriodEnd;
+}
+
+export function formatPenaltyNotice() {
+  return "Disconnection";
 }
 
 function roundToCurrency(value: number) {

@@ -1,6 +1,10 @@
+import Link from "next/link";
+
 import type { BillStatus } from "@prisma/client";
 
+import { buttonVariants } from "@/components/ui/button-variants";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
+import { cn } from "@/lib/utils";
 
 type UnpaidBillListProps = {
   bills: {
@@ -63,6 +67,7 @@ export function UnpaidBillList({ bills }: UnpaidBillListProps) {
                 <th className="px-4 py-3 font-medium">Total charges</th>
                 <th className="px-4 py-3 font-medium">Due date</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 text-right font-medium">Template</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border bg-background">
@@ -100,12 +105,26 @@ export function UnpaidBillList({ bills }: UnpaidBillListProps) {
                         {bill.status.replace("_", " ")}
                       </span>
                     </td>
+                    <td className="px-4 py-4 text-right">
+                      <Link
+                        href={`/admin/billing/${bill.id}`}
+                        className={cn(
+                          buttonVariants({
+                            variant: "outline",
+                            size: "sm",
+                            className: "rounded-xl px-3",
+                          })
+                        )}
+                      >
+                        View / print
+                      </Link>
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={8}
                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                   >
                     No unpaid bills have been generated yet.

@@ -121,19 +121,46 @@
 - **Current Billing Defaults:** Generated bills use the reading month as `billingPeriod`, set `usageAmount` from `Reading.consumption`, default to `UNPAID`, and currently assign a due date `15` days after the reading date.
 - **Step Boundary:** Do not start Step 3.4 payment recording until the user validates the Step 3.3 billing test.
 
-### Step 3.4: Manual Payment Recording - **[IMPLEMENTED - PENDING USER VALIDATION]**
+### Step 3.4: Manual Payment Recording - **[IMPLEMENTED - USER VALIDATED]**
 - Added `src/features/payments/actions.ts` with an authenticated Server Action that validates manual payment inputs, records a `COMPLETED` payment against an open bill, and updates the bill status to `PARTIALLY_PAID` or `PAID` based on the cumulative completed payments.
 - Added `src/features/payments/lib/payment-schema.ts` to centralize Zod validation for payment bill selection, amount, payment method, and optional manual reference ID.
 - Added `src/features/payments/components/payment-form.tsx` as the cashier-facing encoding form showing the selected bill's customer, meter, and remaining balance before submission.
 - Added `src/features/payments/components/payment-history-list.tsx` and the protected route `src/app/(dashboard)/admin/payments/page.tsx` to review recent payment activity and current bill status after encoding.
 - Updated `src/app/(dashboard)/admin/dashboard/page.tsx` and `src/app/(dashboard)/admin/billing/page.tsx` to link directly to the new payments module.
-- **Pending User Verification:** Open `/admin/payments`, select an unpaid bill, record a payment exactly matching its remaining balance, and verify the payment is saved and the bill status updates from `UNPAID` to `PAID`.
+- **User Verification:** User confirmed Step 3.4 was validated and work could proceed to Step 4.1.
 
 #### Notes for Future Developers (Step 3.4)
 - **Status Transition Rule:** Bill status is recalculated from cumulative `COMPLETED` payments only. A positive payment that does not settle the remaining balance marks the bill `PARTIALLY_PAID`; a payment that exactly settles the balance marks it `PAID`.
 - **Overpayment Guardrail:** Step 3.4 rejects payments greater than the remaining balance because V1 does not yet model cashier change, wallet credit, or unapplied customer credits.
 - **Step Boundary:** Do not start Step 4.1 collections reporting until the user validates the Step 3.4 payment test.
 
+### Step 4.1: Collections Dashboard - **[IMPLEMENTED - USER VALIDATED]**
+- Added `src/features/reports/lib/collections.ts` to centralize the current operating-day range calculation and collection date formatting for daily reporting.
+- Added `src/features/reports/components/collections-summary.tsx` and `src/features/reports/components/daily-collections-list.tsx` to show today’s total collections together with the completed payment records included in that total.
+- Added the protected route `src/app/(dashboard)/admin/collections/page.tsx` as the Step 4.1 reporting surface for daily collections.
+- Updated `src/app/(dashboard)/admin/dashboard/page.tsx` and `src/app/(dashboard)/admin/payments/page.tsx` to link directly to the new collections dashboard.
+- **User Verification:** User confirmed the collections dashboard was accepted as part of the final site state.
+
+#### Notes for Future Developers (Step 4.1)
+- **Collections Scope:** The daily report currently counts only `Payment.status === COMPLETED` records and excludes pending, failed, or refunded payments.
+- **Operating Day Boundary:** The dashboard computes “today” using the app’s Manila operating timezone so the daily total stays aligned with local cashier activity.
+- **Step Boundary:** Step 4.1 is limited to daily collections visibility. Do not assume unpaid-account reporting or trend analytics are included yet unless a later step explicitly adds them.
+
+### Final Site Polish - **[IMPLEMENTED]**
+- Updated `src/app/page.tsx` so the public entry page now describes the finished DESWATERS admin product instead of the original validation flow.
+- Updated `src/app/(dashboard)/admin/dashboard/page.tsx` into an operations hub with live counts for customers, active meters, pending readings, approved readings awaiting billing, open bills, and today’s collections.
+- Updated the billing, payments, and collections route headers to use production-facing labels instead of step-based milestone copy.
+- The current site state is now treated as the finalized MVP admin surface for DESWATERS.
+
 ### Blockers / Next Steps
-- Waiting for user to validate Step 3.4 by recording a payment in `/admin/payments` and confirming the target bill status changes to `PAID`.
-- Do not start **Step 4.1** until the user validates the Step 3.4 test.
+- No active MVP blockers are recorded in the memory-bank. Future work should be scoped as new phases or explicit enhancement requests.
+
+### Billing Rules & Printable Consumer Bill Template - **[IMPLEMENTED]**
+- Updated `src/features/billing/lib/billing-calculations.ts` so bill issue date is derived as the `5th` day of the following month, due date is `10` days after the bill issue date, and grace period ends `5` days after due date.
+- Updated `src/features/billing/actions.ts` so newly generated bills now persist the revised due-date rule based on the monthly 5th-day issue schedule.
+- Added `src/app/(dashboard)/admin/billing/[billId]/page.tsx` as a printable per-consumer bill statement showing customer details, meter reading summary, issue date, due date, grace period end, and the penalty notice of disconnection.
+- Added `src/features/billing/components/print-bill-button.tsx` and linked the new template from `src/features/billing/components/unpaid-bill-list.tsx` so staff can open, print, and distribute individual bills directly from the billing module.
+
+#### Notes for Future Developers (Billing Template)
+- **Issue Schedule Rule:** The current implementation assumes each bill is issued on the `5th day of the month following the reading month`, which keeps billing aligned with a monthly post-reading distribution cycle.
+- **Penalty Rule:** The printable template now explicitly states that unpaid accounts after the grace period are subject to disconnection. No automated disconnection workflow is implemented yet; this is display-only for now.

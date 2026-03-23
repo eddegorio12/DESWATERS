@@ -24,9 +24,13 @@
 ## Physical Architecture Insights (Phase 1.3 Auth Integration)
 - **`src/proxy.ts`**: Route protection for Clerk on Next.js 16 lives here. All `/admin/*` routes are guarded through `clerkMiddleware()` and `createRouteMatcher()`.
 - **`src/app/(auth)/`**: Contains the custom authentication routes (`/sign-in`, `/sign-up`) rendered with Clerk UI components.
-- **`src/app/(dashboard)/admin/dashboard/page.tsx`**: Current protected validation surface for auth. It is intentionally minimal and exists to verify redirect and provisioning behavior before the real admin modules are built.
+- **`src/app/(dashboard)/admin/dashboard/page.tsx`**: Now serves as the final operations hub for the MVP. It still hosts the first-login sync trigger, but also aggregates current operational counts and links to all live admin modules.
 - **`src/features/auth/`**: Holds authentication-specific modules. Shared auth UI wrappers live under `components/`, Clerk styling is isolated in `lib/`, and first-login provisioning lives in `actions/`.
 - **`src/lib/prisma.ts`**: Central Prisma singleton for App Router server components and server actions. Reuse this instead of instantiating `PrismaClient` ad hoc in features. In the current local SQLite mode, it is configured with Prisma v7's `@prisma/adapter-better-sqlite3` driver adapter.
+
+## Physical Architecture Insights (Final MVP Shell)
+- **`src/app/page.tsx`**: Public entry page for the finished MVP. It now presents the DESWATERS admin system as a complete operations product rather than a setup validation screen.
+- **Dashboard Aggregation Pattern:** The admin dashboard now performs lightweight server-side aggregation for counts and today’s collections summary. This is acceptable for the MVP shell, but heavier analytics should move into dedicated reporting modules if reporting scope expands later.
 
 ## Physical Architecture Insights (Phase 2.1 Customer Module)
 - **`src/app/(dashboard)/admin/customers/page.tsx`**: Protected customer management route for Step 2.1. It stays server-rendered and fetches the current customer list directly from Prisma.
@@ -70,6 +74,8 @@
 - **`src/features/billing/components/approved-reading-bill-queue.tsx`**: Presents the approved-reading work queue for manual bill generation and surfaces the currently active tariff being used for computation.
 - **`src/features/billing/components/generate-bill-button.tsx`**: Isolated client control that invokes bill generation from the approved reading queue.
 - **`src/features/billing/components/unpaid-bill-list.tsx`**: Presents generated bills whose statuses are still open (`UNPAID`, `PARTIALLY_PAID`, or `OVERDUE`) so Step 3.3 has a visible accounts-receivable surface before payments are built.
+- **`src/app/(dashboard)/admin/billing/[billId]/page.tsx`**: Adds a printable consumer bill statement view for individual bill distribution. It renders customer identity, service address, meter reading summary, billing schedule, grace period, and the disconnection penalty notice.
+- **Billing Schedule Rule:** The current billing schedule assumes the bill is issued on the `5th day of the month following the reading month`, the due date is `10` days after that issue date, and the grace period ends `5` days after the due date.
 
 ## Physical Architecture Insights (Phase 3.4 Payments Module)
 - **`src/app/(dashboard)/admin/payments/page.tsx`**: Protected payments route for Step 3.4. It server-renders the open-bill cashier queue together with recent payment history for manual encoding review.
@@ -78,6 +84,13 @@
 - **`src/features/payments/components/payment-form.tsx`**: Owns the cashier entry workflow and surfaces the currently selected bill's customer, meter, and remaining balance before submission.
 - **`src/features/payments/components/payment-history-list.tsx`**: Presents recent payment records with their linked bill statuses so Step 3.4 has an immediate audit surface after manual encoding.
 - **Receivables Settlement Rule:** Bill status is now driven by cumulative `Payment.status === COMPLETED` amounts: open bills remain `UNPAID` until the first completed payment, become `PARTIALLY_PAID` while a balance remains, and flip to `PAID` once the running total reaches the bill total. Overpayments are currently rejected because V1 has no credit ledger yet.
+
+## Physical Architecture Insights (Phase 4.1 Collections Dashboard)
+- **`src/app/(dashboard)/admin/collections/page.tsx`**: Protected reporting route for Step 4.1. It server-renders the current-day collections summary and the payment records included in that daily total.
+- **`src/features/reports/lib/collections.ts`**: Centralizes current operating-day range calculation and label formatting for the collections dashboard, currently aligned to the Manila business timezone.
+- **`src/features/reports/components/collections-summary.tsx`**: Presents the reporting date, completed payment count, and summed total collections for the day.
+- **`src/features/reports/components/daily-collections-list.tsx`**: Presents the completed payments included in the report so the Step 4.1 total is auditable from the same surface.
+- **Daily Reporting Rule:** Step 4.1 only reports `Payment.status === COMPLETED` rows whose `paymentDate` falls within the current operating day window. It does not yet include historical filtering, charts, or unpaid-account analytics.
 
 ## Database Schema (Prisma Draft)
 

@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
 import {
+  calculateBillIssueDate,
   calculateBillDueDate,
   calculateProgressiveCharge,
   formatBillingPeriod,
@@ -112,7 +113,8 @@ export async function generateBill(readingId: string) {
 
   const totalCharges = calculateProgressiveCharge(reading.consumption, activeTariff);
   const billingPeriod = formatBillingPeriod(reading.readingDate);
-  const dueDate = calculateBillDueDate(reading.readingDate);
+  const billIssueDate = calculateBillIssueDate(reading.readingDate);
+  const dueDate = calculateBillDueDate(billIssueDate);
 
   let bill;
 

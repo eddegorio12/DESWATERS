@@ -91,15 +91,13 @@ export default async function AdminBillingPage() {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <header className="flex flex-col gap-4 rounded-3xl border border-border bg-background px-6 py-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-              Step 3.3
-            </p>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-              Bill Generation Workflow
+              Billing
             </h1>
             <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
               Generate unpaid bills from approved readings using the active progressive
-              tariff, then review open bill records before payment encoding begins.
+              tariff, review open bill records, and open printable consumer bill copies
+              for distribution.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">

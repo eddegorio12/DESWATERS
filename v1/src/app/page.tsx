@@ -17,20 +17,21 @@ export default async function Home() {
           </p>
           <div className="space-y-4">
             <h1 className="max-w-2xl text-4xl font-semibold tracking-tight text-balance text-foreground lg:text-5xl">
-              Water utility operations, starting with a protected admin surface.
+              Water utility billing, collections, and consumer account operations in one
+              admin system.
             </h1>
             <p className="max-w-xl text-base leading-7 text-muted-foreground">
-              Clerk authentication is now wired into the app shell. Use the admin route
-              to validate redirects, sign-in, and first-login user provisioning.
+              Manage customers, meters, readings, billing, payments, collections, and
+              printable consumer bills from a single protected operations workspace.
             </p>
           </div>
         </div>
         <div className="flex flex-col justify-between rounded-3xl border border-border bg-card p-6">
           <div className="space-y-3">
-            <p className="text-sm font-medium text-foreground">Validation path</p>
+            <p className="text-sm font-medium text-foreground">Operations access</p>
             <p className="text-sm leading-6 text-muted-foreground">
-              Open `/admin/dashboard` while signed out, then sign in and confirm the
-              dashboard loads.
+              Staff sign in through Clerk, then continue to the admin dashboard to manage
+              the full DESWATERS workflow.
             </p>
           </div>
           <div className="mt-8 flex flex-col gap-3">
@@ -38,7 +39,7 @@ export default async function Home() {
               href={userId ? "/admin/dashboard" : "/sign-in"}
               className={cn(buttonVariants({ className: "h-11 rounded-xl" }))}
             >
-              {userId ? "Open admin dashboard" : "Go to sign in"}
+              {userId ? "Open admin dashboard" : "Sign in to admin"}
             </Link>
             <Link
               href="/admin/dashboard"
@@ -47,7 +48,7 @@ export default async function Home() {
                 buttonVariants({ variant: "outline", className: "h-11 rounded-xl" })
               )}
             >
-              Test protected route
+              View operations workspace
             </Link>
           </div>
         </div>
