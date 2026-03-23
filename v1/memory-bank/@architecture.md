@@ -30,12 +30,12 @@
 - **Styling:** Tailwind CSS + `shadcn/ui`
 - **Auth:** Clerk for authentication and session handling
 - **ORM:** Prisma v7
-- **Current local DB runtime:** SQLite with `@prisma/adapter-better-sqlite3`
+- **Current intended DB runtime:** PostgreSQL
 
 ### Important Runtime Clarification
-- The current repository is **not yet running the intended PostgreSQL-first architecture**.
-- SQLite is a temporary local-development compromise that kept MVP implementation moving.
-- The migration back to PostgreSQL is tracked as **EH1: Data Platform Hardening**.
+- The repository has been moved back to a **PostgreSQL-first runtime path**.
+- The prior SQLite adapter path has been removed from the intended runtime.
+- EH1 has been validated and closed, so PostgreSQL is now the confirmed primary runtime path in the repo.
 
 ## Physical Architecture: Implemented Surfaces
 
@@ -51,7 +51,7 @@
 - `src/proxy.ts`
   - Clerk route protection for `/admin/*` in Next.js 16
 - `src/lib/prisma.ts`
-  - Central Prisma singleton used by server components and server actions
+  - Central Prisma singleton used by server components and server actions with environment-driven PostgreSQL connections
 - `src/components/ui/`
   - Shared `shadcn/ui` primitives only
 
@@ -107,6 +107,8 @@
 - Reconfirm schema compatibility for all existing models and relations.
 - Preserve a single Prisma access layer in `src/lib/prisma.ts`.
 - Keep environment-specific connection logic centralized in `prisma.config.ts` and related config, not scattered across features.
+- A PostgreSQL baseline migration now exists under `prisma/migrations/20260323_eh1_postgresql_baseline/`.
+- EH1 validation has been completed. Remaining platform work now falls outside EH1.
 
 ### EH2: Authorization & Staff Controls
 - Introduce explicit authorization checks in server actions and route-level data access.
@@ -146,7 +148,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model Tariff {

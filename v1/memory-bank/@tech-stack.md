@@ -26,10 +26,10 @@ Document the stack that is actually implemented today, the target production sta
 
 ### Database Runtime in Repo Today
 - **Prisma v7**
-- **SQLite** for the current local development runtime
-- **`@prisma/adapter-better-sqlite3`** in the server runtime
+- **PostgreSQL** for the intended runtime path
+- Direct Prisma client connections driven by `DATABASE_URL`
 
-This is a temporary development compromise, not the long-term data-platform target.
+This replaces the earlier SQLite adapter workaround, though live PostgreSQL validation is still pending under EH1.
 
 ## Target Production Stack
 
@@ -52,6 +52,7 @@ This is a temporary development compromise, not the long-term data-platform targ
 - Standardize on **PostgreSQL** for non-local environments
 - Use **Prisma Migrate** as the canonical migration workflow
 - Keep `prisma.config.ts` as the datasource binding layer for Prisma v7
+- The baseline PostgreSQL migration is now committed in `prisma/migrations/20260323_eh1_postgresql_baseline/`
 
 ### EH2: Authorization & Staff Controls
 - Keep **Clerk** for auth
@@ -86,6 +87,6 @@ This is a temporary development compromise, not the long-term data-platform targ
 - No custom auth build while Clerk is sufficient
 
 ## Practical Summary
-- **Implemented now:** Next.js, TypeScript, Prisma v7, Clerk, Tailwind CSS, shadcn/ui, React Hook Form, Zod, SQLite local runtime
-- **Target next for platform hardening:** PostgreSQL migration and environment parity
+- **Implemented now:** Next.js, TypeScript, Prisma v7, Clerk, Tailwind CSS, shadcn/ui, React Hook Form, Zod, PostgreSQL-first runtime path
+- **Target next for platform hardening:** PostgreSQL workflow validation and environment parity
 - **Deferred until explicitly scoped:** Xendit, storage-backed uploads, notifications, advanced reporting libraries, receipt-generation tooling

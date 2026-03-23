@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DWDS
 
-## Getting Started
+DWDS is the staff-facing water utility operations system for `DEGORIO WATER DISTRIBUTION SERVICES`. The current app covers customer records, meter management, tariffs, readings, billing, payments, collections reporting, and the public marketing site.
 
-First, run the development server:
+## Environment
+
+- Framework: Next.js 16 App Router
+- ORM: Prisma v7
+- Primary database path: PostgreSQL
+- Auth: Clerk
+
+## Local PostgreSQL Setup
+
+1. Copy `.env.example` into `.env` if needed.
+2. Start PostgreSQL locally. A ready-to-run Docker setup is included in [`docker-compose.postgres.yml`](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\docker-compose.postgres.yml).
+3. Confirm `DATABASE_URL` points to `127.0.0.1:55432` for the local Docker database.
+4. Generate the Prisma client:
+
+```bash
+npm run prisma:generate
+```
+
+5. Apply the baseline migration:
+
+```bash
+npm run prisma:migrate:dev -- --name init
+```
+
+6. Start the app:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Staging And Production
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Use a managed PostgreSQL instance.
+- Set `DATABASE_URL` in the target environment before deployment.
+- Apply migrations with:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run prisma:migrate:deploy
+```
 
-## Learn More
+- Generate the client during build or release with:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run prisma:generate
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Current EH1 Notes
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- The repo no longer depends on `@prisma/adapter-better-sqlite3` for the intended runtime path.
+- The PostgreSQL baseline migration lives in [`prisma/migrations/20260323_eh1_postgresql_baseline/migration.sql`](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\prisma\migrations\20260323_eh1_postgresql_baseline\migration.sql).
+- Local Docker PostgreSQL intentionally uses host port `55432` to avoid collisions with other PostgreSQL services already bound to `5432`.
+- Full MVP workflow revalidation against PostgreSQL should be completed before moving to `EH2`.

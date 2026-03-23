@@ -45,8 +45,8 @@ Use this as the minimum smoke test after major refactors:
 
 ### EH1: Data Platform Hardening
 **Priority:** Highest
-**Status:** Not started
-**Why it exists:** The repo still runs on a temporary SQLite local setup while the intended operational target is PostgreSQL.
+**Status:** Complete
+**Why it exists:** The repo needed to be moved off the earlier temporary SQLite workaround and revalidated on the intended PostgreSQL target.
 
 Scope:
 1. Restore PostgreSQL as the intended primary runtime outside temporary local development.
@@ -58,6 +58,11 @@ Exit criteria:
 - PostgreSQL workflow is documented and working.
 - The Prisma runtime no longer depends on the temporary SQLite-only adapter for the intended primary path.
 - MVP workflows still pass the baseline validation.
+
+Current progress:
+- Prisma schema and runtime have been switched to PostgreSQL-first operation.
+- The repo now includes a PostgreSQL baseline migration and local/staging/production setup guidance.
+- MVP baseline validation against a live PostgreSQL environment has been completed and validated.
 
 ### EH2: Authorization & Staff Controls
 **Priority:** High

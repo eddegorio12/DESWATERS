@@ -17,8 +17,8 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 ## 2. Current Product State
 - The MVP is implemented.
 - The live admin surface covers authentication, customers, meters, tariffs, readings, billing, payments, printable bills, collections reporting, and the marketing site.
-- The current local development database runtime is **SQLite via Prisma v7 + `@prisma/adapter-better-sqlite3`**.
-- **PostgreSQL remains the target production data platform**, but the migration is still an enhancement item and not yet complete in the repo.
+- The current intended database runtime is **PostgreSQL via Prisma v7**.
+- EH1 is now the active platform-hardening phase: the PostgreSQL-first repo path is in place, but end-to-end validation must still be completed before treating it as fully closed.
 
 ## 3. Enhancement Backlog Handling
 - Treat the enhancement roadmap in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md) as the canonical backlog instead of inventing new unnamed phases.

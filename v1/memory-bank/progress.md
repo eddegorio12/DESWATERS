@@ -30,11 +30,11 @@
 
 ## Important Historical Constraints
 
-### Database Constraint
-- The repo currently uses **SQLite for local development** because the earlier PostgreSQL path was blocked during setup.
-- Prisma v7 configuration is handled through `prisma.config.ts`.
-- The current runtime uses `@prisma/adapter-better-sqlite3`.
-- This remains the main technical debt item and is now tracked under **EH1: Data Platform Hardening**.
+### Data Platform Constraint
+- The repo has now been switched back to a **PostgreSQL-first Prisma runtime**.
+- Prisma v7 configuration remains centralized in `prisma.config.ts`.
+- A baseline PostgreSQL migration and repeatable environment setup guidance now exist in the repo.
+- MVP workflow validation against a live PostgreSQL environment has been completed, so EH1 is now closed.
 
 ### Authorization Constraint
 - Local users have a `role`, but the app does **not yet fully enforce role-based authorization** across modules.
@@ -61,8 +61,8 @@
 ## Enhancement Phase Status
 
 ### EH1: Data Platform Hardening
-- Status: `not started`
-- Notes: Highest-priority technical debt. Should be completed before treating the system as environment-ready beyond the current local flow.
+- Status: `complete`
+- Notes: PostgreSQL-first runtime, migration baseline, setup guidance, and live-environment validation are complete.
 
 ### EH2: Authorization & Staff Controls
 - Status: `not started`
@@ -89,4 +89,4 @@
 - Notes: Low product priority, but useful before another major UI redesign cycle.
 
 ## Current Next-Step Recommendation
-Start with **EH1: Data Platform Hardening** unless a business-driven need makes authorization or reporting more urgent in the short term.
+Proceed to **EH2: Authorization & Staff Controls** unless a business-driven need makes reporting more urgent in the short term.
