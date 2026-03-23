@@ -28,6 +28,20 @@
 - **`src/features/auth/`**: Holds authentication-specific modules. Shared auth UI wrappers live under `components/`, Clerk styling is isolated in `lib/`, and first-login provisioning lives in `actions/`.
 - **`src/lib/prisma.ts`**: Central Prisma singleton for App Router server components and server actions. Reuse this instead of instantiating `PrismaClient` ad hoc in features. In the current local SQLite mode, it is configured with Prisma v7's `@prisma/adapter-better-sqlite3` driver adapter.
 
+## Physical Architecture Insights (Phase 2.1 Customer Module)
+- **`src/app/(dashboard)/admin/customers/page.tsx`**: Protected customer management route for Step 2.1. It stays server-rendered and fetches the current customer list directly from Prisma.
+- **`src/features/customers/actions.ts`**: Contains the `createCustomer` Server Action. Authentication is verified inside the action before any mutation, and the customers page is revalidated after a successful create.
+- **`src/features/customers/components/`**: Holds the client-side `CustomerForm` and the presentational `CustomerList`, keeping the route file focused on composition and data loading.
+- **`src/features/customers/lib/customer-schema.ts`**: Shared Zod schema for both client-side form validation and server-side input validation to keep the Customer create flow consistent.
+- **Direct Dependencies Added:** `react-hook-form`, `@hookform/resolvers`, and `zod` are now first-class dependencies for form handling and validation in feature modules.
+
+## Physical Architecture Insights (Phase 2.2 Meter Module)
+- **`src/app/(dashboard)/admin/meters/page.tsx`**: Protected meter management route for Step 2.2. It server-renders the meter registry, current customers, and the unassigned meter pool needed by the assignment form.
+- **`src/features/meters/actions.ts`**: Contains `registerMeter` and `assignMeterToCustomer`. Both Server Actions verify authentication internally, validate input via Zod, and revalidate `/admin/meters`, `/admin/customers`, and `/admin/dashboard` after mutation.
+- **`src/features/meters/components/`**: Holds the client-side registration and assignment forms plus the presentational meter registry table. This keeps the route file focused on loading and composition.
+- **`src/features/meters/lib/meter-schema.ts`**: Shared Zod schemas for meter registration and meter assignment so client and server validation stay aligned.
+- **Customer Registry Extension:** `src/features/customers/components/customer-list.tsx` now displays linked meter numbers pulled from Prisma, making Step 2.2 assignments visible from the customer module immediately after revalidation.
+
 ## Database Schema (Prisma Draft)
 
 ```prisma

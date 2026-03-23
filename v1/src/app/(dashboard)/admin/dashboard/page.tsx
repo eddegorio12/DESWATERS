@@ -1,9 +1,13 @@
+import Link from "next/link";
+
 import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 
+import { buttonVariants } from "@/components/ui/button-variants";
 import { FirstLoginSync } from "@/features/auth/components/first-login-sync";
 import { syncCurrentUser } from "@/features/auth/actions/sync-current-user";
 import { prisma } from "@/lib/prisma";
+import { cn } from "@/lib/utils";
 
 export default async function AdminDashboardPage() {
   const { userId } = await auth();
@@ -56,6 +60,37 @@ export default async function AdminDashboardPage() {
                 : "Sync in progress. Refresh once the automatic upsert completes."}
             </p>
           </article>
+        </section>
+
+        <section className="rounded-3xl border border-border bg-background px-6 py-5 shadow-sm">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Next validated slice</p>
+              <p className="text-sm leading-6 text-muted-foreground">
+                Step 2.2 adds meter registration and customer assignment without starting
+                tariff configuration.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/admin/customers"
+                className={cn(
+                  buttonVariants({
+                    variant: "outline",
+                    className: "h-10 rounded-xl px-4",
+                  })
+                )}
+              >
+                Customer module
+              </Link>
+              <Link
+                href="/admin/meters"
+                className={cn(buttonVariants({ className: "h-10 rounded-xl px-4" }))}
+              >
+                Meter module
+              </Link>
+            </div>
+          </div>
         </section>
       </div>
     </main>
