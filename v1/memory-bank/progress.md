@@ -78,21 +78,34 @@
 - **Tier Validation:** Tariff tiers are validated in shared Zod logic to prevent overlaps, gaps, and non-terminal open-ended tiers. Keep any future billing assumptions aligned with this structure.
 - **Step Boundary:** Do not start Step 2.4 or later billing work until the user validates the Step 2.3 tariff test.
 
-### Step 3.1: Meter Reading Encoding - **[IMPLEMENTED - PENDING USER VALIDATION]**
+### Step 3.1: Meter Reading Encoding - **[IMPLEMENTED - USER VALIDATED]**
 - Added `src/features/readings/actions.ts` with an authenticated Server Action that resolves the current Clerk session, looks up the matching local Prisma `User`, derives the selected meter's previous reading from the latest saved reading, calculates `consumption`, and saves the new reading with `PENDING_REVIEW` status.
 - Added `src/features/readings/lib/reading-schema.ts` to centralize Zod validation for meter selection and current reading input.
 - Added `src/features/readings/components/reading-form.tsx` as the specialized meter reading entry form showing the selected meter's customer, previous reading, and minimum valid next value before submission.
 - Added `src/features/readings/components/reading-list.tsx` and the protected route `src/app/(dashboard)/admin/readings/page.tsx` to review the latest encoded readings and confirm they are queued for approval.
 - Added a guarded delete action for mistaken encodings so staff can remove unbilled `PENDING_REVIEW` readings directly from the Step 3.1 queue before approval.
 - Updated `src/app/(dashboard)/admin/dashboard/page.tsx` to link directly to the new reading module.
-- **Pending User Verification:** Open `/admin/readings`, submit a reading where the current reading is greater than the displayed previous reading, and verify the saved record has the correct `consumption`, the correct local `readerId`, and a status of `PENDING_REVIEW`.
+- **User Verification:** User confirmed Step 3.1 was validated and work could proceed to Step 3.2.
 
 #### Notes for Future Developers (Step 3.1)
 - **Reader Identity Resolution:** The reading form never accepts `readerId` from the client. The server action always derives it from the authenticated Clerk user and the synced local Prisma `User` record.
 - **Previous Reading Source of Truth:** The client shows the latest saved reading for guidance, but the server action recalculates `previousReading` from the database again before persisting to prevent stale submissions.
 - **Mistake Correction Guardrail:** Deletion is only allowed while a reading is still `PENDING_REVIEW` and has no linked `Bill`, keeping Step 3.1 corrections separate from later approval and billing workflows.
-- **Step Boundary:** Do not start Step 3.2 reading approval until the user validates the Step 3.1 meter reading test.
+- **Step Boundary (Historical):** Step 3.1 is now closed. Continue with Step 3.2 reading approval, but do not start Step 3.3 until the user validates the approval workflow.
+
+### Step 3.2: Reading Approval Workflow - **[IMPLEMENTED - PENDING USER VALIDATION]**
+- Extended `src/features/readings/actions.ts` with authenticated approval Server Actions for single-reading approval and bulk approval, both enforcing that only `PENDING_REVIEW` readings can move to `APPROVED`.
+- Added `src/features/readings/components/approve-reading-button.tsx` for manual individual approval directly from the pending review queue.
+- Added `src/features/readings/components/pending-reading-approvals.tsx` to present all `PENDING_REVIEW` readings with select-all and bulk approval controls for billing review staff.
+- Updated `src/app/(dashboard)/admin/readings/page.tsx` to load the pending queue separately, surface the Step 3.2 approval dashboard, and keep recent reading history visible for audit and correction work.
+- Updated `src/app/(dashboard)/admin/dashboard/page.tsx` so the dashboard now points to the approval workflow as the current validated slice.
+- **Pending User Verification:** Open `/admin/readings`, approve the reading created in Step 3.1 using either the row-level Approve button or the bulk Approve selected action, and verify the saved database record updates its status from `PENDING_REVIEW` to `APPROVED`.
+
+#### Notes for Future Developers (Step 3.2)
+- **Approval Status Guardrail:** Both approval actions re-check the database and refuse to approve any reading that is no longer `PENDING_REVIEW`, preventing stale bulk selections from mutating already-processed rows.
+- **Bulk Review Scope:** The approval dashboard only lists `PENDING_REVIEW` readings, while the recent history table still shows mixed statuses so encoding and approval activity stay auditable on one page.
+- **Step Boundary:** Do not start Step 3.3 bill generation until the user validates the Step 3.2 approval test.
 
 ### Blockers / Next Steps
-- Waiting for user to validate Step 3.1 by creating a reading in `/admin/readings` and confirming the saved database record has the correct `readerId`, `consumption`, and `PENDING_REVIEW` status.
-- Do not start **Step 3.2** until the user validates the Step 3.1 test.
+- Waiting for user to validate Step 3.2 by approving a pending reading in `/admin/readings` and confirming the saved database record updates from `PENDING_REVIEW` to `APPROVED`.
+- Do not start **Step 3.3** until the user validates the Step 3.2 test.

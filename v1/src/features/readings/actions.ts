@@ -146,3 +146,96 @@ export async function deleteReading(readingId: string) {
   revalidatePath("/admin/readings");
   revalidatePath("/admin/dashboard");
 }
+
+export async function approveReading(readingId: string) {
+  await requireAuthenticatedReader();
+
+  const reading = await prisma.reading.findUnique({
+    where: {
+      id: readingId,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+
+  if (!reading) {
+    throw new Error("That reading no longer exists.");
+  }
+
+  if (reading.status !== ReadingStatus.PENDING_REVIEW) {
+    throw new Error("Only pending-review readings can be approved.");
+  }
+
+  const approvedReading = await prisma.reading.update({
+    where: {
+      id: reading.id,
+    },
+    data: {
+      status: ReadingStatus.APPROVED,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+
+  revalidatePath("/admin/readings");
+  revalidatePath("/admin/dashboard");
+
+  return approvedReading;
+}
+
+export async function approveReadings(readingIds: string[]) {
+  await requireAuthenticatedReader();
+
+  const uniqueReadingIds = [...new Set(readingIds.filter(Boolean))];
+
+  if (uniqueReadingIds.length === 0) {
+    throw new Error("Select at least one pending reading to approve.");
+  }
+
+  const readings = await prisma.reading.findMany({
+    where: {
+      id: {
+        in: uniqueReadingIds,
+      },
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+
+  if (readings.length !== uniqueReadingIds.length) {
+    throw new Error("One or more selected readings no longer exist.");
+  }
+
+  const nonPendingReading = readings.find(
+    (reading) => reading.status !== ReadingStatus.PENDING_REVIEW
+  );
+
+  if (nonPendingReading) {
+    throw new Error("Only pending-review readings can be bulk approved.");
+  }
+
+  const result = await prisma.reading.updateMany({
+    where: {
+      id: {
+        in: uniqueReadingIds,
+      },
+      status: ReadingStatus.PENDING_REVIEW,
+    },
+    data: {
+      status: ReadingStatus.APPROVED,
+    },
+  });
+
+  revalidatePath("/admin/readings");
+  revalidatePath("/admin/dashboard");
+
+  return {
+    approvedCount: result.count,
+  };
+}

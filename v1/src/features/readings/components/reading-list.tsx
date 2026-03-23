@@ -29,10 +29,10 @@ export function ReadingList({ readings }: ReadingListProps) {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Reading Queue
+            Reading History
           </p>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Recently encoded readings
+            Recent encoding activity
           </h2>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -109,7 +109,7 @@ export function ReadingList({ readings }: ReadingListProps) {
                     colSpan={8}
                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                   >
-                    No readings yet. Submit the first meter reading with the form on this page.
+                    No readings have been recorded yet.
                   </td>
                 </tr>
               )}

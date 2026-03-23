@@ -56,6 +56,13 @@
 - **`src/features/readings/lib/reading-schema.ts`**: Shared Zod schema for meter reading input so client and server validation remain aligned on meter identity and reading values.
 - **Dashboard Navigation Extension:** `src/app/(dashboard)/admin/dashboard/page.tsx` now links directly to `/admin/readings`, making Step 3.1 the current validation surface after tariff setup.
 
+## Physical Architecture Insights (Phase 3.2 Reading Approval Workflow)
+- **`src/app/(dashboard)/admin/readings/page.tsx`**: Now composes three reading sub-surfaces on one protected route: encoding, pending approval review, and recent reading history.
+- **`src/features/readings/actions.ts`**: Now also contains `approveReading` and `approveReadings`. Both Server Actions verify authentication internally, confirm every targeted reading still has `PENDING_REVIEW` status, update the status to `APPROVED`, and revalidate `/admin/readings` plus `/admin/dashboard`.
+- **`src/features/readings/components/pending-reading-approvals.tsx`**: Owns the Step 3.2 billing review table, including client-side selection state for bulk approval and row-level approval/delete controls.
+- **`src/features/readings/components/approve-reading-button.tsx`**: Isolated client control for individual approval, keeping mutation wiring separate from the approval table layout.
+- **Approval Queue Boundary:** Step 3.2 only changes reading status from `PENDING_REVIEW` to `APPROVED`. No bill generation logic is attached yet; Step 3.3 remains a separate workflow after user validation.
+
 ## Database Schema (Prisma Draft)
 
 ```prisma

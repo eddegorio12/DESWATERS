@@ -67,8 +67,8 @@ export default async function AdminDashboardPage() {
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">Next validated slice</p>
               <p className="text-sm leading-6 text-muted-foreground">
-                Step 3.1 adds the meter reading encoding workflow so field readings can be
-                captured with an authenticated staff reader and queued for review.
+                Step 3.2 extends the reading module with billing review controls so
+                pending readings can be approved individually or in bulk before billing.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">

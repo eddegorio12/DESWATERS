@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { MeterStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { PendingReadingApprovals } from "@/features/readings/components/pending-reading-approvals";
 import { ReadingForm } from "@/features/readings/components/reading-form";
 import { ReadingList } from "@/features/readings/components/reading-list";
 import { prisma } from "@/lib/prisma";
@@ -17,7 +18,7 @@ export default async function AdminReadingsPage() {
     return null;
   }
 
-  const [meters, readings] = await Promise.all([
+  const [meters, pendingReadings, readings] = await Promise.all([
     prisma.meter.findMany({
       where: {
         customerId: {
@@ -40,6 +41,35 @@ export default async function AdminReadingsPage() {
           take: 1,
           select: {
             currentReading: true,
+          },
+        },
+      },
+    }),
+    prisma.reading.findMany({
+      where: {
+        status: "PENDING_REVIEW",
+      },
+      orderBy: [{ readingDate: "asc" }],
+      select: {
+        id: true,
+        readingDate: true,
+        previousReading: true,
+        currentReading: true,
+        consumption: true,
+        meter: {
+          select: {
+            meterNumber: true,
+            customer: {
+              select: {
+                accountNumber: true,
+                name: true,
+              },
+            },
+          },
+        },
+        reader: {
+          select: {
+            name: true,
           },
         },
       },
@@ -90,14 +120,14 @@ export default async function AdminReadingsPage() {
         <header className="flex flex-col gap-4 rounded-3xl border border-border bg-background px-6 py-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-              Step 3.1
+              Step 3.2
             </p>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground">
-              Meter Reading Encoding
+              Reading Approval Workflow
             </h1>
             <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-              Capture new meter readings, derive the previous reading from the latest saved
-              value, and queue each submission for billing review.
+              Review the pending reading queue, approve readings individually or in bulk,
+              and keep encoding history visible for audit and correction work.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -129,8 +159,10 @@ export default async function AdminReadingsPage() {
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
           <ReadingForm meters={meterOptions} />
-          <ReadingList readings={readings} />
         </section>
+
+        <PendingReadingApprovals readings={pendingReadings} />
+        <ReadingList readings={readings} />
       </div>
     </main>
   );
