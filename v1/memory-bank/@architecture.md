@@ -21,6 +21,13 @@
 - **`src/components/ui/`**: Reserved exclusively for `shadcn/ui` primitive components (like `button`, `input`, `card`). Do not pollute this with feature-specific components.
 - **`prisma/`**: Contains the Prisma schema. It is the single source of truth for our database definitions.
 
+## Physical Architecture Insights (Phase 1.3 Auth Integration)
+- **`src/proxy.ts`**: Route protection for Clerk on Next.js 16 lives here. All `/admin/*` routes are guarded through `clerkMiddleware()` and `createRouteMatcher()`.
+- **`src/app/(auth)/`**: Contains the custom authentication routes (`/sign-in`, `/sign-up`) rendered with Clerk UI components.
+- **`src/app/(dashboard)/admin/dashboard/page.tsx`**: Current protected validation surface for auth. It is intentionally minimal and exists to verify redirect and provisioning behavior before the real admin modules are built.
+- **`src/features/auth/`**: Holds authentication-specific modules. Shared auth UI wrappers live under `components/`, Clerk styling is isolated in `lib/`, and first-login provisioning lives in `actions/`.
+- **`src/lib/prisma.ts`**: Central Prisma singleton for App Router server components and server actions. Reuse this instead of instantiating `PrismaClient` ad hoc in features. In the current local SQLite mode, it is configured with Prisma v7's `@prisma/adapter-better-sqlite3` driver adapter.
+
 ## Database Schema (Prisma Draft)
 
 ```prisma
