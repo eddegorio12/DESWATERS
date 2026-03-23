@@ -63,6 +63,14 @@
 - **`src/features/readings/components/approve-reading-button.tsx`**: Isolated client control for individual approval, keeping mutation wiring separate from the approval table layout.
 - **Approval Queue Boundary:** Step 3.2 only changes reading status from `PENDING_REVIEW` to `APPROVED`. No bill generation logic is attached yet; Step 3.3 remains a separate workflow after user validation.
 
+## Physical Architecture Insights (Phase 3.3 Billing Module)
+- **`src/app/(dashboard)/admin/billing/page.tsx`**: Protected billing route for Step 3.3. It server-renders the active tariff summary, the queue of approved unbilled readings, and the current open bills list.
+- **`src/features/billing/actions.ts`**: Contains `generateBill`. The Server Action verifies the Clerk session and local staff profile, ensures the selected reading is `APPROVED` and still unbilled, fetches the active tariff, computes `totalCharges`, creates a new `Bill` with `UNPAID` status, and revalidates `/admin/billing`, `/admin/readings`, and `/admin/dashboard`.
+- **`src/features/billing/lib/billing-calculations.ts`**: Centralizes progressive tariff math, billing period formatting, due-date derivation, and currency formatting so billing behavior stays aligned across actions and UI.
+- **`src/features/billing/components/approved-reading-bill-queue.tsx`**: Presents the approved-reading work queue for manual bill generation and surfaces the currently active tariff being used for computation.
+- **`src/features/billing/components/generate-bill-button.tsx`**: Isolated client control that invokes bill generation from the approved reading queue.
+- **`src/features/billing/components/unpaid-bill-list.tsx`**: Presents generated bills whose statuses are still open (`UNPAID`, `PARTIALLY_PAID`, or `OVERDUE`) so Step 3.3 has a visible accounts-receivable surface before payments are built.
+
 ## Database Schema (Prisma Draft)
 
 ```prisma

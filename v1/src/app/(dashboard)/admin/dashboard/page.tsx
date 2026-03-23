@@ -67,8 +67,8 @@ export default async function AdminDashboardPage() {
             <div className="space-y-1">
               <p className="text-sm font-medium text-foreground">Next validated slice</p>
               <p className="text-sm leading-6 text-muted-foreground">
-                Step 3.2 extends the reading module with billing review controls so
-                pending readings can be approved individually or in bulk before billing.
+                Step 3.3 turns approved readings into unpaid bills using the active
+                progressive tariff, while keeping open bill records visible for review.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -100,6 +100,12 @@ export default async function AdminDashboardPage() {
                 className={cn(buttonVariants({ className: "h-10 rounded-xl px-4" }))}
               >
                 Reading module
+              </Link>
+              <Link
+                href="/admin/billing"
+                className={cn(buttonVariants({ className: "h-10 rounded-xl px-4" }))}
+              >
+                Billing module
               </Link>
             </div>
           </div>

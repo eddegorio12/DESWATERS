@@ -132,6 +132,17 @@ export default async function AdminReadingsPage() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <Link
+              href="/admin/billing"
+              className={cn(
+                buttonVariants({
+                  variant: "outline",
+                  className: "h-10 rounded-xl px-4",
+                })
+              )}
+            >
+              Billing module
+            </Link>
+            <Link
               href="/admin/tariffs"
               className={cn(
                 buttonVariants({

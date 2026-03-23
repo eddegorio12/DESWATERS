@@ -93,19 +93,34 @@
 - **Mistake Correction Guardrail:** Deletion is only allowed while a reading is still `PENDING_REVIEW` and has no linked `Bill`, keeping Step 3.1 corrections separate from later approval and billing workflows.
 - **Step Boundary (Historical):** Step 3.1 is now closed. Continue with Step 3.2 reading approval, but do not start Step 3.3 until the user validates the approval workflow.
 
-### Step 3.2: Reading Approval Workflow - **[IMPLEMENTED - PENDING USER VALIDATION]**
+### Step 3.2: Reading Approval Workflow - **[IMPLEMENTED - USER VALIDATED]**
 - Extended `src/features/readings/actions.ts` with authenticated approval Server Actions for single-reading approval and bulk approval, both enforcing that only `PENDING_REVIEW` readings can move to `APPROVED`.
 - Added `src/features/readings/components/approve-reading-button.tsx` for manual individual approval directly from the pending review queue.
 - Added `src/features/readings/components/pending-reading-approvals.tsx` to present all `PENDING_REVIEW` readings with select-all and bulk approval controls for billing review staff.
 - Updated `src/app/(dashboard)/admin/readings/page.tsx` to load the pending queue separately, surface the Step 3.2 approval dashboard, and keep recent reading history visible for audit and correction work.
 - Updated `src/app/(dashboard)/admin/dashboard/page.tsx` so the dashboard now points to the approval workflow as the current validated slice.
-- **Pending User Verification:** Open `/admin/readings`, approve the reading created in Step 3.1 using either the row-level Approve button or the bulk Approve selected action, and verify the saved database record updates its status from `PENDING_REVIEW` to `APPROVED`.
+- **User Verification:** User confirmed Step 3.2 was validated and work could proceed to Step 3.3.
 
 #### Notes for Future Developers (Step 3.2)
 - **Approval Status Guardrail:** Both approval actions re-check the database and refuse to approve any reading that is no longer `PENDING_REVIEW`, preventing stale bulk selections from mutating already-processed rows.
 - **Bulk Review Scope:** The approval dashboard only lists `PENDING_REVIEW` readings, while the recent history table still shows mixed statuses so encoding and approval activity stay auditable on one page.
-- **Step Boundary:** Do not start Step 3.3 bill generation until the user validates the Step 3.2 approval test.
+- **Step Boundary (Historical):** Step 3.2 is now closed. Continue with Step 3.3 bill generation, but do not start Step 3.4 until the user validates the billing workflow.
+
+### Step 3.3: Bill Generation Workflow (Progressive Tier Computing) - **[IMPLEMENTED - PENDING USER VALIDATION]**
+- Added `src/features/billing/actions.ts` with an authenticated Server Action that accepts an `APPROVED` reading, rejects duplicate billing attempts, fetches the active tariff, computes the bill total using progressive tiers, and creates an `UNPAID` `Bill`.
+- Added `src/features/billing/lib/billing-calculations.ts` to centralize progressive tier billing math, billing period formatting, due-date generation, and currency formatting for billing surfaces.
+- Added `src/features/billing/components/generate-bill-button.tsx` for manual bill generation directly from approved readings awaiting billing.
+- Added `src/features/billing/components/approved-reading-bill-queue.tsx` to show all approved readings without bills and surface the currently active tariff context during bill generation.
+- Added `src/features/billing/components/unpaid-bill-list.tsx` and the protected route `src/app/(dashboard)/admin/billing/page.tsx` to review open bill records after generation.
+- Updated `src/app/(dashboard)/admin/dashboard/page.tsx` and `src/app/(dashboard)/admin/readings/page.tsx` to link directly to the new billing module.
+- **Pending User Verification:** Open `/admin/billing`, generate a bill from an approved reading where `consumption` is `0` or `1` and verify the saved bill total is exactly the active tariff `minimumCharge` (for example, `25`). Then generate another bill where `consumption` is `8` and verify the saved bill total is exactly `390` when using the configured sample tariff tiers.
+
+#### Notes for Future Developers (Step 3.3)
+- **Bill Generation Guardrail:** Billing is allowed only for readings with `APPROVED` status and no existing linked bill. The server action re-checks both conditions before writing.
+- **Tariff Coverage Guardrail:** Progressive charge calculation now throws if the active tariff does not fully cover the billable usage range above `minimumUsage`, preventing silent underbilling from malformed tariff tiers.
+- **Current Billing Defaults:** Generated bills use the reading month as `billingPeriod`, set `usageAmount` from `Reading.consumption`, default to `UNPAID`, and currently assign a due date `15` days after the reading date.
+- **Step Boundary:** Do not start Step 3.4 payment recording until the user validates the Step 3.3 billing test.
 
 ### Blockers / Next Steps
-- Waiting for user to validate Step 3.2 by approving a pending reading in `/admin/readings` and confirming the saved database record updates from `PENDING_REVIEW` to `APPROVED`.
-- Do not start **Step 3.3** until the user validates the Step 3.2 test.
+- Waiting for user to validate Step 3.3 by generating bills in `/admin/billing` and confirming the saved totals match the active progressive tariff.
+- Do not start **Step 3.4** until the user validates the Step 3.3 test.
