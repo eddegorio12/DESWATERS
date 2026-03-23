@@ -36,20 +36,46 @@ export async function syncCurrentUser() {
     throw new Error("Clerk user profile is missing a primary email address.");
   }
 
-  const localUser = await prisma.user.upsert({
-    where: { clerkId: userId },
-    update: {
-      email,
-      name,
-      active: true,
-    },
-    create: {
-      clerkId: userId,
-      email,
-      name,
-      role: Role.CUSTOMER_SERVICE,
-      active: true,
-    },
+  const localUser = await prisma.$transaction(async (tx) => {
+    const existingByClerkId = await tx.user.findUnique({
+      where: { clerkId: userId },
+    });
+
+    if (existingByClerkId) {
+      return tx.user.update({
+        where: { id: existingByClerkId.id },
+        data: {
+          email,
+          name,
+          active: true,
+        },
+      });
+    }
+
+    const existingByEmail = await tx.user.findUnique({
+      where: { email },
+    });
+
+    if (existingByEmail) {
+      return tx.user.update({
+        where: { id: existingByEmail.id },
+        data: {
+          clerkId: userId,
+          name,
+          active: true,
+        },
+      });
+    }
+
+    return tx.user.create({
+      data: {
+        clerkId: userId,
+        email,
+        name,
+        role: Role.CUSTOMER_SERVICE,
+        active: true,
+      },
+    });
   });
 
   revalidatePath("/admin/dashboard");

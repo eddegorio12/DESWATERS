@@ -32,7 +32,7 @@ export function ApprovedReadingBillQueue({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-2">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Step 3.3
+            Billing Queue
           </p>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
             Approved readings ready for billing

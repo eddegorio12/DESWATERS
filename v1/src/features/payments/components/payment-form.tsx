@@ -118,7 +118,7 @@ export function PaymentForm({ bills }: PaymentFormProps) {
     <section className="rounded-3xl border border-border bg-background p-6 shadow-sm">
       <div className="space-y-2">
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Step 3.4
+          Cashier Entry
         </p>
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">
           Record a manual payment
@@ -239,7 +239,7 @@ export function PaymentForm({ bills }: PaymentFormProps) {
           <p className="mt-2 text-sm text-muted-foreground">
             {requiresReference
               ? "Use this for transfer, wallet, or card references."
-              : "Optional for cash receipts in Step 3.4."}
+              : "Optional for cash receipts."}
           </p>
           <p className="mt-2 text-sm text-destructive">
             {form.formState.errors.referenceId?.message}

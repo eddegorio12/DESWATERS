@@ -4,8 +4,12 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "DESWATERS Admin",
-  description: "Administrative workspace for DESWATERS utility operations.",
+  title: {
+    default: "DESWATERS",
+    template: "%s",
+  },
+  description:
+    "DESWATERS is a water utility operations platform for customer records, metering, billing, cashiering, and collections reporting.",
 };
 
 export default function RootLayout({

@@ -147,13 +147,23 @@
 - **Step Boundary:** Step 4.1 is limited to daily collections visibility. Do not assume unpaid-account reporting or trend analytics are included yet unless a later step explicitly adds them.
 
 ### Final Site Polish - **[IMPLEMENTED]**
-- Updated `src/app/page.tsx` so the public entry page now describes the finished DESWATERS admin product instead of the original validation flow.
+- Replaced the old root page with a dedicated public marketing route group under `src/app/(marketing)/`, including the landing page plus supporting `/platform`, `/workflows`, and `/rollout` pages.
+- Added shared public-site composition under `src/features/marketing/` for the marketing shell, navigation, footer, and centralized content data.
 - Updated `src/app/(dashboard)/admin/dashboard/page.tsx` into an operations hub with live counts for customers, active meters, pending readings, approved readings awaiting billing, open bills, and today’s collections.
-- Updated the billing, payments, and collections route headers to use production-facing labels instead of step-based milestone copy.
+- Removed step-based milestone copy from user-facing admin pages and workflow panels so the protected app reads as a finished product surface instead of a build checklist.
 - The current site state is now treated as the finalized MVP admin surface for DESWATERS.
 
 ### Blockers / Next Steps
 - No active MVP blockers are recorded in the memory-bank. Future work should be scoped as new phases or explicit enhancement requests.
+
+### Auth Sync Reconciliation - **[IMPLEMENTED]**
+- Updated `src/features/auth/actions/sync-current-user.ts` so first-login sync no longer fails when a local `User` row already exists with the same unique `email`.
+- The sync now checks for an existing local user by `clerkId` first, then reconciles by `email`, attaching the authenticated Clerk ID to that existing record before falling back to creating a new user.
+- **Verification:** `npm run lint` passed after the sync logic change.
+
+#### Notes for Future Developers (Auth Sync Reconciliation)
+- **Duplicate Prevention Rule:** Do not assume a missing `clerkId` means it is safe to create a new `User`. Existing seeded or manually created staff rows may already own the same unique email address.
+- **Current Sync Strategy:** The first-login flow now treats `email` as the reconciliation fallback when `clerkId` is not yet attached. If roles are pre-seeded locally, this preserves the existing role instead of creating a second user row.
 
 ### Billing Rules & Printable Consumer Bill Template - **[IMPLEMENTED]**
 - Updated `src/features/billing/lib/billing-calculations.ts` so bill issue date is derived as the `5th` day of the following month, due date is `10` days after the bill issue date, and grace period ends `5` days after due date.

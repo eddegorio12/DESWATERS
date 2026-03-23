@@ -74,7 +74,7 @@ export function PendingReadingApprovals({ readings }: PendingReadingApprovalsPro
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-2">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Step 3.2
+            Review Queue
           </p>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
             Pending reading approvals

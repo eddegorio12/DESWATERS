@@ -43,14 +43,14 @@ export default async function AdminCustomersPage() {
         <header className="flex flex-col gap-4 rounded-3xl border border-border bg-background px-6 py-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-              Step 2.1
+              Customer Operations
             </p>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground">
               Customer Management
             </h1>
             <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
               Create customer records and review linked service meters from the same
-              registry after Step 2.2 assignments.
+              registry alongside current meter assignments.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">

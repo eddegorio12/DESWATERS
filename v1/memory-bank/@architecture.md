@@ -26,11 +26,18 @@
 - **`src/app/(auth)/`**: Contains the custom authentication routes (`/sign-in`, `/sign-up`) rendered with Clerk UI components.
 - **`src/app/(dashboard)/admin/dashboard/page.tsx`**: Now serves as the final operations hub for the MVP. It still hosts the first-login sync trigger, but also aggregates current operational counts and links to all live admin modules.
 - **`src/features/auth/`**: Holds authentication-specific modules. Shared auth UI wrappers live under `components/`, Clerk styling is isolated in `lib/`, and first-login provisioning lives in `actions/`.
+- **`src/features/auth/actions/sync-current-user.ts`**: The first-login sync now reconciles local staff records by `clerkId` first and by unique `email` second. This prevents duplicate-user failures when a local staff row already exists before Clerk is linked.
 - **`src/lib/prisma.ts`**: Central Prisma singleton for App Router server components and server actions. Reuse this instead of instantiating `PrismaClient` ad hoc in features. In the current local SQLite mode, it is configured with Prisma v7's `@prisma/adapter-better-sqlite3` driver adapter.
 
 ## Physical Architecture Insights (Final MVP Shell)
-- **`src/app/page.tsx`**: Public entry page for the finished MVP. It now presents the DESWATERS admin system as a complete operations product rather than a setup validation screen.
+- **`src/app/(marketing)/page.tsx`**: Public entry page for the finished MVP. It now presents the DESWATERS admin system as a complete operations product rather than a setup validation screen.
 - **Dashboard Aggregation Pattern:** The admin dashboard now performs lightweight server-side aggregation for counts and today’s collections summary. This is acceptable for the MVP shell, but heavier analytics should move into dedicated reporting modules if reporting scope expands later.
+
+## Physical Architecture Insights (Public Marketing Surface)
+- **`src/app/(marketing)/`**: Public route group for the DESWATERS marketing site. It now owns the root landing page plus supporting public pages like `/platform`, `/workflows`, and `/rollout` without affecting the protected admin route URLs.
+- **`src/features/marketing/components/`**: Shared marketing shell, header, footer, and section primitives. Public site composition stays out of `src/components/ui/` so shared primitive components remain focused on app-wide building blocks.
+- **`src/features/marketing/lib/site-content.ts`**: Centralized marketing copy and navigation data used across public routes. This keeps page files slimmer and makes future copy updates less error-prone.
+- **Admin UI Language Update:** The protected operations pages now use production-facing section labels instead of step-based milestone copy, separating internal build history from live product language.
 
 ## Physical Architecture Insights (Phase 2.1 Customer Module)
 - **`src/app/(dashboard)/admin/customers/page.tsx`**: Protected customer management route for Step 2.1. It stays server-rendered and fetches the current customer list directly from Prisma.

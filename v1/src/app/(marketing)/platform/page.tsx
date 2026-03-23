@@ -1,0 +1,130 @@
+import type { Metadata } from "next";
+import {
+  BarChart3,
+  FileSpreadsheet,
+  FolderKanban,
+  HandCoins,
+  Layers3,
+  ShieldCheck,
+} from "lucide-react";
+
+import { PageHero } from "@/features/marketing/components/page-hero";
+import { SectionHeading } from "@/features/marketing/components/section-heading";
+import {
+  moduleHighlights,
+  platformPillars,
+  reportingHighlights,
+} from "@/features/marketing/lib/site-content";
+
+export const metadata: Metadata = {
+  title: "Platform | DESWATERS",
+  description:
+    "A closer look at the DESWATERS platform architecture, modular workflow design, and utility operations coverage.",
+};
+
+const pillarIcons = [Layers3, ShieldCheck, FolderKanban];
+const sectionIcons = [FileSpreadsheet, HandCoins, BarChart3];
+
+export default function PlatformPage() {
+  return (
+    <div className="space-y-20 pb-24 pt-10">
+      <PageHero
+        eyebrow="Platform"
+        title="A modular utility platform with a clear operating model."
+        description="DESWATERS is structured around the work staff actually perform, with separate modules for records, billing, cashiering, and reports instead of one overcrowded screen."
+      />
+
+      <section className="grid gap-5 lg:grid-cols-3">
+        {platformPillars.map((pillar, index) => {
+          const Icon = pillarIcons[index];
+
+          return (
+            <article
+              key={pillar.title}
+              className="rounded-[2rem] border border-border/70 bg-white/88 p-6 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.55)]"
+            >
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                <Icon className="size-5" />
+              </div>
+              <h2 className="mt-5 font-heading text-2xl text-foreground">{pillar.title}</h2>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                {pillar.description}
+              </p>
+            </article>
+          );
+        })}
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
+        <article className="rounded-[2rem] border border-border/70 bg-white/90 p-8 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.55)]">
+          <SectionHeading
+            eyebrow="Module Map"
+            title="Each business function has a dedicated surface."
+            description="That separation keeps DESWATERS easier to extend, easier to maintain, and safer for role-based work."
+          />
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            {moduleHighlights.map((item) => (
+              <div
+                key={item.title}
+                className="rounded-[1.5rem] border border-border/70 bg-secondary/35 p-5"
+              >
+                <p className="text-base font-semibold text-foreground">{item.title}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {item.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="rounded-[2rem] border border-primary/10 bg-[#0f3f43] p-8 text-primary-foreground shadow-[0_28px_90px_-60px_rgba(15,63,67,1)]">
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary-foreground/70">
+            Product Principles
+          </p>
+          <div className="mt-8 space-y-4">
+            {[
+              "Keep the public site, admin workspace, and future portal inside one maintainable codebase.",
+              "Use server-rendered routes for business-critical surfaces and keep the app structure lean.",
+              "Protect operational actions through authentication and role-aware data boundaries.",
+              "Make reports traceable back to the underlying reading, bill, and payment records.",
+            ].map((item) => (
+              <div
+                key={item}
+                className="flex gap-3 rounded-[1.4rem] border border-white/12 bg-white/6 px-4 py-4 text-sm leading-6 text-primary-foreground/80"
+              >
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#8ce1d5]" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+        </article>
+      </section>
+
+      <section className="space-y-8">
+        <SectionHeading
+          eyebrow="Visibility"
+          title="Reporting is treated as a first-class operational layer."
+          description="The platform is designed so teams can understand present-day cash movement and unfinished utility work without leaving the system."
+        />
+        <div className="grid gap-5 md:grid-cols-3">
+          {reportingHighlights.map((item, index) => {
+            const Icon = sectionIcons[index];
+
+            return (
+              <article
+                key={item.title}
+                className="rounded-[2rem] border border-border/70 bg-white/88 p-6 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.55)]"
+              >
+                <Icon className="size-5 text-primary" />
+                <h3 className="mt-5 font-heading text-2xl text-foreground">{item.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                  {item.description}
+                </p>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    </div>
+  );
+}

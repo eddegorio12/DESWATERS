@@ -89,7 +89,7 @@ export function ReadingForm({ meters }: ReadingFormProps) {
     <section className="rounded-3xl border border-border bg-background p-6 shadow-sm">
       <div className="space-y-2">
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Step 3.1
+          Field Entry
         </p>
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">
           Encode a meter reading

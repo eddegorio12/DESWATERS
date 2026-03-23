@@ -44,7 +44,7 @@ export default async function AdminTariffsPage() {
         <header className="flex flex-col gap-4 rounded-3xl border border-border bg-background px-6 py-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-              Step 2.3
+              Billing Rules
             </p>
             <h1 className="text-3xl font-semibold tracking-tight text-foreground">
               Tariff Configuration
