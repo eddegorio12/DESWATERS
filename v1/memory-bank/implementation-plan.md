@@ -50,12 +50,13 @@ This document now reflects the **implemented MVP state** of the DESWATERS applic
 2. Landing page plus `/platform`, `/workflows`, and `/rollout` pages implemented to present DESWATERS as a finished product instead of a setup placeholder.
 3. Shared marketing shell, navigation, footer, and centralized content model implemented under `src/features/marketing/`.
 4. User-facing admin pages updated to use production-facing labels instead of step-based milestone copy.
+5. Admin dashboard redesigned with `ui-ux-pro-max` guidance in fallback mode to improve hierarchy, module navigation, and operations visibility.
 
 **Delivered outcome:** The repo now presents a coherent public product surface and a cleaner protected operations UI, with internal build history separated from live user-facing language.
 
 ## Current MVP Validation Targets
 1. Open `/`, `/platform`, `/workflows`, and `/rollout` and confirm the public product site loads with the shared marketing shell and navigation.
-2. Sign in and confirm `/admin/dashboard` loads with live operations counts and no first-login sync failure for pre-existing staff emails.
+2. Sign in and confirm `/admin/dashboard` loads with live operations counts, no first-login sync failure for pre-existing staff emails, and the new operations-control layout.
 3. Open a core admin module such as `/admin/meters` or `/admin/tariffs` and confirm step-based milestone labels are no longer shown in the UI.
 4. Create or review a customer, assigned meter, active tariff, approved reading, generated bill, and recorded payment.
 5. Open `/admin/billing/[billId]` through the billing table and confirm the printable consumer bill shows the correct issue date, due date, grace period, and disconnection penalty notice.
@@ -71,3 +72,4 @@ This document now reflects the **implemented MVP state** of the DESWATERS applic
 4. Introduce automated overdue handling and any future disconnection workflow logic, if the business wants system-enforced penalties rather than display-only notices.
 5. Add role-based authorization beyond authentication and local role storage.
 6. Add official receipt generation, installment handling, or customer credit logic if the cashier workflow expands beyond exact-balance settlement.
+7. Restore executable local Python support for the installed `ui-ux-pro-max` workflow so future UI passes can use the searchable `--design-system` script rather than written-rule fallback.

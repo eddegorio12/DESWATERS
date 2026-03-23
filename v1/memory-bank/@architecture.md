@@ -29,6 +29,10 @@
 - **`src/features/auth/actions/sync-current-user.ts`**: The first-login sync now reconciles local staff records by `clerkId` first and by unique `email` second. This prevents duplicate-user failures when a local staff row already exists before Clerk is linked.
 - **`src/lib/prisma.ts`**: Central Prisma singleton for App Router server components and server actions. Reuse this instead of instantiating `PrismaClient` ad hoc in features. In the current local SQLite mode, it is configured with Prisma v7's `@prisma/adapter-better-sqlite3` driver adapter.
 
+## Physical Architecture Insights (Dashboard Design Pass)
+- **`src/app/(dashboard)/admin/dashboard/page.tsx`**: The admin dashboard now uses a more intentional operations-control layout with a branded hero, grouped KPI cards, a workflow pulse section, and modular navigation cards instead of a plain stats-and-links screen.
+- **Design Guidance Source:** This redesign followed the installed `ui-ux-pro-max` skill in fallback mode using the skill's written rules because the local Python search script could not execute in this environment.
+
 ## Physical Architecture Insights (Final MVP Shell)
 - **`src/app/(marketing)/page.tsx`**: Public entry page for the finished MVP. It now presents the DESWATERS admin system as a complete operations product rather than a setup validation screen.
 - **Dashboard Aggregation Pattern:** The admin dashboard now performs lightweight server-side aggregation for counts and today’s collections summary. This is acceptable for the MVP shell, but heavier analytics should move into dedicated reporting modules if reporting scope expands later.
