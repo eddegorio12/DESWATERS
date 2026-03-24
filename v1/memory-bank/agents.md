@@ -19,6 +19,8 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - The live admin surface covers authentication, customers, meters, tariffs, readings, billing, payments, printable bills, collections reporting, and the marketing site.
 - The live admin surface now also includes receivables follow-up, disconnection tracking, and reinstatement workflow support.
 - EH5 follow-up actions now also support provider-backed customer notifications with auditable delivery logging.
+- First-time Clerk accounts now require explicit admin or manager approval before protected DWDS dashboard access is granted.
+- EH6 public-surface expansion is validated and closed.
 - The current intended database runtime is **PostgreSQL via Prisma v7**.
 - EH1 through EH5 are complete.
 

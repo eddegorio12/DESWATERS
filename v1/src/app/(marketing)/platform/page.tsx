@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import {
   BarChart3,
   FileSpreadsheet,
@@ -31,8 +32,19 @@ export default function PlatformPage() {
       <PageHero
         eyebrow="Platform"
         title="A modular utility platform with a clear operating model."
-        description="DWDS is structured around the work staff actually perform, with separate modules for records, billing, cashiering, and reports instead of one overcrowded screen."
-      />
+        description="DWDS is structured around the work staff actually perform, with separate modules for records, billing, cashiering, follow-up, and reports instead of one overcrowded screen."
+      >
+        <article className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/92 p-4 shadow-[0_24px_80px_-50px_rgba(12,60,64,0.45)]">
+          <Image
+            src="/marketing/dashboard-preview.svg"
+            alt="DWDS platform dashboard preview"
+            width={1200}
+            height={840}
+            className="h-auto w-full rounded-[1.5rem] border border-border/70"
+            priority
+          />
+        </article>
+      </PageHero>
 
       <section className="grid gap-5 lg:grid-cols-3">
         {platformPillars.map((pillar, index) => {

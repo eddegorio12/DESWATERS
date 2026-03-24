@@ -1,10 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
-import { Role } from "@prisma/client";
+import { Role, StaffApprovalStatus } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
 export type AdminModule =
   | "dashboard"
+  | "staffAccess"
   | "customers"
   | "meters"
   | "tariffs"
@@ -16,6 +17,7 @@ export type AdminModule =
   | "followUp";
 
 export type StaffCapability =
+  | "staff:approve"
   | "customers:create"
   | "meters:register"
   | "meters:assign"
@@ -39,6 +41,7 @@ const moduleAccess: Record<AdminModule, readonly Role[]> = {
     Role.BILLING_STAFF,
     Role.CASHIER,
   ],
+  staffAccess: [Role.ADMIN, Role.MANAGER],
   customers: [Role.ADMIN, Role.MANAGER, Role.CUSTOMER_SERVICE],
   meters: [Role.ADMIN, Role.MANAGER, Role.CUSTOMER_SERVICE],
   tariffs: [Role.ADMIN, Role.MANAGER, Role.BILLING_STAFF],
@@ -51,6 +54,7 @@ const moduleAccess: Record<AdminModule, readonly Role[]> = {
 };
 
 const capabilityAccess: Record<StaffCapability, readonly Role[]> = {
+  "staff:approve": [Role.ADMIN, Role.MANAGER],
   "customers:create": [Role.ADMIN, Role.MANAGER, Role.CUSTOMER_SERVICE],
   "meters:register": [Role.ADMIN, Role.MANAGER, Role.CUSTOMER_SERVICE],
   "meters:assign": [Role.ADMIN, Role.MANAGER, Role.CUSTOMER_SERVICE],
@@ -68,6 +72,7 @@ const capabilityAccess: Record<StaffCapability, readonly Role[]> = {
 
 const moduleLabels: Record<AdminModule, string> = {
   dashboard: "dashboard",
+  staffAccess: "staff access approvals",
   customers: "customer operations",
   meters: "meter operations",
   tariffs: "tariff controls",
@@ -80,6 +85,7 @@ const moduleLabels: Record<AdminModule, string> = {
 };
 
 const capabilityLabels: Record<StaffCapability, string> = {
+  "staff:approve": "approve staff access",
   "customers:create": "create customer records",
   "meters:register": "register meters",
   "meters:assign": "assign meters",
@@ -124,11 +130,14 @@ type CurrentStaffUser = {
   name: string;
   role: Role;
   active: boolean;
+  approvalStatus: StaffApprovalStatus;
 };
 
 export type ModuleAccessState =
   | { status: "signed_out" }
   | { status: "missing_profile" }
+  | { status: "pending"; user: CurrentStaffUser }
+  | { status: "rejected"; user: CurrentStaffUser }
   | { status: "inactive"; user: CurrentStaffUser }
   | { status: "forbidden"; user: CurrentStaffUser }
   | { status: "authorized"; user: CurrentStaffUser };
@@ -149,6 +158,7 @@ async function getCurrentStaffUser() {
       name: true,
       role: true,
       active: true,
+      approvalStatus: true,
     },
   });
 
@@ -183,6 +193,14 @@ export async function getModuleAccess(module: AdminModule): Promise<ModuleAccess
     return { status: "missing_profile" };
   }
 
+  if (current.user.approvalStatus === StaffApprovalStatus.PENDING) {
+    return { status: "pending", user: current.user };
+  }
+
+  if (current.user.approvalStatus === StaffApprovalStatus.REJECTED) {
+    return { status: "rejected", user: current.user };
+  }
+
   if (!current.user.active) {
     return { status: "inactive", user: current.user };
   }
@@ -201,10 +219,22 @@ export async function requireStaffCapability(capability: StaffCapability) {
     throw new Error("You must be signed in to continue.");
   }
 
-  if (!current.user || !current.user.active) {
+  if (!current.user) {
     throw new Error(
       "Your local staff profile is unavailable. Re-open the dashboard and let account sync complete."
     );
+  }
+
+  if (current.user.approvalStatus === StaffApprovalStatus.PENDING) {
+    throw new Error("Your staff access request is still pending admin or manager approval.");
+  }
+
+  if (current.user.approvalStatus === StaffApprovalStatus.REJECTED) {
+    throw new Error("Your staff access request was rejected. Contact an administrator.");
+  }
+
+  if (!current.user.active) {
+    throw new Error("Your approved DWDS staff profile is inactive. Ask an administrator to reactivate it.");
   }
 
   if (!canPerformCapability(current.user.role, capability)) {

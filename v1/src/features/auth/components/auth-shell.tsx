@@ -32,7 +32,7 @@ export function AuthShell({ title, description, children }: AuthShellProps) {
             <div className="rounded-2xl border border-border bg-background p-5">
               <p className="text-sm font-medium text-foreground">Local role record</p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                First login seeds the matching `User` row in Prisma using `clerkId`.
+                First login links a pre-approved staff record or submits a pending access request for review.
               </p>
             </div>
           </div>

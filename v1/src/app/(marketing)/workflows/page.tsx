@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import {
   CheckCircle2,
   ClipboardCheck,
@@ -25,8 +26,19 @@ export default function WorkflowsPage() {
       <PageHero
         eyebrow="Workflows"
         title="DWDS follows the same sequence your operations team already uses."
-        description="The product reduces handoff friction by keeping data connected across readings, bills, cashiering, and collections review."
-      />
+        description="The product reduces handoff friction by keeping data connected across readings, bills, cashiering, follow-up, and collections review."
+      >
+        <article className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/92 p-4 shadow-[0_24px_80px_-50px_rgba(12,60,64,0.45)]">
+          <Image
+            src="/marketing/billing-preview.svg"
+            alt="DWDS workflow billing preview"
+            width={1200}
+            height={840}
+            className="h-auto w-full rounded-[1.5rem] border border-border/70"
+            priority
+          />
+        </article>
+      </PageHero>
 
       <section className="space-y-8">
         <SectionHeading

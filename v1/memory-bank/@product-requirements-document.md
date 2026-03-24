@@ -14,6 +14,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH4 cashiering expansion is validated and closed.
 - EH5 overdue, disconnection, and email-first follow-up notification support are validated and closed.
 - EH5 now also includes customer-notification support for low-cost email and SMS follow-up.
+- EH6 public-surface expansion is now validated and closed after testing.
 
 ## Product Principles
 - **Modularity is mandatory:** Features must be separated into focused modules.
@@ -59,6 +60,7 @@ Expected outcomes:
 Current status:
 - Role-based authorization is now enforced in protected admin routes and server actions.
 - Mixed-access modules now expose read-only views where appropriate instead of relying on UI display alone.
+- First-time Clerk accounts now require explicit admin or manager approval before protected DWDS dashboard access is granted.
 
 ### EH3: Reporting & Receivables Intelligence
 Goal: Expand reporting beyond today's collections into a usable finance and follow-up workspace.
@@ -107,6 +109,11 @@ Expected outcomes:
 - richer marketing content and assets
 - future consumer portal routes
 - optional notifications and online-payment integrations when explicitly scoped
+
+Current status:
+- The marketing site now includes DWDS brand assets, screenshot-style product previews, and stronger deployment-ready copy for the implemented operational surface.
+- Consumer portal routes, public notifications, and online consumer payments remain deferred until explicitly approved.
+- EH6 has been validated and is now complete.
 
 ### EH7: Tooling & Design Workflow Recovery
 Goal: Restore the full local design-assistant workflow that is currently blocked by the Python environment.

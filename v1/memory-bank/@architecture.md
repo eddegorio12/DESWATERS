@@ -45,7 +45,7 @@
 - `src/app/(auth)/`
   - Clerk-powered sign-in and sign-up routes
 - `src/app/(dashboard)/admin/`
-  - Protected staff operations area for dashboard, customers, meters, tariffs, readings, billing, payments, and collections
+  - Protected staff operations area for dashboard, staff access approvals, customers, meters, tariffs, readings, billing, payments, and collections
 
 ### Cross-Cutting Modules
 - `src/proxy.ts`
@@ -53,7 +53,9 @@
 - `src/lib/prisma.ts`
   - Central Prisma singleton used by server components and server actions with environment-driven PostgreSQL connections
 - `src/features/auth/lib/authorization.ts`
-  - Central role matrix for protected module access and sensitive server-side capability checks
+  - Central role matrix for protected module access, staff approval state checks, and sensitive server-side capability checks
+- `src/features/auth/actions/review-staff-access.ts`
+  - Admin and manager approval actions for pending Clerk-linked staff accounts
 - `src/components/ui/`
   - Shared `shadcn/ui` primitives only
 
@@ -79,13 +81,14 @@
 - `src/features/notifications/`
   - Notification templates, provider integrations, phone normalization, and delivery logging for customer notices
 - `src/features/marketing/`
-  - Shared public-site layout, navigation, footer, and centralized site content
+  - Shared public-site layout, navigation, footer, brand lockup, screenshot showcase components, and centralized site content
 
 ## Implemented Workflow Boundaries
 
 ### Authentication
 - Clerk proves identity.
 - Local staff records are synchronized on first login.
+- Unknown Clerk identities now create pending local staff requests instead of automatically receiving active dashboard access.
 - Local role data is enforced through centralized route and capability checks before protected data loads or mutations execute.
 
 ### Meter Reading Workflow
@@ -165,6 +168,9 @@
 - Keep future consumer-portal routes separate from admin routes by route group, not by repository split.
 - Public marketing content should stay under `src/features/marketing/` unless a future consumer domain becomes large enough to justify its own feature tree.
 - Online payment or notification integrations should be attached to explicit feature modules when those channels are approved.
+- The current EH6 implementation adds reusable DWDS public brand assets under `public/brand/` and screenshot-style product previews under `public/marketing/`.
+- Marketing pages now present deployment-ready product evidence without introducing consumer-portal routes ahead of approval.
+- EH6 has been user-validated and is now closed.
 
 ### EH7: Tooling & Design Workflow Recovery
 - The installed `ui-ux-pro-max` skill remains the design guidance source.

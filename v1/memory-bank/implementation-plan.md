@@ -83,6 +83,9 @@ Current progress:
 - Protected admin routes now enforce role access before loading module data.
 - Server actions now reject authenticated-but-unauthorized staff for customer, meter, tariff, reading, billing, and payment mutations.
 - The readings and tariffs surfaces now degrade into role-appropriate read-only states where mutation authority is intentionally absent.
+- First-time Clerk sign-ins no longer self-provision active staff access by default.
+- Unknown Clerk accounts now land in a pending approval state until an admin or manager reviews them from `/admin/staff-access`.
+- Approved staff access, rejected requests, and deactivated staff access are now separate operational states in the auth layer.
 
 Implemented role access expectations:
 - `ADMIN`: full access across all protected admin modules and sensitive mutations.
@@ -158,7 +161,7 @@ Current progress:
 
 ### EH6: Product Surface Expansion
 **Priority:** Medium
-**Status:** Not started
+**Status:** Complete
 **Depends on:** MVP stability
 
 Scope:
@@ -168,6 +171,11 @@ Scope:
 
 Exit criteria:
 - Public and future customer-facing surfaces are supported intentionally rather than implied by MVP copy.
+
+Current progress:
+- The public marketing surface now includes reusable DWDS brand assets plus screenshot-style product previews aligned to the implemented dashboard, billing, and follow-up modules.
+- Home, platform, workflows, and rollout pages now use deployment-ready copy that distinguishes live operational scope from future consumer-facing expansion.
+- EH6 has been user-validated and is now closed. Do not begin EH7 unless the user explicitly approves that tooling work.
 
 ### EH7: Tooling & Design Workflow Recovery
 **Priority:** Low

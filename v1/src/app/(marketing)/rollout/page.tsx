@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import {
   ArrowUpRight,
   Building2,
@@ -25,8 +26,19 @@ export default function RolloutPage() {
       <PageHero
         eyebrow="Rollout Path"
         title="Start with operational accuracy, then expand into customer-facing services."
-        description="DWDS is being built in phases so the billing and collections core stays stable before additional channels are layered in."
-      />
+        description="DWDS is being built in phases so the billing, collections, and follow-up core stays stable before additional channels are layered in."
+      >
+        <article className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/92 p-4 shadow-[0_24px_80px_-50px_rgba(12,60,64,0.45)]">
+          <Image
+            src="/marketing/follow-up-preview.svg"
+            alt="DWDS rollout preview showing receivables follow-up operations"
+            width={1200}
+            height={840}
+            className="h-auto w-full rounded-[1.5rem] border border-border/70"
+            priority
+          />
+        </article>
+      </PageHero>
 
       <section className="space-y-8">
         <SectionHeading

@@ -44,6 +44,14 @@ const moduleCards: {
   icon: ComponentType<{ className?: string }>;
 }[] = [
   {
+    module: "staffAccess",
+    href: "/admin/staff-access",
+    title: "Staff access",
+    description: "Approve, reject, and reactivate Clerk-linked staff accounts before dashboard access is granted.",
+    action: "Review staff access",
+    icon: ShieldAlert,
+  },
+  {
     module: "customers",
     href: "/admin/customers",
     title: "Customer registry",
@@ -111,6 +119,7 @@ const moduleCards: {
 
 function getRoleCapabilities(role: Role) {
   return [
+    canPerformCapability(role, "staff:approve") ? "Staff approval" : null,
     canPerformCapability(role, "customers:create") ? "Customer and meter setup" : null,
     canPerformCapability(role, "readings:create") ? "Reading entry" : null,
     canPerformCapability(role, "readings:approve") ? "Reading approval" : null,
@@ -124,7 +133,12 @@ function getRoleCapabilities(role: Role) {
 export default async function AdminDashboardPage() {
   const access = await getModuleAccess("dashboard");
 
-  if (access.status === "signed_out" || access.status === "inactive") {
+  if (
+    access.status === "signed_out" ||
+    access.status === "inactive" ||
+    access.status === "pending" ||
+    access.status === "rejected"
+  ) {
     return <ModuleAccessStateView module="dashboard" access={access} />;
   }
 
@@ -149,8 +163,9 @@ export default async function AdminDashboardPage() {
                   Finish the first-login sync before opening DWDS modules.
                 </h1>
                 <p className="max-w-2xl text-sm leading-7 text-white/76 sm:text-base">
-                  Your Clerk session is active, but the local staff record still needs to be
-                  created. Stay on this page until the dashboard refresh completes.
+                  Your Clerk session is active, but the local DWDS staff profile still needs
+                  to be linked or requested. Stay on this page until the dashboard refresh
+                  completes.
                 </p>
               </div>
 

@@ -7,7 +7,7 @@ export default function SignInPage() {
   return (
     <AuthShell
       title="Sign in to the DEGORIO WATER DISTRIBUTION SERVICES admin system."
-      description="Use your Clerk account to access protected operations screens for billing, customer records, and metering workflows."
+      description="Use your Clerk account to request or open approved staff access for protected billing, customer, metering, and collections workflows."
     >
       <SignIn
         appearance={clerkAppearance}

@@ -7,7 +7,7 @@ export default function SignUpPage() {
   return (
     <AuthShell
       title="Create a DEGORIO WATER DISTRIBUTION SERVICES staff account."
-      description="This flow creates the Clerk identity first, then the app provisions the matching local user record when the protected dashboard loads."
+      description="This flow creates the Clerk identity first, then DWDS submits a staff access request that must be approved by an admin or manager before dashboard access is granted."
     >
       <SignUp
         appearance={clerkAppearance}

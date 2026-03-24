@@ -44,14 +44,26 @@ model User {
   name      String
   role      Role     @default(CUSTOMER_SERVICE)
   active    Boolean  @default(true)
+  approvalStatus StaffApprovalStatus @default(APPROVED)
+  approvalNote String?
+  approvalUpdatedAt DateTime?
+  approvalUpdatedById String?
+  approvalUpdatedBy User? @relation("StaffApprovalUpdatedBy", fields: [approvalUpdatedById], references: [id])
   
   readings  Reading[] // Meter readings performed by this user (if METER_READER)
   recordedPayments Payment[] @relation("RecordedPayments")
   receivableFollowUpUpdates Bill[] @relation("ReceivableFollowUpUpdatedBy")
   customerStatusUpdates Customer[] @relation("CustomerStatusUpdatedBy")
   triggeredNotifications NotificationLog[] @relation("TriggeredNotifications")
+  staffApprovalUpdates User[] @relation("StaffApprovalUpdatedBy")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum StaffApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum Role {

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 type FirstLoginSyncProps = {
   needsSync: boolean;
-  syncUser: () => Promise<{ localUserId: string; role: string }>;
+  syncUser: () => Promise<{ localUserId: string; role: string; approvalStatus: string }>;
 };
 
 export function FirstLoginSync({
@@ -29,7 +29,7 @@ export function FirstLoginSync({
         router.refresh();
       } catch (syncError) {
         console.error(syncError);
-        setError("We could not create your local staff profile automatically.");
+        setError("We could not submit or link your DWDS staff access request automatically.");
       }
     });
   }, [needsSync, router, syncUser]);

@@ -1,6 +1,6 @@
 "use server";
 
-import { Role } from "@prisma/client";
+import { Role, StaffApprovalStatus } from "@prisma/client";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
@@ -47,7 +47,6 @@ export async function syncCurrentUser() {
         data: {
           email,
           name,
-          active: true,
         },
       });
     }
@@ -62,7 +61,6 @@ export async function syncCurrentUser() {
         data: {
           clerkId: userId,
           name,
-          active: true,
         },
       });
     }
@@ -73,15 +71,20 @@ export async function syncCurrentUser() {
         email,
         name,
         role: Role.CUSTOMER_SERVICE,
-        active: true,
+        active: false,
+        approvalStatus: StaffApprovalStatus.PENDING,
+        approvalNote: "Awaiting admin or manager approval for first-time staff access.",
+        approvalUpdatedAt: new Date(),
       },
     });
   });
 
+  revalidatePath("/admin/staff-access");
   revalidatePath("/admin/dashboard");
 
   return {
     localUserId: localUser.id,
     role: localUser.role,
+    approvalStatus: localUser.approvalStatus,
   };
 }

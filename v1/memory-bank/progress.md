@@ -6,6 +6,7 @@
 - Future work is now tracked as named enhancement phases `EH1` through `EH7`.
 - EH3 and EH4 have now been validated.
 - EH5 has now been validated, including the email-first follow-up notification path.
+- EH6 has now been validated after public-surface testing.
 
 ## Implemented Milestones
 
@@ -14,6 +15,7 @@
 - Prisma was integrated and the current repo runtime was unblocked through a local SQLite setup.
 - Clerk authentication was added with protected admin routing.
 - First-login sync was later hardened to reconcile existing local users by `clerkId` first and `email` second.
+- Staff access now requires explicit admin or manager approval for first-time Clerk accounts before the dashboard opens.
 
 ### Core Records
 - Customer creation and listing were implemented.
@@ -29,6 +31,7 @@
 - Daily collections reporting was implemented for completed payments in the Manila operating day.
 - The marketing site and production-facing admin UI copy were implemented.
 - The admin dashboard was redesigned into a stronger operations hub.
+- The public marketing site now includes reusable DWDS brand assets, screenshot-style product previews, and clearer deployment-ready rollout messaging.
 
 ## Important Historical Constraints
 
@@ -41,6 +44,7 @@
 ### Authorization Constraint
 - Role-based authorization is now enforced in protected admin routes and server actions.
 - Staff access now follows an implemented route and mutation matrix for admin, manager, customer service, meter reader, billing staff, and cashier roles.
+- Unknown Clerk accounts are no longer auto-approved into DWDS staff access. They now create pending requests that must be approved from an admin review queue.
 
 ### Reporting Constraint
 - Reporting now includes **historical collections filters plus receivables visibility** in the admin reporting workspace.
@@ -86,12 +90,12 @@
 - Notes: Dedicated receivables follow-up workflow, server-side overdue status syncing, disconnection tracking, reinstatement guardrails, and low-cost SMS/email notification plumbing are implemented and validated.
 
 ### EH6: Product Surface Expansion
-- Status: `not started`
-- Notes: Marketing and consumer-facing expansion remain optional until the business asks for them explicitly.
+- Status: `complete`
+- Notes: Marketing expansion is implemented and user-validated through brand assets, product previews, and stronger deployment-ready copy. Consumer portal routes remain unstarted.
 
 ### EH7: Tooling & Design Workflow Recovery
 - Status: `not started`
 - Notes: Low product priority, but useful before another major UI redesign cycle.
 
 ## Current Next-Step Recommendation
-EH5 is closed. Do not begin **EH6** until the user explicitly approves that next phase.
+EH6 is closed. EH7 remains not started and should stay deferred unless the user explicitly asks to recover the local design-tooling workflow.

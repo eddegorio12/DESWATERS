@@ -58,6 +58,7 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 ### EH2: Authorization & Staff Controls
 - Keep **Clerk** for auth
 - Authorization is now implemented in app logic through the existing Prisma `Role` enum and the shared helper in `src/features/auth/lib/authorization.ts`
+- Clerk authentication is now paired with an app-native staff approval state before first-time users can enter protected DWDS routes
 - A future permission layer should only be introduced if the current role model becomes too coarse
 
 ### EH3: Reporting & Receivables Intelligence
@@ -82,6 +83,7 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 ### EH6: Product Surface Expansion
 - Keep marketing, future consumer routes, and admin routes in the same codebase
 - Add online-payment or notification vendors only when those channels are actively scoped
+- EH6 marketing-surface expansion is implemented, validated, and closed.
 
 ### EH7: Tooling & Design Workflow Recovery
 - The installed `ui-ux-pro-max` skill remains the design guidance layer

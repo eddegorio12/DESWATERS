@@ -10,6 +10,12 @@ export const footerLinks = [
   { href: "/sign-in", label: "Admin Access" },
 ];
 
+export const proofStatements = [
+  "Built from the live DWDS module structure, not placeholder product copy.",
+  "Ready to demo with role-based operations, printable outputs, and audit context.",
+  "Structured for deployment as one codebase across public and staff-facing surfaces.",
+] as const;
+
 export const siteStats = [
   {
     value: "6 core modules",
@@ -105,6 +111,75 @@ export const reportingHighlights = [
     title: "Linked audit trail",
     description:
       "Trace payment and billing state back to the underlying customer, meter, and reading records.",
+  },
+] as const;
+
+export const productShowcaseCards = [
+  {
+    title: "Operations dashboard",
+    description:
+      "A single control surface for live account volume, cashier movement, receivables pressure, and module-level utility work.",
+    imageSrc: "/marketing/dashboard-preview.svg",
+    imageAlt:
+      "DWDS operations dashboard preview showing left navigation, summary cards, and collections performance bars.",
+    href: "/platform",
+    ctaLabel: "See platform structure",
+  },
+  {
+    title: "Billing and statement review",
+    description:
+      "Approved readings, tariff-backed billing, and printable consumer statements stay connected so billing remains traceable.",
+    imageSrc: "/marketing/billing-preview.svg",
+    imageAlt:
+      "DWDS billing workspace preview with bill summary cards and line-item sections for statement review.",
+    href: "/workflows",
+    ctaLabel: "View workflow chain",
+  },
+  {
+    title: "Receivables follow-up",
+    description:
+      "Reminder, final-notice, disconnection review, and reinstatement work now sit in a dedicated operational queue.",
+    imageSrc: "/marketing/follow-up-preview.svg",
+    imageAlt:
+      "DWDS follow-up workspace preview showing overdue stages, account detail, and notification activity.",
+    href: "/rollout",
+    ctaLabel: "Review rollout path",
+  },
+] as const;
+
+export const launchReadiness = [
+  {
+    title: "Brand assets in place",
+    description:
+      "DWDS now has a reusable public wordmark, monogram, and consistent site identity for demos and deployment.",
+  },
+  {
+    title: "Public proof is product-aligned",
+    description:
+      "The marketing surface now shows concrete product views tied to the live module set instead of abstract promises.",
+  },
+  {
+    title: "Future expansion stays explicit",
+    description:
+      "Consumer portal, online payments, and broader notifications remain sequenced as later channels, not implied current features.",
+  },
+] as const;
+
+export const brandPrinciples = [
+  {
+    title: "Utility-first clarity",
+    description:
+      "The visual system stays readable, operational, and confident without borrowing consumer-fintech styling that does not fit the product.",
+  },
+  {
+    title: "One public story",
+    description:
+      "Screens, copy, and rollout messaging now describe the same DWDS product state the admin application already supports.",
+  },
+  {
+    title: "Deployment-ready positioning",
+    description:
+      "The site is now suitable for rollout conversations, internal demos, and early customer-facing presentation without placeholder language.",
   },
 ] as const;
 
