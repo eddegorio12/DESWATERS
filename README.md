@@ -19,6 +19,20 @@ Not implemented yet:
 - online customer payments
 - public customer-facing account access
 
+## Screenshots
+
+### Operations Dashboard
+
+![DWDS dashboard preview](./v1/public/marketing/dashboard-preview.svg)
+
+### Billing Review
+
+![DWDS billing preview](./v1/public/marketing/billing-preview.svg)
+
+### Receivables Follow-Up
+
+![DWDS follow-up preview](./v1/public/marketing/follow-up-preview.svg)
+
 ## Project Location
 
 The active Next.js application is inside [`v1/`](./v1).
