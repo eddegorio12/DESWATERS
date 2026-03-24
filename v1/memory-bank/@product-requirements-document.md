@@ -10,7 +10,8 @@ Build a modular, robust web-based utility operations system that starts with a s
 - The **MVP admin web app is implemented**.
 - The current live surface covers authentication, customer records, meter management, tariff setup, reading intake and approval, billing, payment encoding, printable consumer bills, daily collections reporting, and a public marketing site.
 - The repo now runs on a validated **PostgreSQL-first data path**.
-- EH3 reporting expansion is now implemented in code and awaiting validation before the roadmap advances to EH4.
+- EH3 reporting expansion is validated and closed.
+- EH4 cashiering expansion is now implemented in code and awaiting workflow validation.
 
 ## Product Principles
 - **Modularity is mandatory:** Features must be separated into focused modules.
@@ -68,7 +69,7 @@ Expected outcomes:
 
 Current status:
 - Historical date filtering, receivables visibility, and overdue reporting are implemented in the admin reporting workspace.
-- EH3 remains in validation until the user confirms the workflow.
+- EH3 has been validated and is now complete.
 
 ### EH4: Cashiering & Settlement Expansion
 Goal: Support a broader real-world cashier workflow after the exact-balance MVP flow.
@@ -77,6 +78,11 @@ Expected outcomes:
 - official receipt generation
 - installment or partial-payment policy support
 - customer credit or overpayment handling if approved by the business
+
+Current status:
+- Official receipt generation and partial-settlement cashier posting are implemented in the admin payments workspace.
+- Overpayment and customer-credit handling remain intentionally deferred until explicitly approved.
+- EH4 remains in validation until the user confirms the cashier and receipt workflow.
 
 ### EH5: Overdue & Disconnection Workflow
 Goal: Move from display-only penalty language to explicit receivables follow-up logic if the business wants enforced workflow support.

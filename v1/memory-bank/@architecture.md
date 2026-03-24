@@ -71,7 +71,7 @@
 - `src/features/billing/`
   - Billing math, bill generation, unpaid-bill surfaces, and printable bill actions/UI
 - `src/features/payments/`
-  - Manual payment validation, cashier entry UI, and payment history UI
+  - Manual payment validation, cashier entry UI, payment history UI, and printable receipt workflow
 - `src/features/reports/`
   - Historical collections filtering, receivables analytics, and reporting components
 - `src/features/marketing/`
@@ -96,7 +96,9 @@
 ### Payment Workflow
 - Payments are recorded manually against open bills.
 - Settlement is derived from cumulative `COMPLETED` payments.
-- Exact-balance discipline is enforced because customer credit handling does not yet exist.
+- Official receipts are generated from posted payments with cashier attribution and before/after balance snapshots.
+- Partial settlement is now explicit in the cashier workflow.
+- Overpayment is still blocked because customer credit handling does not yet exist.
 
 ### Reporting Workflow
 - Reporting now supports a Manila-aligned date range for completed payment history.
@@ -128,12 +130,14 @@
 - Keep date filtering, receivables calculations, and overdue summaries in dedicated reporting libs.
 - Add charts only when they serve an operational use case, not for decoration.
 - The current implementation now uses dedicated report libs for date-range parsing and receivables summarization under `src/features/reports/lib/`.
-- EH3 remains pending validation before it should be treated as closed.
+- EH3 has been validated and closed.
 
 ### EH4: Cashiering & Settlement Expansion
 - Extend `src/features/payments/` for receipts, installment policies, or customer credit handling.
 - Add receipt generation as a dedicated submodule instead of mixing it directly into the current payment form component.
 - Keep settlement rules centralized so bill status logic remains consistent.
+- The current EH4 implementation adds receipt-backed payment posting and a dedicated printable receipt route at `/admin/payments/[paymentId]/receipt`.
+- Customer credit remains intentionally out of scope until explicitly approved.
 
 ### EH5: Overdue & Disconnection Workflow
 - Introduce dedicated receivables-follow-up or account-status modules rather than overloading billing page logic.
@@ -192,6 +196,7 @@ model User {
   role      Role     @default(CUSTOMER_SERVICE)
   active    Boolean  @default(true)
   readings  Reading[]
+  recordedPayments Payment[] @relation("RecordedPayments")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -289,10 +294,15 @@ enum BillStatus {
 
 model Payment {
   id          String        @id @default(uuid())
+  receiptNumber String      @unique
   amount      Float
   paymentDate DateTime      @default(now())
   method      PaymentMethod
   referenceId String?
+  balanceBefore Float
+  balanceAfter Float
+  recordedById String
+  recordedBy  User          @relation("RecordedPayments", fields: [recordedById], references: [id])
   billId      String
   bill        Bill          @relation(fields: [billId], references: [id])
   status      PaymentStatus @default(COMPLETED)

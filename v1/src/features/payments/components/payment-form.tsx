@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,6 +8,7 @@ import { PaymentMethod } from "@prisma/client";
 import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button-variants";
 import { recordPayment } from "@/features/payments/actions";
 import {
   paymentFormSchema,
@@ -14,6 +16,7 @@ import {
   type PaymentFormValues,
 } from "@/features/payments/lib/payment-schema";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
+import { cn } from "@/lib/utils";
 
 const fieldClassName =
   "mt-2 w-full rounded-2xl border border-input bg-background px-4 py-3 text-sm text-foreground shadow-xs outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20";
@@ -44,9 +47,19 @@ type PaymentFormProps = {
   }[];
 };
 
+type RecordedPaymentSummary = {
+  id: string;
+  receiptNumber: string;
+  amount: number;
+  balanceAfter: number;
+  billId: string;
+};
+
 export function PaymentForm({ bills }: PaymentFormProps) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
+  const [latestRecordedPayment, setLatestRecordedPayment] =
+    useState<RecordedPaymentSummary | null>(null);
   const [isPending, startTransition] = useTransition();
   const form = useForm<PaymentFormInput, undefined, PaymentFormValues>({
     resolver: zodResolver(paymentFormSchema),
@@ -66,12 +79,27 @@ export function PaymentForm({ bills }: PaymentFormProps) {
     control: form.control,
     name: "method",
   });
+  const enteredAmount = useWatch({
+    control: form.control,
+    name: "amount",
+  });
   const selectedBill = useMemo(
     () => bills.find((bill) => bill.id === selectedBillId) ?? bills[0] ?? null,
     [bills, selectedBillId]
   );
   const paymentBlocked = bills.length === 0;
   const requiresReference = selectedMethod !== PaymentMethod.CASH;
+  const safeEnteredAmount =
+    typeof enteredAmount === "number" && Number.isFinite(enteredAmount) ? enteredAmount : 0;
+  const balanceAfterPreview = selectedBill
+    ? Math.max(0, selectedBill.outstandingBalance - safeEnteredAmount)
+    : 0;
+  const settlementModeLabel =
+    selectedBill && safeEnteredAmount > 0
+      ? balanceAfterPreview <= 0.000001
+        ? "Full settlement"
+        : "Partial settlement"
+      : "Awaiting amount";
 
   useEffect(() => {
     if (!selectedBill) {
@@ -95,9 +123,10 @@ export function PaymentForm({ bills }: PaymentFormProps) {
 
     startTransition(async () => {
       try {
-        await recordPayment(values);
+        const createdPayment = await recordPayment(values);
         const nextBill = bills.find((bill) => bill.id !== values.billId);
 
+        setLatestRecordedPayment(createdPayment);
         form.reset({
           billId: nextBill?.id ?? values.billId,
           amount: nextBill?.outstandingBalance,
@@ -121,11 +150,11 @@ export function PaymentForm({ bills }: PaymentFormProps) {
           Cashier Entry
         </p>
         <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-          Record a manual payment
+          Record a settlement and issue an official receipt
         </h2>
         <p className="text-sm leading-6 text-muted-foreground">
-          Select an open bill, confirm the remaining balance, and encode the cashier
-          payment manually.
+          Select an open bill, accept a full or partial payment, and keep each cashier
+          posting tied to a printable official receipt.
         </p>
       </div>
 
@@ -198,12 +227,47 @@ export function PaymentForm({ bills }: PaymentFormProps) {
             id="amount"
             type="number"
             step="0.01"
+            min="0.01"
+            max={selectedBill?.outstandingBalance}
             className={`${fieldClassName} bg-white`}
             disabled={paymentBlocked}
             {...form.register("amount", { valueAsNumber: true })}
           />
+          <p className="mt-2 text-sm text-muted-foreground">
+            Exact-balance posting is no longer required, but overpayment is still blocked
+            until customer credit handling is explicitly approved.
+          </p>
           <p className="mt-2 text-sm text-destructive">{form.formState.errors.amount?.message}</p>
         </div>
+
+        {selectedBill ? (
+          <div className="grid gap-4 rounded-[1.4rem] border border-[#dbe9e5] bg-white p-4 sm:grid-cols-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Settlement mode
+              </p>
+              <p className="mt-2 text-sm font-semibold text-foreground">
+                {settlementModeLabel}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Payment preview
+              </p>
+              <p className="mt-2 text-sm font-semibold text-foreground">
+                {formatCurrency(safeEnteredAmount)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Balance after posting
+              </p>
+              <p className="mt-2 text-sm font-semibold text-foreground">
+                {formatCurrency(balanceAfterPreview)}
+              </p>
+            </div>
+          </div>
+        ) : null}
 
         <div>
           <label className="text-sm font-medium text-foreground" htmlFor="method">
@@ -233,18 +297,57 @@ export function PaymentForm({ bills }: PaymentFormProps) {
             type="text"
             className={`${fieldClassName} bg-white`}
             disabled={paymentBlocked}
-            placeholder={requiresReference ? "Transaction or receipt reference" : "Optional"}
+            placeholder={requiresReference ? "Transaction or wallet reference" : "Optional"}
             {...form.register("referenceId")}
           />
           <p className="mt-2 text-sm text-muted-foreground">
             {requiresReference
-              ? "Use this for transfer, wallet, or card references."
-              : "Optional for cash receipts."}
+              ? "Required for bank transfer, wallet, and card settlements."
+              : "Optional for cash counter postings."}
           </p>
           <p className="mt-2 text-sm text-destructive">
             {form.formState.errors.referenceId?.message}
           </p>
         </div>
+
+        {latestRecordedPayment ? (
+          <div className="rounded-[1.4rem] border border-emerald-200 bg-emerald-50/70 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+              Receipt ready
+            </p>
+            <p className="mt-2 text-sm text-emerald-900">
+              {latestRecordedPayment.receiptNumber} was issued for{" "}
+              {formatCurrency(latestRecordedPayment.amount)}.
+            </p>
+            <p className="mt-1 text-sm text-emerald-800">
+              Remaining balance after posting:{" "}
+              {formatCurrency(latestRecordedPayment.balanceAfter)}
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link
+                href={`/admin/payments/${latestRecordedPayment.id}/receipt`}
+                className={cn(
+                  buttonVariants({
+                    className: "h-10 rounded-xl px-4",
+                  })
+                )}
+              >
+                View official receipt
+              </Link>
+              <Link
+                href={`/admin/billing/${latestRecordedPayment.billId}`}
+                className={cn(
+                  buttonVariants({
+                    variant: "outline",
+                    className: "h-10 rounded-xl px-4",
+                  })
+                )}
+              >
+                Review related bill
+              </Link>
+            </div>
+          </div>
+        ) : null}
 
         {paymentBlocked ? (
           <p className="rounded-2xl border border-border bg-muted/50 px-4 py-3 text-sm text-muted-foreground">
@@ -264,7 +367,7 @@ export function PaymentForm({ bills }: PaymentFormProps) {
           className="h-11 rounded-2xl px-5"
           disabled={isPending || paymentBlocked}
         >
-          {isPending ? "Recording payment..." : "Record payment"}
+          {isPending ? "Recording settlement..." : "Record payment and issue receipt"}
         </Button>
       </form>
     </section>

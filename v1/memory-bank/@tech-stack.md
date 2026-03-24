@@ -66,8 +66,9 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 - Avoid speculative dependencies until reporting requirements are stable
 
 ### EH4: Cashiering & Settlement Expansion
-- Existing payment flow is sufficient for manual encoding
-- Add PDF or receipt-generation tooling only when official receipts are formally implemented
+- Existing payment flow now supports partial settlements and app-native printable official receipts
+- Official receipt generation currently uses server-rendered Next.js routes rather than PDF-specific dependencies
+- Add PDF or storage-backed receipt tooling only if the business later requires downloadable archives or uploaded proof
 
 ### EH5: Overdue & Disconnection Workflow
 - This should remain within the main app and database, not a separate service
@@ -89,6 +90,6 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 - No custom auth build while Clerk is sufficient
 
 ## Practical Summary
-- **Implemented now:** Next.js, TypeScript, Prisma v7, Clerk, Tailwind CSS, shadcn/ui, React Hook Form, Zod, PostgreSQL-first runtime path
-- **Currently validating:** EH3 reporting expansion and receivables intelligence
-- **Deferred until explicitly scoped:** Xendit, storage-backed uploads, notifications, advanced reporting libraries, receipt-generation tooling
+- **Implemented now:** Next.js, TypeScript, Prisma v7, Clerk, Tailwind CSS, shadcn/ui, React Hook Form, Zod, PostgreSQL-first runtime path, app-native printable receipts
+- **Currently validating:** EH4 cashiering expansion and receipt workflow
+- **Deferred until explicitly scoped:** Xendit, storage-backed uploads, notifications, advanced reporting libraries, PDF-specific receipt tooling, customer credit handling

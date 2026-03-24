@@ -46,6 +46,7 @@ model User {
   active    Boolean  @default(true)
   
   readings  Reading[] // Meter readings performed by this user (if METER_READER)
+  recordedPayments Payment[] @relation("RecordedPayments")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -163,10 +164,15 @@ enum BillStatus {
 // Payments applied to Bills
 model Payment {
   id            String   @id @default(uuid())
+  receiptNumber String   @unique
   amount        Float
   paymentDate   DateTime @default(now())
   method        PaymentMethod
   referenceId   String?  // Xendit ref, check number, etc.
+  balanceBefore Float
+  balanceAfter  Float
+  recordedById  String
+  recordedBy    User     @relation("RecordedPayments", fields: [recordedById], references: [id])
   
   billId        String
   bill          Bill     @relation(fields: [billId], references: [id])

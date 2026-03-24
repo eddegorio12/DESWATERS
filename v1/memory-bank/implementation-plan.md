@@ -94,7 +94,7 @@ Implemented role access expectations:
 
 ### EH3: Reporting & Receivables Intelligence
 **Priority:** High
-**Status:** In validation
+**Status:** Complete
 **Depends on:** EH1 recommended, but not strictly required
 
 Scope:
@@ -110,11 +110,11 @@ Current progress:
 - `/admin/collections` now accepts server-side historical date filters through Next.js page `searchParams`.
 - The reporting workspace now shows completed-payment history for the selected range plus receivables summaries for unpaid, partially paid, and overdue bills.
 - Overdue reporting is derived from due dates and outstanding balances so staff can see follow-up pressure even when no separate enforcement workflow exists yet.
-- EH3 should remain in validation until the user confirms the reporting workflow in the UI.
+- EH3 has been validated by the user and is now closed.
 
 ### EH4: Cashiering & Settlement Expansion
 **Priority:** Medium
-**Status:** Not started
+**Status:** In validation
 **Depends on:** EH2 for permission boundaries
 
 Scope:
@@ -125,6 +125,12 @@ Scope:
 Exit criteria:
 - Cashiering no longer stops at simple exact-balance manual posting.
 - Receipt output and settlement rules are explicit and auditable.
+
+Current progress:
+- Payments now generate unique official receipt numbers plus before/after balance snapshots tied to the cashier who posted them.
+- `/admin/payments` now supports explicit partial-settlement posting instead of presenting the flow as exact-balance only.
+- Printable official receipts now exist at `/admin/payments/[paymentId]/receipt`.
+- Customer credit and overpayment handling remain out of scope until the business approves that workflow.
 
 ### EH5: Overdue & Disconnection Workflow
 **Priority:** Medium

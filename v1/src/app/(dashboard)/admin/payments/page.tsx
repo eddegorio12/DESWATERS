@@ -69,11 +69,19 @@ export default async function AdminPaymentsPage() {
       take: 20,
       select: {
         id: true,
+        receiptNumber: true,
         amount: true,
+        balanceBefore: true,
+        balanceAfter: true,
         paymentDate: true,
         method: true,
         referenceId: true,
         status: true,
+        recordedBy: {
+          select: {
+            name: true,
+          },
+        },
         bill: {
           select: {
             id: true,
@@ -117,7 +125,7 @@ export default async function AdminPaymentsPage() {
     <AdminPageShell
       eyebrow="Cashier Posting"
       title="Post utility payments against live receivables and keep recent settlement activity within reach."
-      description="Select an open bill, encode the payment method and amount, and review the latest cashier transactions together with the bill status they affected."
+      description="Select an open bill, accept full or partial settlement, issue an official receipt, and review the latest cashier transactions together with the bill status they affected."
       actions={
         <>
             <Link

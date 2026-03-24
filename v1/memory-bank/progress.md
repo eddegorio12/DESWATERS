@@ -4,6 +4,7 @@
 - The DWDS MVP is implemented and the memory-bank now treats that MVP as the baseline rather than an active checklist.
 - There are **no open MVP blockers** recorded in the memory-bank.
 - Future work is now tracked as named enhancement phases `EH1` through `EH7`.
+- EH3 has now been validated and EH4 is implemented in code pending cashier workflow validation.
 
 ## Implemented Milestones
 
@@ -43,12 +44,12 @@
 ### Reporting Constraint
 - Reporting now includes **historical collections filters plus receivables visibility** in the admin reporting workspace.
 - Overdue and follow-up reporting is now visible, but automated enforcement workflows are still not implemented.
-- EH3 is implemented in code and awaiting user validation before it is marked complete.
+- EH3 has been user-validated and is now closed.
 
 ### Cashiering Constraint
-- Payment handling currently assumes the exact-balance manual cashier workflow.
-- Official receipts, installment logic, and customer credit handling are not yet implemented.
-- This is now tracked under **EH4: Cashiering & Settlement Expansion**.
+- Cashier posting now supports auditable partial settlements plus printable official receipts.
+- Customer credit and overpayment handling are still not implemented.
+- EH4 should remain in validation until the user confirms the receipt and settlement workflow in the UI.
 
 ### Overdue Workflow Constraint
 - Bill templates mention penalties and disconnection, but there is **no automated overdue or disconnection workflow** yet.
@@ -69,12 +70,12 @@
 - Notes: Protected route access, mutation enforcement, and role-specific read-only fallbacks are now in place.
 
 ### EH3: Reporting & Receivables Intelligence
-- Status: `in validation`
-- Notes: Historical collections filtering, unpaid and partially paid receivables analytics, and overdue visibility are implemented and awaiting validation.
+- Status: `complete`
+- Notes: Historical collections filtering, unpaid and partially paid receivables analytics, and overdue visibility are implemented and validated.
 
 ### EH4: Cashiering & Settlement Expansion
-- Status: `not started`
-- Notes: Relevant once cashier operations outgrow exact-balance manual posting.
+- Status: `in validation`
+- Notes: Official receipt generation and explicit partial-settlement cashiering are implemented. Customer credit handling remains deferred.
 
 ### EH5: Overdue & Disconnection Workflow
 - Status: `not started`
@@ -89,4 +90,4 @@
 - Notes: Low product priority, but useful before another major UI redesign cycle.
 
 ## Current Next-Step Recommendation
-Validate **EH3: Reporting & Receivables Intelligence** in the live UI. Do not begin **EH4** until EH3 validation is accepted.
+Validate **EH4: Cashiering & Settlement Expansion** in the live UI. Do not begin **EH5** until EH4 validation is accepted.

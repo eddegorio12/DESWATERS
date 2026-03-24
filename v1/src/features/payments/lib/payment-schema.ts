@@ -20,6 +20,14 @@ export const paymentFormSchema = z.object({
     .max(100, "Reference ID must be 100 characters or fewer.")
     .optional()
     .or(z.literal("")),
+}).superRefine((value, ctx) => {
+  if (value.method !== PaymentMethod.CASH && !value.referenceId?.trim()) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Reference ID is required for non-cash payments.",
+      path: ["referenceId"],
+    });
+  }
 });
 
 export type PaymentFormInput = z.input<typeof paymentFormSchema>;
