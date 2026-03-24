@@ -174,7 +174,8 @@
 
 ### EH7: Tooling & Design Workflow Recovery
 - The installed `ui-ux-pro-max` skill remains the design guidance source.
-- If local Python execution is restored, use the searchable workflow before major new design passes.
+- Local search-assisted execution is now restored through `scripts/run-ui-ux-pro-max.ps1` and the `npm run design:search -- ...` package script.
+- The skill entrypoints now register their script directory before importing sibling modules so execution does not depend on a specific interpreter's default `sys.path` behavior.
 - Do not let tooling failure push design logic into giant page files or ad hoc styling sprawl.
 
 ## Database Schema: Current Repository Snapshot

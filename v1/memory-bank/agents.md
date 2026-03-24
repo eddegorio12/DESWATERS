@@ -21,8 +21,9 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - EH5 follow-up actions now also support provider-backed customer notifications with auditable delivery logging.
 - First-time Clerk accounts now require explicit admin or manager approval before protected DWDS dashboard access is granted.
 - EH6 public-surface expansion is validated and closed.
+- EH7 tooling recovery is complete, and the repo now includes a stable launcher for searchable `ui-ux-pro-max` execution.
 - The current intended database runtime is **PostgreSQL via Prisma v7**.
-- EH1 through EH5 are complete.
+- EH1 through EH7 are complete.
 
 ## 3. Enhancement Backlog Handling
 - Treat the enhancement roadmap in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md) as the canonical backlog instead of inventing new unnamed phases.

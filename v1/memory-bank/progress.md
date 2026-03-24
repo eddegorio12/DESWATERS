@@ -7,6 +7,7 @@
 - EH3 and EH4 have now been validated.
 - EH5 has now been validated, including the email-first follow-up notification path.
 - EH6 has now been validated after public-surface testing.
+- EH7 has now restored the searchable local design-tooling workflow.
 
 ## Implemented Milestones
 
@@ -65,7 +66,7 @@
 
 ### Tooling Constraint
 - The installed `ui-ux-pro-max` skill had to run in written-rule fallback mode because the local Python path could not execute the searchable script workflow.
-- This is now tracked under **EH7: Tooling & Design Workflow Recovery**.
+- The Windows Store `python.exe` alias remains broken on this machine, but DWDS now bypasses it through a repo-local launcher that resolves a usable interpreter and restores searchable skill execution.
 
 ## Enhancement Phase Status
 
@@ -94,8 +95,8 @@
 - Notes: Marketing expansion is implemented and user-validated through brand assets, product previews, and stronger deployment-ready copy. Consumer portal routes remain unstarted.
 
 ### EH7: Tooling & Design Workflow Recovery
-- Status: `not started`
-- Notes: Low product priority, but useful before another major UI redesign cycle.
+- Status: `complete`
+- Notes: Search-assisted `ui-ux-pro-max` execution now works through `scripts/run-ui-ux-pro-max.ps1` and `npm run design:search -- ...`, with sibling Python imports hardened inside the skill entrypoints.
 
 ## Current Next-Step Recommendation
-EH6 is closed. EH7 remains not started and should stay deferred unless the user explicitly asks to recover the local design-tooling workflow.
+EH7 is closed. The next recommendation should come from a newly approved enhancement phase rather than additional EH7 recovery work.

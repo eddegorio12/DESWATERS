@@ -15,6 +15,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH5 overdue, disconnection, and email-first follow-up notification support are validated and closed.
 - EH5 now also includes customer-notification support for low-cost email and SMS follow-up.
 - EH6 public-surface expansion is now validated and closed after testing.
+- EH7 tooling recovery is now complete, and the searchable local design-assistant workflow is usable again from the repo.
 
 ## Product Principles
 - **Modularity is mandatory:** Features must be separated into focused modules.
@@ -121,6 +122,10 @@ Goal: Restore the full local design-assistant workflow that is currently blocked
 Expected outcomes:
 - working local Python execution for the installed design skill
 - searchable design-system workflow for future UI passes
+
+Current status:
+- The searchable `ui-ux-pro-max` workflow has been restored through a repo-local PowerShell launcher and `npm run design:search -- ...`.
+- Skill entrypoints now resolve local sibling imports reliably across supported interpreter paths.
 
 ## Rule of Thumb for Developers
 Always read [@architecture.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\@architecture.md) before changing schema or architecture. Every major addition must map either to the implemented MVP surface or to a named enhancement phase in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md).

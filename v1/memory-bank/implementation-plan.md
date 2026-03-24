@@ -179,7 +179,7 @@ Current progress:
 
 ### EH7: Tooling & Design Workflow Recovery
 **Priority:** Low
-**Status:** Not started
+**Status:** Complete
 **Depends on:** local environment fixes
 
 Scope:
@@ -188,6 +188,12 @@ Scope:
 
 Exit criteria:
 - The local design skill can run in its intended search-assisted mode instead of written-rule fallback.
+
+Current progress:
+- The `ui-ux-pro-max` Python entrypoints now register their script directory before importing sibling modules, so execution no longer depends on interpreter-specific default import behavior.
+- DWDS now includes `scripts/run-ui-ux-pro-max.ps1`, which skips the broken Windows Store `python.exe` alias and locates a usable local interpreter instead.
+- `package.json` now exposes `npm run design:search -- ...` as the stable repo entrypoint for searchable design-system and domain lookups.
+- Search and `--design-system` execution have been verified successfully from the repo after the recovery work.
 
 ## Backlog Intake Rule
 Any new future work should be added here as a named enhancement phase with:

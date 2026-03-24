@@ -87,7 +87,9 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 
 ### EH7: Tooling & Design Workflow Recovery
 - The installed `ui-ux-pro-max` skill remains the design guidance layer
-- The skill’s local searchable Python workflow is currently blocked by the environment and should be restored before future heavy UI redesign work
+- DWDS now restores the skill's searchable Python workflow through `scripts/run-ui-ux-pro-max.ps1`
+- `npm run design:search -- ...` is the stable repo entrypoint for future search-assisted design passes
+- The broken Windows Store `python.exe` alias remains a machine-level issue, but the repo no longer depends on it
 
 ## Decisions to Keep
 - One codebase
@@ -97,6 +99,6 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 - No custom auth build while Clerk is sufficient
 
 ## Practical Summary
-- **Implemented now:** Next.js, TypeScript, Prisma v7, Clerk, Tailwind CSS, shadcn/ui, React Hook Form, Zod, PostgreSQL-first runtime path, app-native printable receipts, notification logging, Resend-ready email, Semaphore-ready SMS
+- **Implemented now:** Next.js, TypeScript, Prisma v7, Clerk, Tailwind CSS, shadcn/ui, React Hook Form, Zod, PostgreSQL-first runtime path, app-native printable receipts, notification logging, Resend-ready email, Semaphore-ready SMS, repo-local UI design search launcher
 - **Currently validating:** no active enhancement phase
 - **Deferred until explicitly scoped:** Xendit, storage-backed uploads, notifications, advanced reporting libraries, PDF-specific receipt tooling, customer credit handling
