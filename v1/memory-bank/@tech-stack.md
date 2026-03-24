@@ -45,6 +45,7 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 - **Supabase Storage** for uploaded files if receipt, proof, or document storage is formally added
 - **Resend** or a similar email provider if notices become a scoped feature
 - **Xendit** only when online consumer payments are explicitly added in a later phase
+- **Semaphore** as the low-cost Philippine SMS path for overdue follow-up notices
 
 ## Current Recommendations by Enhancement Phase
 
@@ -69,10 +70,14 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 - Existing payment flow now supports partial settlements and app-native printable official receipts
 - Official receipt generation currently uses server-rendered Next.js routes rather than PDF-specific dependencies
 - Add PDF or storage-backed receipt tooling only if the business later requires downloadable archives or uploaded proof
+- EH4 has been validated and closed.
 
 ### EH5: Overdue & Disconnection Workflow
 - This should remain within the main app and database, not a separate service
 - Prefer scheduled jobs or explicit server-side evaluation over client-driven status logic
+- EH5 is currently implemented with app-native server actions, Prisma-backed follow-up state, a protected `/admin/follow-up` workflow route, Resend-ready email delivery, and Semaphore-ready SMS delivery
+- The default low-cost policy is email for all follow-up notices plus SMS for higher-priority templates, configurable through `DWDS_NOTIFICATION_SMS_TEMPLATES`
+- EH5 has now been validated and closed.
 
 ### EH6: Product Surface Expansion
 - Keep marketing, future consumer routes, and admin routes in the same codebase
@@ -90,6 +95,6 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 - No custom auth build while Clerk is sufficient
 
 ## Practical Summary
-- **Implemented now:** Next.js, TypeScript, Prisma v7, Clerk, Tailwind CSS, shadcn/ui, React Hook Form, Zod, PostgreSQL-first runtime path, app-native printable receipts
-- **Currently validating:** EH4 cashiering expansion and receipt workflow
+- **Implemented now:** Next.js, TypeScript, Prisma v7, Clerk, Tailwind CSS, shadcn/ui, React Hook Form, Zod, PostgreSQL-first runtime path, app-native printable receipts, notification logging, Resend-ready email, Semaphore-ready SMS
+- **Currently validating:** no active enhancement phase
 - **Deferred until explicitly scoped:** Xendit, storage-backed uploads, notifications, advanced reporting libraries, PDF-specific receipt tooling, customer credit handling

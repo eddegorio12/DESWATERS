@@ -33,6 +33,7 @@ export default async function AdminCustomersPage() {
       name: true,
       address: true,
       contactNumber: true,
+      email: true,
       status: true,
       createdAt: true,
       meters: {

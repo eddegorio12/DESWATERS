@@ -13,6 +13,7 @@ import {
 } from "@/features/auth/lib/authorization";
 import { ApprovedReadingBillQueue } from "@/features/billing/components/approved-reading-bill-queue";
 import { UnpaidBillList } from "@/features/billing/components/unpaid-bill-list";
+import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,8 @@ export default async function AdminBillingPage() {
   if (!userId) {
     return null;
   }
+
+  await syncReceivableStatuses();
 
   const [activeTariff, approvedReadings, unpaidBills] = await Promise.all([
     prisma.tariff.findFirst({
@@ -117,6 +120,18 @@ export default async function AdminBillingPage() {
               )}
             >
               Payments module
+            </Link>
+            <Link
+              href="/admin/follow-up"
+              className={cn(
+                buttonVariants({
+                  variant: "outline",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
+                })
+              )}
+            >
+              Follow-up workflow
             </Link>
             <Link
               href="/admin/readings"

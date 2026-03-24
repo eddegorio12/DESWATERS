@@ -11,7 +11,9 @@ Build a modular, robust web-based utility operations system that starts with a s
 - The current live surface covers authentication, customer records, meter management, tariff setup, reading intake and approval, billing, payment encoding, printable consumer bills, daily collections reporting, and a public marketing site.
 - The repo now runs on a validated **PostgreSQL-first data path**.
 - EH3 reporting expansion is validated and closed.
-- EH4 cashiering expansion is now implemented in code and awaiting workflow validation.
+- EH4 cashiering expansion is validated and closed.
+- EH5 overdue, disconnection, and email-first follow-up notification support are validated and closed.
+- EH5 now also includes customer-notification support for low-cost email and SMS follow-up.
 
 ## Product Principles
 - **Modularity is mandatory:** Features must be separated into focused modules.
@@ -82,7 +84,7 @@ Expected outcomes:
 Current status:
 - Official receipt generation and partial-settlement cashier posting are implemented in the admin payments workspace.
 - Overpayment and customer-credit handling remain intentionally deferred until explicitly approved.
-- EH4 remains in validation until the user confirms the cashier and receipt workflow.
+- EH4 is validated and complete.
 
 ### EH5: Overdue & Disconnection Workflow
 Goal: Move from display-only penalty language to explicit receivables follow-up logic if the business wants enforced workflow support.
@@ -91,6 +93,12 @@ Expected outcomes:
 - automated overdue evaluation
 - account follow-up states
 - optional disconnection tracking and reinstatement workflow
+
+Current status:
+- Automated overdue evaluation and explicit receivables follow-up stages are implemented.
+- A protected follow-up workspace now supports reminder escalation, service disconnection, and reinstatement.
+- Customer notifications now have an app-native logging layer plus provider-ready email/SMS delivery hooks.
+- EH5 is validated and complete.
 
 ### EH6: Product Surface Expansion
 Goal: Extend the public-facing and customer-facing parts of DWDS once the operations core is stable.

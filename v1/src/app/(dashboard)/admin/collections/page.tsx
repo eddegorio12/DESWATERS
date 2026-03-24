@@ -8,6 +8,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
+import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { CollectionsFilterForm } from "@/features/reports/components/collections-filter-form";
 import { CollectionsPaymentList } from "@/features/reports/components/collections-payment-list";
 import { CollectionsSummary } from "@/features/reports/components/collections-summary";
@@ -36,6 +37,8 @@ export default async function AdminCollectionsPage({
   if (!userId) {
     return null;
   }
+
+  await syncReceivableStatuses();
 
   const filters = getCollectionRangeFromSearchParams(await searchParams);
 
@@ -127,8 +130,20 @@ export default async function AdminCollectionsPage({
                   "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
               })
             )}
+            >
+              Payments module
+          </Link>
+          <Link
+            href="/admin/follow-up"
+            className={cn(
+              buttonVariants({
+                variant: "outline",
+                className:
+                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
+              })
+            )}
           >
-            Payments module
+            Follow-up workflow
           </Link>
           <Link
             href="/admin/dashboard"

@@ -114,7 +114,7 @@ Current progress:
 
 ### EH4: Cashiering & Settlement Expansion
 **Priority:** Medium
-**Status:** In validation
+**Status:** Complete
 **Depends on:** EH2 for permission boundaries
 
 Scope:
@@ -131,10 +131,11 @@ Current progress:
 - `/admin/payments` now supports explicit partial-settlement posting instead of presenting the flow as exact-balance only.
 - Printable official receipts now exist at `/admin/payments/[paymentId]/receipt`.
 - Customer credit and overpayment handling remain out of scope until the business approves that workflow.
+- EH4 has been validated by the user and is now closed.
 
 ### EH5: Overdue & Disconnection Workflow
 **Priority:** Medium
-**Status:** Not started
+**Status:** Complete
 **Depends on:** EH3 recommended
 
 Scope:
@@ -144,6 +145,16 @@ Scope:
 
 Exit criteria:
 - Overdue handling is operationally actionable, not just printed on the bill template.
+
+Current progress:
+- Bills now carry explicit receivables follow-up stages for current, reminder sent, final notice sent, disconnection review, disconnected, and resolved.
+- `/admin/follow-up` now provides a protected overdue-operations workspace for reminder escalation, service disconnection, and reinstatement.
+- Customer service status changes are now tracked in-app, and reinstatement is blocked while overdue balances remain open.
+- Open-bill status is now synchronized server-side so overdue balances remain operationally actionable across dashboard, billing, payments, collections, and follow-up surfaces.
+- Customer records now support optional email capture for outbound notices.
+- A notification audit log plus provider-ready Resend email and Semaphore SMS delivery now exist for EH5 notices.
+- The default low-cost policy sends email for all follow-up notices and limits SMS to higher-priority templates unless configuration expands that list.
+- EH5 has been validated by the user, including the email-first follow-up notification path, and is now closed.
 
 ### EH6: Product Surface Expansion
 **Priority:** Medium

@@ -74,6 +74,10 @@
   - Manual payment validation, cashier entry UI, payment history UI, and printable receipt workflow
 - `src/features/reports/`
   - Historical collections filtering, receivables analytics, and reporting components
+- `src/features/follow-up/`
+  - Overdue workflow actions, service-status enforcement, and the dedicated follow-up workspace
+- `src/features/notifications/`
+  - Notification templates, provider integrations, phone normalization, and delivery logging for customer notices
 - `src/features/marketing/`
   - Shared public-site layout, navigation, footer, and centralized site content
 
@@ -103,7 +107,15 @@
 ### Reporting Workflow
 - Reporting now supports a Manila-aligned date range for completed payment history.
 - The reporting workspace also summarizes unpaid, partially paid, and overdue receivables from open bills.
-- Overdue visibility is currently analytical only; it is not yet an automated enforcement workflow.
+- Overdue visibility now feeds an explicit follow-up workflow, but reporting remains focused on visibility rather than mutation controls.
+
+### Overdue & Disconnection Workflow
+- Open bills now carry explicit receivables follow-up states separate from printed bill wording.
+- Server-side synchronization keeps open bill status aligned with due dates and completed-payment totals.
+- Dedicated follow-up actions move overdue bills through reminder, final-notice, and disconnection-review stages.
+- Customer service status now tracks disconnection and reinstatement actions with staff attribution fields.
+- Reinstatement is blocked while overdue balances remain open.
+- Follow-up actions can now trigger provider-backed customer notifications, and every attempt is logged in-app for auditability.
 
 ## Enhancement Architecture Targets
 
@@ -138,11 +150,16 @@
 - Keep settlement rules centralized so bill status logic remains consistent.
 - The current EH4 implementation adds receipt-backed payment posting and a dedicated printable receipt route at `/admin/payments/[paymentId]/receipt`.
 - Customer credit remains intentionally out of scope until explicitly approved.
+- EH4 has been validated and is now closed.
 
 ### EH5: Overdue & Disconnection Workflow
 - Introduce dedicated receivables-follow-up or account-status modules rather than overloading billing page logic.
 - Treat overdue evaluation, disconnection tracking, and reinstatement as explicit workflow states if they are built.
 - Avoid making printed bill language the source of truth for enforcement logic.
+- The current EH5 implementation now uses `src/features/follow-up/` plus customer and bill state fields to track reminder, final-notice, disconnection-review, disconnected, and resolved follow-up stages.
+- `/admin/follow-up` is the protected operational surface for those actions.
+- Notification delivery for EH5 now lives under `src/features/notifications/`, with Resend-ready email and Semaphore-ready SMS integrations chosen as the low-cost initial path.
+- EH5 has been user-validated and is now closed.
 
 ### EH6: Product Surface Expansion
 - Keep future consumer-portal routes separate from admin routes by route group, not by repository split.
@@ -197,6 +214,8 @@ model User {
   active    Boolean  @default(true)
   readings  Reading[]
   recordedPayments Payment[] @relation("RecordedPayments")
+  receivableFollowUpUpdates Bill[] @relation("ReceivableFollowUpUpdatedBy")
+  customerStatusUpdates Customer[] @relation("CustomerStatusUpdatedBy")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -216,7 +235,12 @@ model Customer {
   name          String
   address       String
   contactNumber String?
+  email         String?
   status        CustomerStatus @default(ACTIVE)
+  statusNote    String?
+  statusUpdatedAt DateTime?
+  statusUpdatedById String?
+  statusUpdatedBy User? @relation("CustomerStatusUpdatedBy", fields: [statusUpdatedById], references: [id])
   meters        Meter[]
   bills         Bill[]
   createdAt     DateTime       @default(now())
@@ -280,6 +304,11 @@ model Bill {
   usageAmount   Float
   totalCharges  Float
   status        BillStatus @default(UNPAID)
+  followUpStatus ReceivableFollowUpStatus @default(CURRENT)
+  followUpStatusUpdatedAt DateTime?
+  followUpNote  String?
+  followUpUpdatedById String?
+  followUpUpdatedBy User? @relation("ReceivableFollowUpUpdatedBy", fields: [followUpUpdatedById], references: [id])
   payments      Payment[]
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
@@ -290,6 +319,56 @@ enum BillStatus {
   PARTIALLY_PAID
   PAID
   OVERDUE
+}
+
+enum ReceivableFollowUpStatus {
+  CURRENT
+  REMINDER_SENT
+  FINAL_NOTICE_SENT
+  DISCONNECTION_REVIEW
+  DISCONNECTED
+  RESOLVED
+}
+
+model NotificationLog {
+  id            String             @id @default(uuid())
+  customerId    String
+  customer      Customer           @relation(fields: [customerId], references: [id])
+  billId        String?
+  bill          Bill?              @relation(fields: [billId], references: [id])
+  channel       NotificationChannel
+  template      NotificationTemplate
+  status        NotificationStatus @default(PENDING)
+  provider      String
+  destination   String
+  subject       String?
+  message       String
+  providerMessageId String?
+  errorMessage  String?
+  triggeredById String?
+  triggeredBy   User?              @relation("TriggeredNotifications", fields: [triggeredById], references: [id])
+  sentAt        DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+}
+
+enum NotificationTemplate {
+  FOLLOW_UP_REMINDER
+  FINAL_NOTICE
+  DISCONNECTION
+  REINSTATEMENT
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+  SKIPPED
 }
 
 model Payment {

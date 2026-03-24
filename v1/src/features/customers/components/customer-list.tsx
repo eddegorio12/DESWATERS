@@ -3,7 +3,7 @@ import type { Customer, CustomerStatus, MeterStatus } from "@prisma/client";
 type CustomerListProps = {
   customers: (Pick<
     Customer,
-    "id" | "accountNumber" | "name" | "address" | "contactNumber" | "createdAt"
+    "id" | "accountNumber" | "name" | "address" | "contactNumber" | "email" | "createdAt"
   > & {
     status: CustomerStatus;
     meters: {
@@ -59,7 +59,10 @@ export function CustomerList({ customers }: CustomerListProps) {
                     </td>
                     <td className="px-4 py-4 text-muted-foreground">{customer.address}</td>
                     <td className="px-4 py-4 text-muted-foreground">
-                      {customer.contactNumber || "No contact number"}
+                      <div>{customer.contactNumber || "No contact number"}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {customer.email || "No email address"}
+                      </div>
                     </td>
                     <td className="px-4 py-4">
                       {customer.meters.length ? (

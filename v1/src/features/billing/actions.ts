@@ -122,6 +122,8 @@ export async function generateBill(readingId: string) {
 
   revalidatePath("/admin/billing");
   revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/collections");
+  revalidatePath("/admin/follow-up");
   revalidatePath("/admin/readings");
 
   return bill;

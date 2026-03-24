@@ -1,9 +1,14 @@
 "use server";
 
-import { BillStatus, PaymentStatus, Prisma } from "@prisma/client";
+import { BillStatus, PaymentStatus, Prisma, ReceivableFollowUpStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { requireStaffCapability } from "@/features/auth/lib/authorization";
+import {
+  getOperationalBillStatus,
+  getOutstandingBalance,
+  syncReceivableStatuses,
+} from "@/features/follow-up/lib/workflow";
 import { createReceiptNumber } from "@/features/payments/lib/receipt-number";
 import {
   paymentFormSchema,
@@ -13,6 +18,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function recordPayment(values: PaymentFormInput) {
   const staffUser = await requireStaffCapability("payments:record");
+  await syncReceivableStatuses();
 
   const parsedValues = paymentFormSchema.safeParse(values);
 
@@ -29,8 +35,10 @@ export async function recordPayment(values: PaymentFormInput) {
           },
           select: {
             id: true,
+            dueDate: true,
             totalCharges: true,
             status: true,
+            followUpStatus: true,
             payments: {
               where: {
                 status: PaymentStatus.COMPLETED,
@@ -54,7 +62,7 @@ export async function recordPayment(values: PaymentFormInput) {
           (sum, existingPayment) => sum + existingPayment.amount,
           0
         );
-        const outstandingBalance = Math.max(0, bill.totalCharges - completedPaymentsTotal);
+        const outstandingBalance = getOutstandingBalance(bill.totalCharges, bill.payments);
 
         if (parsedValues.data.amount - outstandingBalance > 0.000001) {
           throw new Error(
@@ -66,7 +74,11 @@ export async function recordPayment(values: PaymentFormInput) {
         const nextBillStatus =
           updatedPaidTotal + 0.000001 >= bill.totalCharges
             ? BillStatus.PAID
-            : BillStatus.PARTIALLY_PAID;
+            : getOperationalBillStatus({
+                dueDate: bill.dueDate,
+                totalCharges: bill.totalCharges,
+                payments: [...bill.payments, { amount: parsedValues.data.amount }],
+              });
         const balanceAfter = Math.max(0, outstandingBalance - parsedValues.data.amount);
 
         const createdPayment = await tx.payment.create({
@@ -97,6 +109,16 @@ export async function recordPayment(values: PaymentFormInput) {
           },
           data: {
             status: nextBillStatus,
+            followUpStatus:
+              nextBillStatus === BillStatus.PAID
+                ? ReceivableFollowUpStatus.RESOLVED
+                : bill.followUpStatus,
+            followUpStatusUpdatedAt: nextBillStatus === BillStatus.PAID ? new Date() : undefined,
+            followUpUpdatedById: nextBillStatus === BillStatus.PAID ? staffUser.id : undefined,
+            followUpNote:
+              nextBillStatus === BillStatus.PAID
+                ? "The bill was fully settled and the receivables follow-up case was closed."
+                : undefined,
           },
         });
 
@@ -121,6 +143,8 @@ export async function recordPayment(values: PaymentFormInput) {
   revalidatePath("/admin/payments");
   revalidatePath("/admin/billing");
   revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/collections");
+  revalidatePath("/admin/follow-up");
   revalidatePath(`/admin/payments/${payment.id}/receipt`);
 
   return payment;

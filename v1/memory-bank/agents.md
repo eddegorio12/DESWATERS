@@ -17,8 +17,10 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 ## 2. Current Product State
 - The MVP is implemented.
 - The live admin surface covers authentication, customers, meters, tariffs, readings, billing, payments, printable bills, collections reporting, and the marketing site.
+- The live admin surface now also includes receivables follow-up, disconnection tracking, and reinstatement workflow support.
+- EH5 follow-up actions now also support provider-backed customer notifications with auditable delivery logging.
 - The current intended database runtime is **PostgreSQL via Prisma v7**.
-- EH1 and EH2 are complete. The next planned enhancement phase is EH3 unless product priorities change.
+- EH1 through EH5 are complete.
 
 ## 3. Enhancement Backlog Handling
 - Treat the enhancement roadmap in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md) as the canonical backlog instead of inventing new unnamed phases.

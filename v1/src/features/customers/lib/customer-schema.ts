@@ -15,6 +15,13 @@ export const customerFormSchema = z.object({
     .max(30, "Contact number must be 30 characters or fewer.")
     .optional()
     .transform((value) => value || undefined),
+  email: z
+    .string()
+    .trim()
+    .email("Enter a valid email address.")
+    .optional()
+    .or(z.literal(""))
+    .transform((value) => value || undefined),
 });
 
 export type CustomerFormInput = z.input<typeof customerFormSchema>;

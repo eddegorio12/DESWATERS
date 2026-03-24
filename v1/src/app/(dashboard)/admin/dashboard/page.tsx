@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   FileSpreadsheet,
   Gauge,
+  ShieldAlert,
   ReceiptText,
   Users,
   WalletCards,
@@ -29,6 +30,7 @@ import {
 } from "@/features/auth/lib/authorization";
 import { FirstLoginSync } from "@/features/auth/components/first-login-sync";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
+import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { getTodayCollectionRange } from "@/features/reports/lib/collections";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -97,6 +99,14 @@ const moduleCards: {
     action: "Open reporting",
     icon: BanknoteArrowDown,
   },
+  {
+    module: "followUp",
+    href: "/admin/follow-up",
+    title: "Receivables follow-up",
+    description: "Advance overdue balances into reminder, disconnection, and reinstatement states.",
+    action: "Open follow-up",
+    icon: ShieldAlert,
+  },
 ];
 
 function getRoleCapabilities(role: Role) {
@@ -106,6 +116,7 @@ function getRoleCapabilities(role: Role) {
     canPerformCapability(role, "readings:approve") ? "Reading approval" : null,
     canPerformCapability(role, "billing:generate") ? "Bill generation" : null,
     canPerformCapability(role, "payments:record") ? "Cashier posting" : null,
+    canPerformCapability(role, "followup:update") ? "Receivables follow-up" : null,
     canPerformCapability(role, "tariffs:create") ? "Tariff changes" : null,
   ].filter(Boolean) as string[];
 }
@@ -167,6 +178,7 @@ export default async function AdminDashboardPage() {
 
   const localUser = access.user;
   const { start, end } = getTodayCollectionRange();
+  await syncReceivableStatuses();
 
   const [
     customerCount,
@@ -272,11 +284,11 @@ export default async function AdminDashboardPage() {
       href: "/admin/billing",
     },
     {
-      module: "collections" as const,
-      title: "Reporting and follow-up",
-      summary: "Open receivables and filtered collection history in one view.",
+      module: "followUp" as const,
+      title: "Overdue workflow",
+      summary: "Escalate past-due balances into reminder and service actions.",
       count: `${openBillCount} open bills`,
-      href: "/admin/collections",
+      href: "/admin/follow-up",
     },
   ].filter((item) => accessibleModules.has(item.module));
   const roleCapabilities = getRoleCapabilities(localUser.role);

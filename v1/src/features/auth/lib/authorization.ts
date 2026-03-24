@@ -12,7 +12,8 @@ export type AdminModule =
   | "billing"
   | "billPrint"
   | "payments"
-  | "collections";
+  | "collections"
+  | "followUp";
 
 export type StaffCapability =
   | "customers:create"
@@ -24,7 +25,10 @@ export type StaffCapability =
   | "readings:delete:any"
   | "readings:delete:own"
   | "billing:generate"
-  | "payments:record";
+  | "payments:record"
+  | "followup:update"
+  | "service:disconnect"
+  | "service:reinstate";
 
 const moduleAccess: Record<AdminModule, readonly Role[]> = {
   dashboard: [
@@ -43,6 +47,7 @@ const moduleAccess: Record<AdminModule, readonly Role[]> = {
   billPrint: [Role.ADMIN, Role.MANAGER, Role.BILLING_STAFF, Role.CASHIER],
   payments: [Role.ADMIN, Role.MANAGER, Role.CASHIER],
   collections: [Role.ADMIN, Role.MANAGER, Role.BILLING_STAFF, Role.CASHIER],
+  followUp: [Role.ADMIN, Role.MANAGER, Role.BILLING_STAFF],
 };
 
 const capabilityAccess: Record<StaffCapability, readonly Role[]> = {
@@ -56,6 +61,9 @@ const capabilityAccess: Record<StaffCapability, readonly Role[]> = {
   "readings:delete:own": [Role.ADMIN, Role.MANAGER, Role.METER_READER],
   "billing:generate": [Role.ADMIN, Role.MANAGER, Role.BILLING_STAFF],
   "payments:record": [Role.ADMIN, Role.MANAGER, Role.CASHIER],
+  "followup:update": [Role.ADMIN, Role.MANAGER, Role.BILLING_STAFF],
+  "service:disconnect": [Role.ADMIN, Role.MANAGER],
+  "service:reinstate": [Role.ADMIN, Role.MANAGER],
 };
 
 const moduleLabels: Record<AdminModule, string> = {
@@ -68,6 +76,7 @@ const moduleLabels: Record<AdminModule, string> = {
   billPrint: "bill templates",
   payments: "cashier posting",
   collections: "collections reporting",
+  followUp: "receivables follow-up",
 };
 
 const capabilityLabels: Record<StaffCapability, string> = {
@@ -81,6 +90,9 @@ const capabilityLabels: Record<StaffCapability, string> = {
   "readings:delete:own": "delete your pending readings",
   "billing:generate": "generate bills",
   "payments:record": "record payments",
+  "followup:update": "update receivables follow-up",
+  "service:disconnect": "disconnect service accounts",
+  "service:reinstate": "reinstate service accounts",
 };
 
 export const roleDisplayName: Record<Role, string> = {
@@ -100,7 +112,7 @@ export const roleSummaries: Record<Role, string> = {
   METER_READER:
     "Reading entry access plus deletion of their own pending submissions before review.",
   BILLING_STAFF:
-    "Tariff visibility, reading approval, billing generation, and collections visibility.",
+    "Tariff visibility, reading approval, billing generation, collections visibility, and receivables follow-up updates.",
   CASHIER:
     "Cashier posting and collections monitoring without customer setup or billing mutations.",
 };

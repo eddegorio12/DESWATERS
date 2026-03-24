@@ -4,7 +4,8 @@
 - The DWDS MVP is implemented and the memory-bank now treats that MVP as the baseline rather than an active checklist.
 - There are **no open MVP blockers** recorded in the memory-bank.
 - Future work is now tracked as named enhancement phases `EH1` through `EH7`.
-- EH3 has now been validated and EH4 is implemented in code pending cashier workflow validation.
+- EH3 and EH4 have now been validated.
+- EH5 has now been validated, including the email-first follow-up notification path.
 
 ## Implemented Milestones
 
@@ -49,11 +50,14 @@
 ### Cashiering Constraint
 - Cashier posting now supports auditable partial settlements plus printable official receipts.
 - Customer credit and overpayment handling are still not implemented.
-- EH4 should remain in validation until the user confirms the receipt and settlement workflow in the UI.
+- EH4 has been user-validated and is now closed.
 
 ### Overdue Workflow Constraint
-- Bill templates mention penalties and disconnection, but there is **no automated overdue or disconnection workflow** yet.
-- This is now tracked under **EH5: Overdue & Disconnection Workflow**.
+- Receivables now include an explicit overdue follow-up workspace with reminder, final-notice, disconnection-review, disconnection, and reinstatement workflow states.
+- Bill overdue status is now evaluated operationally on the server instead of remaining display-only language on printed statements.
+- EH5 now includes a low-cost notification foundation: customer email capture, notification logging, Resend-ready email delivery, and Semaphore-ready SMS delivery.
+- By default, email is attempted for all EH5 customer notices, while SMS is limited to higher-priority templates unless `DWDS_NOTIFICATION_SMS_TEMPLATES` is expanded.
+- EH5 has been user-validated and is now closed.
 
 ### Tooling Constraint
 - The installed `ui-ux-pro-max` skill had to run in written-rule fallback mode because the local Python path could not execute the searchable script workflow.
@@ -74,12 +78,12 @@
 - Notes: Historical collections filtering, unpaid and partially paid receivables analytics, and overdue visibility are implemented and validated.
 
 ### EH4: Cashiering & Settlement Expansion
-- Status: `in validation`
-- Notes: Official receipt generation and explicit partial-settlement cashiering are implemented. Customer credit handling remains deferred.
+- Status: `complete`
+- Notes: Official receipt generation and explicit partial-settlement cashiering are implemented and validated. Customer credit handling remains deferred.
 
 ### EH5: Overdue & Disconnection Workflow
-- Status: `not started`
-- Notes: Should follow once receivables visibility and policy decisions are clear.
+- Status: `complete`
+- Notes: Dedicated receivables follow-up workflow, server-side overdue status syncing, disconnection tracking, reinstatement guardrails, and low-cost SMS/email notification plumbing are implemented and validated.
 
 ### EH6: Product Surface Expansion
 - Status: `not started`
@@ -90,4 +94,4 @@
 - Notes: Low product priority, but useful before another major UI redesign cycle.
 
 ## Current Next-Step Recommendation
-Validate **EH4: Cashiering & Settlement Expansion** in the live UI. Do not begin **EH5** until EH4 validation is accepted.
+EH5 is closed. Do not begin **EH6** until the user explicitly approves that next phase.

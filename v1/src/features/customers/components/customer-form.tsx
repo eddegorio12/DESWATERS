@@ -28,6 +28,7 @@ export function CustomerForm() {
       name: "",
       address: "",
       contactNumber: "",
+      email: "",
     },
   });
 
@@ -106,6 +107,23 @@ export function CustomerForm() {
           <p className="mt-2 text-sm text-destructive">
             {form.formState.errors.contactNumber?.message}
           </p>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-foreground" htmlFor="email">
+            Email address
+          </label>
+          <input
+            id="email"
+            type="email"
+            className={`${fieldClassName} bg-white`}
+            placeholder="customer@example.com"
+            {...form.register("email")}
+          />
+          <p className="mt-2 text-sm text-muted-foreground">
+            Optional, but required if overdue notices should also go out by email.
+          </p>
+          <p className="mt-2 text-sm text-destructive">{form.formState.errors.email?.message}</p>
         </div>
 
         {serverError ? (
