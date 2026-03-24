@@ -41,7 +41,8 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 - **Tailwind CSS + shadcn/ui**
 
 ### Planned Supporting Stack
-- **Railway** or another managed platform for app hosting and PostgreSQL
+- **Supabase Postgres** as the practical managed PostgreSQL target for the next deployment pass
+- **Railway** or another managed platform for app hosting and PostgreSQL if deployment preferences change later
 - **Supabase Storage** for uploaded files if receipt, proof, or document storage is formally added
 - **Resend** or a similar email provider if notices become a scoped feature
 - **Xendit** only when online consumer payments are explicitly added in a later phase
@@ -53,6 +54,7 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 - Standardize on **PostgreSQL** for non-local environments
 - Use **Prisma Migrate** as the canonical migration workflow
 - Keep `prisma.config.ts` as the datasource binding layer for Prisma v7
+- Managed providers such as Supabase should use pooled `DATABASE_URL` runtime access plus direct `DIRECT_URL` migration access
 - The baseline PostgreSQL migration is now committed in `prisma/migrations/20260323_eh1_postgresql_baseline/`
 
 ### EH2: Authorization & Staff Controls

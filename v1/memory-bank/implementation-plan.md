@@ -65,6 +65,7 @@ Current progress:
 - Prisma schema and runtime have been switched to PostgreSQL-first operation.
 - The repo now includes a PostgreSQL baseline migration and local/staging/production setup guidance.
 - MVP baseline validation against a live PostgreSQL environment has been completed and validated.
+- Prisma v7 config now also supports the production-style split of pooled `DATABASE_URL` runtime connections and direct `DIRECT_URL` migration connections needed by managed providers such as Supabase.
 
 ### EH2: Authorization & Staff Controls
 **Priority:** High
@@ -203,15 +204,21 @@ Current progress:
 The next recommended task is **Vercel deployment setup** for the implemented DWDS staff/admin application.
 
 Target outcomes:
-1. Configure the Vercel project with root directory `v1`.
-2. Provision and connect a production PostgreSQL database.
+1. Confirm the Vercel project root directory remains `v1`, which is already configured.
+2. Finish the Supabase-managed PostgreSQL connection by completing successful migration deployment and wiring the hosted app to the managed database environment variables.
 3. Attach a custom owned domain before switching Clerk from Development to Production, because Clerk Production cannot use the default `*.vercel.app` provider domain.
 4. Set Clerk production environment variables and redirect URLs.
-5. Run Prisma production migrations.
-6. Define the first-admin bootstrap path before exposing the admin sign-in flow publicly.
+5. Define the first-admin bootstrap path before exposing the admin sign-in flow publicly.
+6. Validate the hosted staff sign-in and dashboard flow against the final deployment infrastructure.
 
 Current dependency note:
 - Until the custom domain exists, keep the Vercel deployment on Clerk Development/test keys and treat that surface as staging rather than the final production release.
+- For managed Postgres deployment, keep `DATABASE_URL` on the provider pooler/runtime path and `DIRECT_URL` on the provider direct migration path.
+
+Current rollout status:
+- Vercel is already building from the `v1` root directory.
+- Supabase pooled and direct connection strings have been validated far enough for Prisma to reach the managed database and enumerate the committed migrations.
+- Final database rollout is not yet closed until migration deployment finishes successfully and the hosted app is confirmed against those environment variables.
 
 ## Backlog Intake Rule
 Any new future work should be added here as a named enhancement phase with:

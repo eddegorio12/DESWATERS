@@ -10,6 +10,7 @@
 - EH7 has now restored the searchable local design-tooling workflow.
 - The public GitHub repository surface has now been cleaned up with a stronger root README, CI workflow, license, and real redacted product screenshots.
 - DWDS now includes a custom PNG logo system with transparent brand asset handling, shared marketing/auth/dashboard lockups, and branded browser/app icons.
+- DWDS deployment planning now uses Supabase Postgres as the practical managed database target, with pooled runtime connections and direct migration connections validated from the repo.
 
 ## Implemented Milestones
 
@@ -45,6 +46,7 @@
 - Prisma v7 configuration remains centralized in `prisma.config.ts`.
 - A baseline PostgreSQL migration and repeatable environment setup guidance now exist in the repo.
 - MVP workflow validation against a live PostgreSQL environment has been completed, so EH1 is now closed.
+- Supabase pooler-based `DATABASE_URL` plus direct `DIRECT_URL` testing now reaches the managed Postgres target from the repo, and Prisma can enumerate the committed migrations against that environment.
 
 ### Authorization Constraint
 - Role-based authorization is now enforced in protected admin routes and server actions.
@@ -78,12 +80,13 @@
 - The next operational step is production deployment setup, with Vercel currently treated as the preferred hosting target.
 - Production readiness still depends on real PostgreSQL, Clerk production configuration, first-admin bootstrap in the target environment, and a custom owned domain for Clerk Production.
 - Until a custom domain exists, the Vercel `vercel.app` deployment should be treated as a test or staging surface rather than the final public production release.
+- Supabase is now the practical managed Postgres target for the next deployment pass, but the database password should be rotated because it was exposed during connection troubleshooting.
 
 ## Enhancement Phase Status
 
 ### EH1: Data Platform Hardening
 - Status: `complete`
-- Notes: PostgreSQL-first runtime, migration baseline, setup guidance, and live-environment validation are complete.
+- Notes: PostgreSQL-first runtime, migration baseline, setup guidance, live-environment validation, and Supabase pooled/direct connection validation are complete.
 
 ### EH2: Authorization & Staff Controls
 - Status: `complete`
@@ -110,4 +113,4 @@
 - Notes: Search-assisted `ui-ux-pro-max` execution now works through `scripts/run-ui-ux-pro-max.ps1` and `npm run design:search -- ...`, with sibling Python imports hardened inside the skill entrypoints.
 
 ## Current Next-Step Recommendation
-The next recommended step is **Vercel deployment setup** for the current staff/admin DWDS product surface.
+The next recommended step is to **finish Vercel deployment setup** for the current staff/admin DWDS product surface by closing the remaining infrastructure tasks: successful Supabase migration deployment, custom domain attachment, Clerk Production setup, and first-admin bootstrap.

@@ -36,6 +36,7 @@
 - The repository has been moved back to a **PostgreSQL-first runtime path**.
 - The prior SQLite adapter path has been removed from the intended runtime.
 - EH1 has been validated and closed, so PostgreSQL is now the confirmed primary runtime path in the repo.
+- Prisma v7 connection configuration now lives in `prisma.config.ts`, where pooled `DATABASE_URL` runtime access and direct `DIRECT_URL` migration access can be defined separately for managed Postgres providers.
 
 ## Physical Architecture: Implemented Surfaces
 
@@ -52,6 +53,8 @@
   - Clerk route protection for `/admin/*` in Next.js 16
 - `src/lib/prisma.ts`
   - Central Prisma singleton used by server components and server actions with environment-driven PostgreSQL connections
+- `prisma.config.ts`
+  - Central Prisma v7 datasource binding for `DATABASE_URL` runtime access and optional `DIRECT_URL` migration access
 - `src/features/auth/lib/authorization.ts`
   - Central role matrix for protected module access, staff approval state checks, and sensitive server-side capability checks
 - `src/features/auth/actions/review-staff-access.ts`
