@@ -51,6 +51,7 @@ next-env.d.ts
 /.codex/
 AGENTS.md
 CLAUDE.md
+.chrome-headless/
 __pycache__/
 *.pyc
 

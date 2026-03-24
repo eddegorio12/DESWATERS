@@ -21,17 +21,19 @@ Not implemented yet:
 
 ## Screenshots
 
+Current repository screenshots are real product captures with sensitive fields redacted for public sharing.
+
 ### Operations Dashboard
 
-![DWDS dashboard preview](./v1/public/marketing/dashboard-preview.svg)
+![DWDS dashboard screenshot](./v1/public/github/dashboard.png)
 
 ### Billing Review
 
-![DWDS billing preview](./v1/public/marketing/billing-preview.svg)
+![DWDS billing screenshot](./v1/public/github/billing.png)
 
 ### Receivables Follow-Up
 
-![DWDS follow-up preview](./v1/public/marketing/follow-up-preview.svg)
+![DWDS follow-up screenshot](./v1/public/github/follow-up.png)
 
 ## Project Location
 
@@ -39,6 +41,7 @@ The active Next.js application is inside [`v1/`](./v1).
 
 Important files:
 - app documentation: [`v1/README.md`](./v1/README.md)
+- screenshot workflow: [`v1/docs/github-screenshots.md`](./v1/docs/github-screenshots.md)
 - app source: [`v1/src/`](./v1/src)
 - Prisma schema: [`v1/prisma/schema.prisma`](./v1/prisma/schema.prisma)
 - deployment workflow: [`v1/.github/workflows/ci.yml`](./v1/.github/workflows/ci.yml)
