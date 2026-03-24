@@ -21,7 +21,7 @@ export function BrandLockup({
   const dimensions = compact
     ? { width: 122, height: 45 }
     : size === "sm"
-      ? { width: 148, height: 55 }
+      ? { width: 126, height: 46 }
       : size === "lg"
         ? { width: 196, height: 72 }
         : { width: 168, height: 62 };
