@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
+    "postinstall": "prisma generate",
     "design:search": "powershell -ExecutionPolicy Bypass -File .\\scripts\\run-ui-ux-pro-max.ps1",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",

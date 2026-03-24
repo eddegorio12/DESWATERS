@@ -8,6 +8,7 @@
 - EH5 has now been validated, including the email-first follow-up notification path.
 - EH6 has now been validated after public-surface testing.
 - EH7 has now restored the searchable local design-tooling workflow.
+- The public GitHub repository surface has now been cleaned up with a stronger root README, CI workflow, license, and real redacted product screenshots.
 
 ## Implemented Milestones
 
@@ -33,6 +34,7 @@
 - The marketing site and production-facing admin UI copy were implemented.
 - The admin dashboard was redesigned into a stronger operations hub.
 - The public marketing site now includes reusable DWDS brand assets, screenshot-style product previews, and clearer deployment-ready rollout messaging.
+- The repository root now presents the product more clearly for public review, including real redacted screenshots of the dashboard, billing, and follow-up surfaces.
 
 ## Important Historical Constraints
 
@@ -68,6 +70,12 @@
 - The installed `ui-ux-pro-max` skill had to run in written-rule fallback mode because the local Python path could not execute the searchable script workflow.
 - The Windows Store `python.exe` alias remains broken on this machine, but DWDS now bypasses it through a repo-local launcher that resolves a usable interpreter and restores searchable skill execution.
 
+### Deployment Readiness Constraint
+- The current product is ready to be positioned as a staff/admin utility operations system plus public marketing site.
+- The consumer portal remains deferred and should not be implied in deployment or repo copy.
+- The next operational step is production deployment setup, with Vercel currently treated as the preferred hosting target.
+- Production readiness still depends on real PostgreSQL, Clerk production configuration, and first-admin bootstrap in the target environment.
+
 ## Enhancement Phase Status
 
 ### EH1: Data Platform Hardening
@@ -99,4 +107,4 @@
 - Notes: Search-assisted `ui-ux-pro-max` execution now works through `scripts/run-ui-ux-pro-max.ps1` and `npm run design:search -- ...`, with sibling Python imports hardened inside the skill entrypoints.
 
 ## Current Next-Step Recommendation
-EH7 is closed. The next recommendation should come from a newly approved enhancement phase rather than additional EH7 recovery work.
+The next recommended step is **Vercel deployment setup** for the current staff/admin DWDS product surface.

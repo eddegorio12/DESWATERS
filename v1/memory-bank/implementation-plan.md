@@ -31,6 +31,7 @@ Developers should not reopen completed MVP steps unless they are fixing regressi
 - Daily collections reporting implemented
 - Public marketing route group implemented
 - Admin dashboard redesigned into a production-facing operations hub
+- Public GitHub repo landing page polished with stronger README structure, CI, license, and real redacted product screenshots
 
 ## Current Validation Baseline
 Use this as the minimum smoke test after major refactors:
@@ -194,6 +195,17 @@ Current progress:
 - DWDS now includes `scripts/run-ui-ux-pro-max.ps1`, which skips the broken Windows Store `python.exe` alias and locates a usable local interpreter instead.
 - `package.json` now exposes `npm run design:search -- ...` as the stable repo entrypoint for searchable design-system and domain lookups.
 - Search and `--design-system` execution have been verified successfully from the repo after the recovery work.
+
+## Current Next Recommendation
+
+The next recommended task is **Vercel deployment setup** for the implemented DWDS staff/admin application.
+
+Target outcomes:
+1. Configure the Vercel project with root directory `v1`.
+2. Provision and connect a production PostgreSQL database.
+3. Set Clerk production environment variables and redirect URLs.
+4. Run Prisma production migrations.
+5. Define the first-admin bootstrap path before exposing the admin sign-in flow publicly.
 
 ## Backlog Intake Rule
 Any new future work should be added here as a named enhancement phase with:

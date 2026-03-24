@@ -22,8 +22,10 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - First-time Clerk accounts now require explicit admin or manager approval before protected DWDS dashboard access is granted.
 - EH6 public-surface expansion is validated and closed.
 - EH7 tooling recovery is complete, and the repo now includes a stable launcher for searchable `ui-ux-pro-max` execution.
+- The public repository surface is now presentation-ready enough for sharing, with real redacted screenshots and cleaner root-level documentation.
 - The current intended database runtime is **PostgreSQL via Prisma v7**.
 - EH1 through EH7 are complete.
+- The next recommended operational task is Vercel deployment setup for the current staff/admin DWDS release.
 
 ## 3. Enhancement Backlog Handling
 - Treat the enhancement roadmap in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md) as the canonical backlog instead of inventing new unnamed phases.
