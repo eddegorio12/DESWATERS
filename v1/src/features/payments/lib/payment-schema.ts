@@ -1,5 +1,6 @@
-import { PaymentMethod } from "@prisma/client";
 import { z } from "zod";
+
+import { PAYMENT_METHODS } from "@/features/payments/lib/payment-methods";
 
 const numericField = (label: string) =>
   z
@@ -11,7 +12,7 @@ const numericField = (label: string) =>
 export const paymentFormSchema = z.object({
   billId: z.uuid("Select a valid bill."),
   amount: numericField("Payment amount").positive("Payment amount must be greater than 0."),
-  method: z.enum(PaymentMethod, {
+  method: z.enum(PAYMENT_METHODS, {
     error: "Select a valid payment method.",
   }),
   referenceId: z
@@ -21,7 +22,7 @@ export const paymentFormSchema = z.object({
     .optional()
     .or(z.literal("")),
 }).superRefine((value, ctx) => {
-  if (value.method !== PaymentMethod.CASH && !value.referenceId?.trim()) {
+  if (value.method !== "CASH" && !value.referenceId?.trim()) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: "Reference ID is required for non-cash payments.",

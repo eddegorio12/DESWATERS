@@ -4,12 +4,15 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PaymentMethod } from "@prisma/client";
 import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { recordPayment } from "@/features/payments/actions";
+import {
+  PAYMENT_METHODS,
+  type PaymentMethod,
+} from "@/features/payments/lib/payment-methods";
 import {
   paymentFormSchema,
   type PaymentFormInput,
@@ -279,7 +282,7 @@ export function PaymentForm({ bills }: PaymentFormProps) {
             disabled={paymentBlocked}
             {...form.register("method")}
           >
-            {Object.values(PaymentMethod).map((method) => (
+            {PAYMENT_METHODS.map((method) => (
               <option key={method} value={method}>
                 {paymentMethodLabels[method]}
               </option>
