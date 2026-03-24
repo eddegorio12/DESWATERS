@@ -31,6 +31,7 @@ import {
 import { FirstLoginSync } from "@/features/auth/components/first-login-sync";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
+import { BrandLockup } from "@/features/marketing/components/brand-lockup";
 import { getTodayCollectionRange } from "@/features/reports/lib/collections";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -156,6 +157,7 @@ export default async function AdminDashboardPage() {
           <section className="overflow-hidden rounded-[2rem] border border-[#d4e7e3] bg-[linear-gradient(135deg,#0f3f43,#19545a_52%,#2f7b82)] text-white shadow-[0_32px_90px_-48px_rgba(16,63,67,0.9)]">
             <div className="flex flex-col gap-6 px-6 py-6 lg:flex-row lg:items-start lg:justify-between lg:px-8 lg:py-8">
               <div className="max-w-3xl space-y-4">
+                <BrandLockup inverse className="w-fit" />
                 <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/78">
                   Staff Provisioning
                 </span>
@@ -315,6 +317,7 @@ export default async function AdminDashboardPage() {
         <section className="overflow-hidden rounded-[2rem] border border-[#d4e7e3] bg-[linear-gradient(135deg,#0f3f43,#19545a_52%,#2f7b82)] text-white shadow-[0_32px_90px_-48px_rgba(16,63,67,0.9)]">
           <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:py-8">
             <div className="space-y-5">
+              <BrandLockup inverse className="w-fit" />
               <div className="flex flex-wrap items-center gap-3">
                 <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/78">
                   Operations Workspace
