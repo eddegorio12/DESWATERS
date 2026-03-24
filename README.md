@@ -4,9 +4,9 @@ DESWATERS is the repository for the `DEGORIO WATER DISTRIBUTION SERVICES` web pl
 
 The current implemented application lives in [`v1/`](./v1).
 
-## Current Release Scope
+This release is the staff-facing utility operations system plus a public marketing site.
 
-The live product surface is the staff-facing utility operations system plus a public marketing site.
+## Current Release Scope
 
 Implemented now:
 - staff sign-in and approval-gated admin access
@@ -18,6 +18,24 @@ Not implemented yet:
 - consumer self-service portal
 - online customer payments
 - public customer-facing account access
+
+## Features
+
+- Role-gated staff access with Clerk authentication and approval flow
+- Customer registry, meter assignment, and tariff configuration
+- Reading intake, approval, and bill generation workflow
+- Cashier payment posting with printable billing and receipt output
+- Receivables reporting plus overdue follow-up and service enforcement states
+- Public product pages that present the current DWDS operational surface
+
+## Deployment
+
+- Hosting target: Vercel
+- App root directory: `v1`
+- Database: PostgreSQL
+- Auth: Clerk
+
+For deployment and app-level environment setup, see [`v1/README.md`](./v1/README.md).
 
 ## Screenshots
 
@@ -45,12 +63,6 @@ Important files:
 - app source: [`v1/src/`](./v1/src)
 - Prisma schema: [`v1/prisma/schema.prisma`](./v1/prisma/schema.prisma)
 - deployment workflow: [`v1/.github/workflows/ci.yml`](./v1/.github/workflows/ci.yml)
-
-## Deployment Notes
-
-If you deploy this repository on Vercel, set the project root directory to `v1`.
-
-The current deployment target is the staff/admin app and marketing site, not the consumer portal.
 
 ## License
 
