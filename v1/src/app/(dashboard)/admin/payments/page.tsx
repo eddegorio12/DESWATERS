@@ -130,7 +130,7 @@ export default async function AdminPaymentsPage() {
                 })
               )}
             >
-              Collections dashboard
+              Reporting workspace
             </Link>
             <Link
               href="/admin/billing"

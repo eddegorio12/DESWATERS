@@ -3,13 +3,15 @@ import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 type CollectionsSummaryProps = {
   totalCollections: number;
   paymentCount: number;
-  collectionDateLabel: string;
+  collectionRangeLabel: string;
+  dayCount: number;
 };
 
 export function CollectionsSummary({
   totalCollections,
   paymentCount,
-  collectionDateLabel,
+  collectionRangeLabel,
+  dayCount,
 }: CollectionsSummaryProps) {
   return (
     <section className="grid gap-4 md:grid-cols-3">
@@ -18,10 +20,11 @@ export function CollectionsSummary({
           Collection Date
         </p>
         <p className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
-          {collectionDateLabel}
+          {collectionRangeLabel}
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Daily totals use recorded payment timestamps for the current operating day.
+          {dayCount} operating day{dayCount === 1 ? "" : "s"} aligned to Manila
+          reporting time.
         </p>
       </article>
 
@@ -33,7 +36,7 @@ export function CollectionsSummary({
           {formatCurrency(totalCollections)}
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Sum of all payments recorded today.
+          Sum of all completed payments recorded inside the selected range.
         </p>
       </article>
 
@@ -45,7 +48,7 @@ export function CollectionsSummary({
           {paymentCount}
         </p>
         <p className="mt-2 text-sm text-muted-foreground">
-          Completed payment entries included in today&apos;s report.
+          Completed payment entries included in this reporting window.
         </p>
       </article>
     </section>

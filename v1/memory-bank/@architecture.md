@@ -73,7 +73,7 @@
 - `src/features/payments/`
   - Manual payment validation, cashier entry UI, and payment history UI
 - `src/features/reports/`
-  - Current-day collections date-range logic and reporting components
+  - Historical collections filtering, receivables analytics, and reporting components
 - `src/features/marketing/`
   - Shared public-site layout, navigation, footer, and centralized site content
 
@@ -99,8 +99,9 @@
 - Exact-balance discipline is enforced because customer credit handling does not yet exist.
 
 ### Reporting Workflow
-- Current reporting is limited to completed payments within the current Manila operating day.
-- Historical reporting and broader receivables analytics are not implemented yet.
+- Reporting now supports a Manila-aligned date range for completed payment history.
+- The reporting workspace also summarizes unpaid, partially paid, and overdue receivables from open bills.
+- Overdue visibility is currently analytical only; it is not yet an automated enforcement workflow.
 
 ## Enhancement Architecture Targets
 
@@ -126,6 +127,8 @@
 - Expand `src/features/reports/` into a broader reporting domain rather than placing analytics directly in route files.
 - Keep date filtering, receivables calculations, and overdue summaries in dedicated reporting libs.
 - Add charts only when they serve an operational use case, not for decoration.
+- The current implementation now uses dedicated report libs for date-range parsing and receivables summarization under `src/features/reports/lib/`.
+- EH3 remains pending validation before it should be treated as closed.
 
 ### EH4: Cashiering & Settlement Expansion
 - Extend `src/features/payments/` for receipts, installment policies, or customer credit handling.

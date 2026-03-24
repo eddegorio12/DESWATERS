@@ -94,7 +94,7 @@ Implemented role access expectations:
 
 ### EH3: Reporting & Receivables Intelligence
 **Priority:** High
-**Status:** Not started
+**Status:** In validation
 **Depends on:** EH1 recommended, but not strictly required
 
 Scope:
@@ -105,6 +105,12 @@ Scope:
 Exit criteria:
 - Staff can review more than the current operating day.
 - Receivables follow-up is visible from dedicated reporting surfaces.
+
+Current progress:
+- `/admin/collections` now accepts server-side historical date filters through Next.js page `searchParams`.
+- The reporting workspace now shows completed-payment history for the selected range plus receivables summaries for unpaid, partially paid, and overdue bills.
+- Overdue reporting is derived from due dates and outstanding balances so staff can see follow-up pressure even when no separate enforcement workflow exists yet.
+- EH3 should remain in validation until the user confirms the reporting workflow in the UI.
 
 ### EH4: Cashiering & Settlement Expansion
 **Priority:** Medium

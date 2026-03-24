@@ -22,7 +22,7 @@ Document the stack that is actually implemented today, the target production sta
 ### Authentication
 - **Clerk** for identity and session management
 - Local staff role data stored in Prisma `User.role`
-- Fine-grained authorization is **not fully implemented yet**
+- Fine-grained authorization is implemented in app logic through the shared authorization helper
 
 ### Database Runtime in Repo Today
 - **Prisma v7**
@@ -60,7 +60,8 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 - A future permission layer should only be introduced if the current role model becomes too coarse
 
 ### EH3: Reporting & Receivables Intelligence
-- The current repo does **not** yet include reporting-specific chart or table libraries beyond the base UI stack
+- EH3 is implemented with server-rendered reporting components and local calculation helpers under `src/features/reports/`
+- The current repo still does **not** include reporting-specific chart libraries beyond the base UI stack
 - Add reporting libraries only when a concrete enhancement requires them
 - Avoid speculative dependencies until reporting requirements are stable
 
@@ -89,5 +90,5 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 
 ## Practical Summary
 - **Implemented now:** Next.js, TypeScript, Prisma v7, Clerk, Tailwind CSS, shadcn/ui, React Hook Form, Zod, PostgreSQL-first runtime path
-- **Target next after EH2:** reporting expansion and receivables intelligence under EH3
+- **Currently validating:** EH3 reporting expansion and receivables intelligence
 - **Deferred until explicitly scoped:** Xendit, storage-backed uploads, notifications, advanced reporting libraries, receipt-generation tooling

@@ -41,9 +41,9 @@
 - Staff access now follows an implemented route and mutation matrix for admin, manager, customer service, meter reader, billing staff, and cashier roles.
 
 ### Reporting Constraint
-- Reporting currently stops at **current-day collections**.
-- Historical filters, receivables analytics, and overdue analysis are not yet implemented.
-- This is now tracked under **EH3: Reporting & Receivables Intelligence**.
+- Reporting now includes **historical collections filters plus receivables visibility** in the admin reporting workspace.
+- Overdue and follow-up reporting is now visible, but automated enforcement workflows are still not implemented.
+- EH3 is implemented in code and awaiting user validation before it is marked complete.
 
 ### Cashiering Constraint
 - Payment handling currently assumes the exact-balance manual cashier workflow.
@@ -69,8 +69,8 @@
 - Notes: Protected route access, mutation enforcement, and role-specific read-only fallbacks are now in place.
 
 ### EH3: Reporting & Receivables Intelligence
-- Status: `not started`
-- Notes: Needed to fulfill the broader reporting expectations implied by the product vision.
+- Status: `in validation`
+- Notes: Historical collections filtering, unpaid and partially paid receivables analytics, and overdue visibility are implemented and awaiting validation.
 
 ### EH4: Cashiering & Settlement Expansion
 - Status: `not started`
@@ -89,4 +89,4 @@
 - Notes: Low product priority, but useful before another major UI redesign cycle.
 
 ## Current Next-Step Recommendation
-Proceed to **EH3: Reporting & Receivables Intelligence** once EH2 validation is accepted.
+Validate **EH3: Reporting & Receivables Intelligence** in the live UI. Do not begin **EH4** until EH3 validation is accepted.

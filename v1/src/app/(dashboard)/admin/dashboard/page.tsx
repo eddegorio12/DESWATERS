@@ -92,9 +92,9 @@ const moduleCards: {
   {
     module: "collections",
     href: "/admin/collections",
-    title: "Collections report",
-    description: "Audit current-day payment records and confirm total collections fast.",
-    action: "Open collections",
+    title: "Reporting workspace",
+    description: "Review filtered payment history and live receivables from one module.",
+    action: "Open reporting",
     icon: BanknoteArrowDown,
   },
 ];
@@ -273,8 +273,8 @@ export default async function AdminDashboardPage() {
     },
     {
       module: "collections" as const,
-      title: "Collections in motion",
-      summary: "Open receivables and today's posted payments.",
+      title: "Reporting and follow-up",
+      summary: "Open receivables and filtered collection history in one view.",
       count: `${openBillCount} open bills`,
       href: "/admin/collections",
     },
@@ -304,7 +304,7 @@ export default async function AdminDashboardPage() {
                 </h1>
                 <p className="max-w-2xl text-sm leading-7 text-white/76 sm:text-base">
                   Monitor the full DWDS workflow from account setup to cashier settlement,
-                  with billing review, printable statements, and same-day collections
+                  with billing review, printable statements, and reporting
                   visibility in one protected surface.
                 </p>
               </div>
@@ -334,7 +334,7 @@ export default async function AdminDashboardPage() {
                       })
                     )}
                   >
-                    Open collections
+                    Open reporting
                   </Link>
                 ) : null}
               </div>

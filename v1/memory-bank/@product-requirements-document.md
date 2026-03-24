@@ -10,6 +10,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 - The **MVP admin web app is implemented**.
 - The current live surface covers authentication, customer records, meter management, tariff setup, reading intake and approval, billing, payment encoding, printable consumer bills, daily collections reporting, and a public marketing site.
 - The repo now runs on a validated **PostgreSQL-first data path**.
+- EH3 reporting expansion is now implemented in code and awaiting validation before the roadmap advances to EH4.
 
 ## Product Principles
 - **Modularity is mandatory:** Features must be separated into focused modules.
@@ -57,13 +58,17 @@ Current status:
 - Mixed-access modules now expose read-only views where appropriate instead of relying on UI display alone.
 
 ### EH3: Reporting & Receivables Intelligence
-Goal: Expand reporting beyond today’s collections into a usable finance and follow-up workspace.
+Goal: Expand reporting beyond today's collections into a usable finance and follow-up workspace.
 
 Expected outcomes:
 - historical filters
 - receivables and unpaid-account views
 - overdue visibility
 - charts or trend summaries where they materially help operations
+
+Current status:
+- Historical date filtering, receivables visibility, and overdue reporting are implemented in the admin reporting workspace.
+- EH3 remains in validation until the user confirms the workflow.
 
 ### EH4: Cashiering & Settlement Expansion
 Goal: Support a broader real-world cashier workflow after the exact-balance MVP flow.
