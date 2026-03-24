@@ -69,7 +69,7 @@ export function PaymentForm({ bills }: PaymentFormProps) {
     defaultValues: {
       billId: bills[0]?.id ?? "",
       amount: bills[0]?.outstandingBalance,
-      method: PaymentMethod.CASH,
+      method: "CASH",
       referenceId: "",
     },
   });
@@ -91,7 +91,7 @@ export function PaymentForm({ bills }: PaymentFormProps) {
     [bills, selectedBillId]
   );
   const paymentBlocked = bills.length === 0;
-  const requiresReference = selectedMethod !== PaymentMethod.CASH;
+  const requiresReference = selectedMethod !== "CASH";
   const safeEnteredAmount =
     typeof enteredAmount === "number" && Number.isFinite(enteredAmount) ? enteredAmount : 0;
   const balanceAfterPreview = selectedBill
@@ -133,7 +133,7 @@ export function PaymentForm({ bills }: PaymentFormProps) {
         form.reset({
           billId: nextBill?.id ?? values.billId,
           amount: nextBill?.outstandingBalance,
-          method: PaymentMethod.CASH,
+          method: "CASH",
           referenceId: "",
         });
         router.refresh();
