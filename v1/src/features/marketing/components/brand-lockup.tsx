@@ -17,13 +17,13 @@ export function BrandLockup({
   compact = false,
 }: BrandLockupProps) {
   return (
-    <Link href={href} className={cn("inline-flex", className)}>
-      <span className={cn("flex items-center gap-3", compact && "gap-2.5")}>
+    <Link href={href} className={cn("inline-flex shrink-0", className)}>
+      <span className="flex items-center">
         <Image
           src="/brand/dwds-logo.png"
           alt="DWDS logo"
-          width={compact ? 168 : 220}
-          height={compact ? 62 : 82}
+          width={compact ? 122 : 184}
+          height={compact ? 45 : 68}
           className={cn(
             "h-auto w-auto object-contain",
             inverse && "brightness-0 invert"
