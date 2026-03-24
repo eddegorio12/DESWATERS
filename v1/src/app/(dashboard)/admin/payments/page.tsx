@@ -6,12 +6,20 @@ import { BillStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
+import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { PaymentForm } from "@/features/payments/components/payment-form";
 import { PaymentHistoryList } from "@/features/payments/components/payment-history-list";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
 export default async function AdminPaymentsPage() {
+  const access = await getModuleAccess("payments");
+
+  if (access.status !== "authorized") {
+    return <ModuleAccessStateView module="payments" access={access} />;
+  }
+
   const { userId } = await auth();
 
   if (!userId) {

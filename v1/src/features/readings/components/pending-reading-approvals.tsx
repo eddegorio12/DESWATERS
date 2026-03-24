@@ -26,20 +26,31 @@ type PendingReadingApprovalsProps = {
       } | null;
     };
     reader: {
+      id: string;
       name: string;
     };
   }[];
+  canApprove: boolean;
+  canDeleteAny: boolean;
+  canDeleteOwn: boolean;
+  currentUserId: string;
 };
 
-export function PendingReadingApprovals({ readings }: PendingReadingApprovalsProps) {
+export function PendingReadingApprovals({
+  readings,
+  canApprove,
+  canDeleteAny,
+  canDeleteOwn,
+  currentUserId,
+}: PendingReadingApprovalsProps) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const allSelected = useMemo(
-    () => readings.length > 0 && selectedIds.length === readings.length,
-    [readings.length, selectedIds.length]
+    () => canApprove && readings.length > 0 && selectedIds.length === readings.length,
+    [canApprove, readings.length, selectedIds.length]
   );
 
   function handleToggleAll(checked: boolean) {
@@ -80,22 +91,25 @@ export function PendingReadingApprovals({ readings }: PendingReadingApprovalsPro
             Pending reading approvals
           </h2>
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-            Billing staff can approve individual readings or approve multiple
-            pending-review submissions in one action.
+            {canApprove
+              ? "Billing staff, managers, and admins can approve individual readings or approve multiple pending-review submissions in one action."
+              : "This queue is visible for follow-up, but approval authority is limited to billing staff, managers, and admins."}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            className="h-10 rounded-xl px-4"
-            disabled={isPending || selectedIds.length === 0}
-            onClick={handleBulkApprove}
-          >
-            {isPending ? "Approving selected..." : `Approve selected (${selectedIds.length})`}
-          </Button>
-        </div>
+        {canApprove ? (
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              className="h-10 rounded-xl px-4"
+              disabled={isPending || selectedIds.length === 0}
+              onClick={handleBulkApprove}
+            >
+              {isPending ? "Approving selected..." : `Approve selected (${selectedIds.length})`}
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       {serverError ? (
@@ -110,13 +124,15 @@ export function PendingReadingApprovals({ readings }: PendingReadingApprovalsPro
             <thead className="bg-secondary/55">
               <tr className="text-sm text-muted-foreground">
                 <th className="w-12 px-4 py-3">
-                  <input
-                    type="checkbox"
-                    aria-label="Select all pending readings"
-                    className={checkboxClassName}
-                    checked={allSelected}
-                    onChange={(event) => handleToggleAll(event.target.checked)}
-                  />
+                  {canApprove ? (
+                    <input
+                      type="checkbox"
+                      aria-label="Select all pending readings"
+                      className={checkboxClassName}
+                      checked={allSelected}
+                      onChange={(event) => handleToggleAll(event.target.checked)}
+                    />
+                  ) : null}
                 </th>
                 <th className="px-4 py-3 font-medium">Meter</th>
                 <th className="px-4 py-3 font-medium">Customer</th>
@@ -131,19 +147,23 @@ export function PendingReadingApprovals({ readings }: PendingReadingApprovalsPro
               {readings.length ? (
                 readings.map((reading) => {
                   const isSelected = selectedIds.includes(reading.id);
+                  const canDeleteReading =
+                    canDeleteAny || (canDeleteOwn && reading.reader.id === currentUserId);
 
                   return (
                     <tr key={reading.id} className="align-top text-sm">
                       <td className="px-4 py-4">
-                        <input
-                          type="checkbox"
-                          aria-label={`Select reading for meter ${reading.meter.meterNumber}`}
-                          className={checkboxClassName}
-                          checked={isSelected}
-                          onChange={(event) =>
-                            handleToggleOne(reading.id, event.target.checked)
-                          }
-                        />
+                        {canApprove ? (
+                          <input
+                            type="checkbox"
+                            aria-label={`Select reading for meter ${reading.meter.meterNumber}`}
+                            className={checkboxClassName}
+                            checked={isSelected}
+                            onChange={(event) =>
+                              handleToggleOne(reading.id, event.target.checked)
+                            }
+                          />
+                        ) : null}
                       </td>
                       <td className="px-4 py-4">
                         <div className="font-mono text-xs text-muted-foreground">
@@ -179,8 +199,12 @@ export function PendingReadingApprovals({ readings }: PendingReadingApprovalsPro
                       <td className="px-4 py-4 text-muted-foreground">{reading.reader.name}</td>
                       <td className="px-4 py-4">
                         <div className="flex flex-col items-end gap-2 sm:flex-row sm:justify-end">
-                          <ApproveReadingButton readingId={reading.id} />
-                          <DeleteReadingButton readingId={reading.id} />
+                          {canApprove ? <ApproveReadingButton readingId={reading.id} /> : null}
+                          {canDeleteReading ? (
+                            <DeleteReadingButton readingId={reading.id} />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">No edit access</span>
+                          )}
                         </div>
                       </td>
                     </tr>

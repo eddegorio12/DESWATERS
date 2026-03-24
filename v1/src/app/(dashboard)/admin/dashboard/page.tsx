@@ -1,3 +1,4 @@
+import type { ComponentType } from "react";
 import Link from "next/link";
 import {
   Activity,
@@ -13,18 +14,35 @@ import {
 
 import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
-import { BillStatus, PaymentStatus, ReadingStatus } from "@prisma/client";
+import { BillStatus, PaymentStatus, ReadingStatus, type Role } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
 import { syncCurrentUser } from "@/features/auth/actions/sync-current-user";
+import {
+  canPerformCapability,
+  getAccessibleAdminModules,
+  getModuleAccess,
+  roleDisplayName,
+  roleSummaries,
+  type AdminModule,
+} from "@/features/auth/lib/authorization";
 import { FirstLoginSync } from "@/features/auth/components/first-login-sync";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 import { getTodayCollectionRange } from "@/features/reports/lib/collections";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
-const moduleCards = [
+const moduleCards: {
+  module: AdminModule;
+  href: string;
+  title: string;
+  description: string;
+  action: string;
+  icon: ComponentType<{ className?: string }>;
+}[] = [
   {
+    module: "customers",
     href: "/admin/customers",
     title: "Customer registry",
     description: "Maintain service accounts, addresses, contacts, and account status.",
@@ -32,6 +50,7 @@ const moduleCards = [
     icon: Users,
   },
   {
+    module: "meters",
     href: "/admin/meters",
     title: "Meter operations",
     description: "Register meters, assign them to customers, and verify service linkage.",
@@ -39,6 +58,7 @@ const moduleCards = [
     icon: Gauge,
   },
   {
+    module: "tariffs",
     href: "/admin/tariffs",
     title: "Tariff rules",
     description: "Manage minimum charges, progressive tiers, and the active billing tariff.",
@@ -46,6 +66,7 @@ const moduleCards = [
     icon: FileSpreadsheet,
   },
   {
+    module: "readings",
     href: "/admin/readings",
     title: "Reading review",
     description: "Encode field readings, approve submissions, and keep an audit trail visible.",
@@ -53,6 +74,7 @@ const moduleCards = [
     icon: ClipboardCheck,
   },
   {
+    module: "billing",
     href: "/admin/billing",
     title: "Billing queue",
     description: "Generate bills from approved readings and review open receivables.",
@@ -60,6 +82,7 @@ const moduleCards = [
     icon: ReceiptText,
   },
   {
+    module: "payments",
     href: "/admin/payments",
     title: "Cashier posting",
     description: "Record completed payments and track remaining balances by account.",
@@ -67,24 +90,82 @@ const moduleCards = [
     icon: WalletCards,
   },
   {
+    module: "collections",
     href: "/admin/collections",
     title: "Collections report",
     description: "Audit current-day payment records and confirm total collections fast.",
     action: "Open collections",
     icon: BanknoteArrowDown,
   },
-] as const;
+];
+
+function getRoleCapabilities(role: Role) {
+  return [
+    canPerformCapability(role, "customers:create") ? "Customer and meter setup" : null,
+    canPerformCapability(role, "readings:create") ? "Reading entry" : null,
+    canPerformCapability(role, "readings:approve") ? "Reading approval" : null,
+    canPerformCapability(role, "billing:generate") ? "Bill generation" : null,
+    canPerformCapability(role, "payments:record") ? "Cashier posting" : null,
+    canPerformCapability(role, "tariffs:create") ? "Tariff changes" : null,
+  ].filter(Boolean) as string[];
+}
 
 export default async function AdminDashboardPage() {
+  const access = await getModuleAccess("dashboard");
+
+  if (access.status === "signed_out" || access.status === "inactive") {
+    return <ModuleAccessStateView module="dashboard" access={access} />;
+  }
+
   const { userId } = await auth();
 
   if (!userId) {
     return null;
   }
 
-  const localUser = await prisma.user.findUnique({
-    where: { clerkId: userId },
-  });
+  if (access.status === "missing_profile") {
+    return (
+      <main className="min-h-screen bg-transparent px-5 py-6 sm:px-6 sm:py-8">
+        <FirstLoginSync needsSync syncUser={syncCurrentUser} />
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+          <section className="overflow-hidden rounded-[2rem] border border-[#d4e7e3] bg-[linear-gradient(135deg,#0f3f43,#19545a_52%,#2f7b82)] text-white shadow-[0_32px_90px_-48px_rgba(16,63,67,0.9)]">
+            <div className="flex flex-col gap-6 px-6 py-6 lg:flex-row lg:items-start lg:justify-between lg:px-8 lg:py-8">
+              <div className="max-w-3xl space-y-4">
+                <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/78">
+                  Staff Provisioning
+                </span>
+                <h1 className="font-heading text-4xl leading-tight tracking-tight sm:text-5xl">
+                  Finish the first-login sync before opening DWDS modules.
+                </h1>
+                <p className="max-w-2xl text-sm leading-7 text-white/76 sm:text-base">
+                  Your Clerk session is active, but the local staff record still needs to be
+                  created. Stay on this page until the dashboard refresh completes.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/"
+                  className={cn(
+                    buttonVariants({
+                      variant: "outline",
+                      className:
+                        "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
+                    })
+                  )}
+                >
+                  Public site
+                </Link>
+                <UserButton />
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
+  const localUser = access.user;
   const { start, end } = getTodayCollectionRange();
 
   const [
@@ -134,7 +215,8 @@ export default async function AdminDashboardPage() {
   ]);
 
   const todayCollections = todayPayments.reduce((sum, payment) => sum + payment.amount, 0);
-
+  const accessibleModules = new Set(getAccessibleAdminModules(localUser.role));
+  const visibleModuleCards = moduleCards.filter((card) => accessibleModules.has(card.module));
   const operationsSnapshot = [
     {
       label: "Customers",
@@ -167,37 +249,41 @@ export default async function AdminDashboardPage() {
       accent: "bg-[#fae4e2] text-[#8a2f28]",
     },
   ] as const;
-
   const workflowBoard = [
     {
+      module: "customers" as const,
       title: "Accounts and meters",
       summary: "Customer setup and active service linkage.",
       count: `${customerCount} accounts`,
       href: "/admin/customers",
     },
     {
+      module: "readings" as const,
       title: "Reading review queue",
       summary: "Pending field submissions requiring validation.",
       count: `${pendingReadingCount} pending`,
       href: "/admin/readings",
     },
     {
+      module: "billing" as const,
       title: "Ready to bill",
       summary: "Approved usage records that can move into receivables.",
       count: `${approvedReadingCount} approved`,
       href: "/admin/billing",
     },
     {
+      module: "collections" as const,
       title: "Collections in motion",
-      summary: "Open receivables and today’s posted payments.",
+      summary: "Open receivables and today's posted payments.",
       count: `${openBillCount} open bills`,
       href: "/admin/collections",
     },
-  ] as const;
+  ].filter((item) => accessibleModules.has(item.module));
+  const roleCapabilities = getRoleCapabilities(localUser.role);
 
   return (
     <main className="min-h-screen bg-transparent px-5 py-6 sm:px-6 sm:py-8">
-      <FirstLoginSync needsSync={!localUser} syncUser={syncCurrentUser} />
+      <FirstLoginSync needsSync={false} syncUser={syncCurrentUser} />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <section className="overflow-hidden rounded-[2rem] border border-[#d4e7e3] bg-[linear-gradient(135deg,#0f3f43,#19545a_52%,#2f7b82)] text-white shadow-[0_32px_90px_-48px_rgba(16,63,67,0.9)]">
           <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:py-8">
@@ -217,36 +303,40 @@ export default async function AdminDashboardPage() {
                   room.
                 </h1>
                 <p className="max-w-2xl text-sm leading-7 text-white/76 sm:text-base">
-                  Monitor the full DWDS workflow from account setup to cashier
-                  settlement, with billing review, printable statements, and same-day
-                  collections visibility in one protected surface.
+                  Monitor the full DWDS workflow from account setup to cashier settlement,
+                  with billing review, printable statements, and same-day collections
+                  visibility in one protected surface.
                 </p>
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/admin/readings"
-                  className={cn(
-                    buttonVariants({
-                      className:
-                        "h-11 rounded-full bg-white px-6 text-primary hover:bg-white/90",
-                    })
-                  )}
-                >
-                  Review reading queue
-                </Link>
-                <Link
-                  href="/admin/collections"
-                  className={cn(
-                    buttonVariants({
-                      variant: "outline",
-                      className:
-                        "h-11 rounded-full border-white/18 bg-white/8 px-6 text-white hover:bg-white/12 hover:text-white",
-                    })
-                  )}
-                >
-                  Open collections
-                </Link>
+                {accessibleModules.has("readings") ? (
+                  <Link
+                    href="/admin/readings"
+                    className={cn(
+                      buttonVariants({
+                        className:
+                          "h-11 rounded-full bg-white px-6 text-primary hover:bg-white/90",
+                      })
+                    )}
+                  >
+                    Review reading queue
+                  </Link>
+                ) : null}
+                {accessibleModules.has("collections") ? (
+                  <Link
+                    href="/admin/collections"
+                    className={cn(
+                      buttonVariants({
+                        variant: "outline",
+                        className:
+                          "h-11 rounded-full border-white/18 bg-white/8 px-6 text-white hover:bg-white/12 hover:text-white",
+                      })
+                    )}
+                  >
+                    Open collections
+                  </Link>
+                ) : null}
               </div>
             </div>
 
@@ -255,13 +345,9 @@ export default async function AdminDashboardPage() {
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
                   Signed-in staff
                 </p>
-                <p className="mt-3 text-xl font-semibold tracking-tight">
-                  {localUser ? localUser.name : "Provisioning local profile"}
-                </p>
+                <p className="mt-3 text-xl font-semibold tracking-tight">{localUser.name}</p>
                 <p className="mt-2 text-sm text-white/72">
-                  {localUser
-                    ? `${localUser.role} with active Clerk session`
-                    : "The first-login sync will finish automatically after refresh."}
+                  {roleDisplayName[localUser.role]} with active Clerk session
                 </p>
               </article>
 
@@ -282,10 +368,15 @@ export default async function AdminDashboardPage() {
               <div className="flex items-center justify-between rounded-[1.75rem] border border-white/12 bg-white/8 px-5 py-4 sm:col-span-2 lg:col-span-1">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
-                    Current session
+                    Role coverage
                   </p>
-                  <p className="mt-2 max-w-[15rem] break-all font-mono text-xs text-white/72">
-                    {userId}
+                  <p className="mt-2 max-w-[16rem] text-sm font-medium text-white">
+                    {roleSummaries[localUser.role]}
+                  </p>
+                  <p className="mt-2 max-w-[16rem] text-xs text-white/72">
+                    {roleCapabilities.length
+                      ? roleCapabilities.join(" | ")
+                      : "No operational capabilities are currently assigned."}
                   </p>
                 </div>
                 <UserButton />
@@ -337,24 +428,30 @@ export default async function AdminDashboardPage() {
             </div>
 
             <div className="mt-8 grid gap-4">
-              {workflowBoard.map((item) => (
-                <Link
-                  key={item.title}
-                  href={item.href}
-                  className="cursor-pointer rounded-[1.5rem] border border-border/80 bg-secondary/35 px-5 py-4 transition-colors duration-200 hover:bg-secondary/60"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-base font-semibold text-foreground">{item.title}</p>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                        {item.summary}
-                      </p>
+              {workflowBoard.length ? (
+                workflowBoard.map((item) => (
+                  <Link
+                    key={item.title}
+                    href={item.href}
+                    className="cursor-pointer rounded-[1.5rem] border border-border/80 bg-secondary/35 px-5 py-4 transition-colors duration-200 hover:bg-secondary/60"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="text-base font-semibold text-foreground">{item.title}</p>
+                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                          {item.summary}
+                        </p>
+                      </div>
+                      <ArrowRight className="mt-1 size-4 shrink-0 text-primary" />
                     </div>
-                    <ArrowRight className="mt-1 size-4 shrink-0 text-primary" />
-                  </div>
-                  <p className="mt-4 text-sm font-medium text-primary">{item.count}</p>
-                </Link>
-              ))}
+                    <p className="mt-4 text-sm font-medium text-primary">{item.count}</p>
+                  </Link>
+                ))
+              ) : (
+                <div className="rounded-[1.5rem] border border-border/80 bg-secondary/35 px-5 py-5 text-sm leading-6 text-muted-foreground">
+                  No downstream workflow modules are assigned to this role yet.
+                </div>
+              )}
             </div>
           </article>
 
@@ -371,7 +468,7 @@ export default async function AdminDashboardPage() {
             </div>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2">
-              {moduleCards.map((item) => {
+              {visibleModuleCards.map((item) => {
                 const Icon = item.icon;
 
                 return (

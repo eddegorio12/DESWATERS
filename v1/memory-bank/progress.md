@@ -37,8 +37,8 @@
 - MVP workflow validation against a live PostgreSQL environment has been completed, so EH1 is now closed.
 
 ### Authorization Constraint
-- Local users have a `role`, but the app does **not yet fully enforce role-based authorization** across modules.
-- This is now tracked under **EH2: Authorization & Staff Controls**.
+- Role-based authorization is now enforced in protected admin routes and server actions.
+- Staff access now follows an implemented route and mutation matrix for admin, manager, customer service, meter reader, billing staff, and cashier roles.
 
 ### Reporting Constraint
 - Reporting currently stops at **current-day collections**.
@@ -65,8 +65,8 @@
 - Notes: PostgreSQL-first runtime, migration baseline, setup guidance, and live-environment validation are complete.
 
 ### EH2: Authorization & Staff Controls
-- Status: `not started`
-- Notes: Required before the current role model can be considered operationally safe.
+- Status: `complete`
+- Notes: Protected route access, mutation enforcement, and role-specific read-only fallbacks are now in place.
 
 ### EH3: Reporting & Receivables Intelligence
 - Status: `not started`
@@ -89,4 +89,4 @@
 - Notes: Low product priority, but useful before another major UI redesign cycle.
 
 ## Current Next-Step Recommendation
-Proceed to **EH2: Authorization & Staff Controls** unless a business-driven need makes reporting more urgent in the short term.
+Proceed to **EH3: Reporting & Receivables Intelligence** once EH2 validation is accepted.

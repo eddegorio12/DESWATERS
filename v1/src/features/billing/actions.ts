@@ -1,10 +1,10 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { BillStatus, Prisma, ReadingStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
+import { requireStaffCapability } from "@/features/auth/lib/authorization";
 import {
   calculateBillIssueDate,
   calculateBillDueDate,
@@ -12,34 +12,8 @@ import {
   formatBillingPeriod,
 } from "@/features/billing/lib/billing-calculations";
 
-async function requireAuthenticatedUser() {
-  const { userId, isAuthenticated } = await auth();
-
-  if (!isAuthenticated || !userId) {
-    throw new Error("You must be signed in to generate bills.");
-  }
-
-  const localUser = await prisma.user.findUnique({
-    where: {
-      clerkId: userId,
-    },
-    select: {
-      id: true,
-      active: true,
-    },
-  });
-
-  if (!localUser || !localUser.active) {
-    throw new Error(
-      "Your local staff profile is unavailable. Re-open the dashboard and let account sync complete."
-    );
-  }
-
-  return localUser;
-}
-
 export async function generateBill(readingId: string) {
-  await requireAuthenticatedUser();
+  await requireStaffCapability("billing:generate");
 
   const reading = await prisma.reading.findUnique({
     where: {

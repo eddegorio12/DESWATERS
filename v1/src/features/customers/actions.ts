@@ -1,9 +1,8 @@
 "use server";
-
-import { auth } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
+import { requireStaffCapability } from "@/features/auth/lib/authorization";
 
 import {
   customerFormSchema,
@@ -18,11 +17,7 @@ function createAccountNumber() {
 }
 
 export async function createCustomer(values: CustomerFormInput) {
-  const { userId, isAuthenticated } = await auth();
-
-  if (!isAuthenticated || !userId) {
-    throw new Error("You must be signed in to create a customer.");
-  }
+  await requireStaffCapability("customers:create");
 
   const parsedValues = customerFormSchema.safeParse(values);
 

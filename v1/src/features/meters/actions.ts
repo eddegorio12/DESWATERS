@@ -1,10 +1,10 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
+import { requireStaffCapability } from "@/features/auth/lib/authorization";
 
 import {
   meterAssignmentSchema,
@@ -13,20 +13,12 @@ import {
   type MeterFormInput,
 } from "@/features/meters/lib/meter-schema";
 
-async function requireAuthenticatedUser() {
-  const { userId, isAuthenticated } = await auth();
-
-  if (!isAuthenticated || !userId) {
-    throw new Error("You must be signed in to manage meters.");
-  }
-}
-
 function normalizeInstallDate(installDate: string) {
   return new Date(`${installDate}T00:00:00`);
 }
 
 export async function registerMeter(values: MeterFormInput) {
-  await requireAuthenticatedUser();
+  await requireStaffCapability("meters:register");
 
   const parsedValues = meterFormSchema.safeParse(values);
 
@@ -64,7 +56,7 @@ export async function registerMeter(values: MeterFormInput) {
 }
 
 export async function assignMeterToCustomer(values: MeterAssignmentInput) {
-  await requireAuthenticatedUser();
+  await requireStaffCapability("meters:assign");
 
   const parsedValues = meterAssignmentSchema.safeParse(values);
 

@@ -6,12 +6,23 @@ import { BillStatus, ReadingStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
+import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import {
+  canPerformCapability,
+  getModuleAccess,
+} from "@/features/auth/lib/authorization";
 import { ApprovedReadingBillQueue } from "@/features/billing/components/approved-reading-bill-queue";
 import { UnpaidBillList } from "@/features/billing/components/unpaid-bill-list";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
 export default async function AdminBillingPage() {
+  const access = await getModuleAccess("billing");
+
+  if (access.status !== "authorized") {
+    return <ModuleAccessStateView module="billing" access={access} />;
+  }
+
   const { userId } = await auth();
 
   if (!userId) {
@@ -86,6 +97,7 @@ export default async function AdminBillingPage() {
       },
     }),
   ]);
+  const canGenerateBills = canPerformCapability(access.user.role, "billing:generate");
 
   return (
     <AdminPageShell
@@ -157,7 +169,11 @@ export default async function AdminBillingPage() {
       ]}
     >
 
-        <ApprovedReadingBillQueue activeTariff={activeTariff} readings={approvedReadings} />
+        <ApprovedReadingBillQueue
+          activeTariff={activeTariff}
+          readings={approvedReadings}
+          canGenerateBills={canGenerateBills}
+        />
         <UnpaidBillList bills={unpaidBills} />
     </AdminPageShell>
   );

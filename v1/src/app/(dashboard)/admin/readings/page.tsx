@@ -6,6 +6,11 @@ import { MeterStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
+import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import {
+  canPerformCapability,
+  getModuleAccess,
+} from "@/features/auth/lib/authorization";
 import { PendingReadingApprovals } from "@/features/readings/components/pending-reading-approvals";
 import { ReadingForm } from "@/features/readings/components/reading-form";
 import { ReadingList } from "@/features/readings/components/reading-list";
@@ -13,6 +18,12 @@ import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
 export default async function AdminReadingsPage() {
+  const access = await getModuleAccess("readings");
+
+  if (access.status !== "authorized") {
+    return <ModuleAccessStateView module="readings" access={access} />;
+  }
+
   const { userId } = await auth();
 
   if (!userId) {
@@ -70,6 +81,7 @@ export default async function AdminReadingsPage() {
         },
         reader: {
           select: {
+            id: true,
             name: true,
           },
         },
@@ -98,6 +110,7 @@ export default async function AdminReadingsPage() {
         },
         reader: {
           select: {
+            id: true,
             name: true,
           },
         },
@@ -116,6 +129,10 @@ export default async function AdminReadingsPage() {
     }));
 
   const flaggedForEntryCount = meterOptions.length;
+  const canCreateReading = canPerformCapability(access.user.role, "readings:create");
+  const canApproveReading = canPerformCapability(access.user.role, "readings:approve");
+  const canDeleteAnyReading = canPerformCapability(access.user.role, "readings:delete:any");
+  const canDeleteOwnReading = canPerformCapability(access.user.role, "readings:delete:own");
 
   return (
     <AdminPageShell
@@ -185,12 +202,40 @@ export default async function AdminReadingsPage() {
       ]}
     >
 
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
-          <ReadingForm meters={meterOptions} />
-        </section>
+        {canCreateReading ? (
+          <section className="grid gap-6 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
+            <ReadingForm meters={meterOptions} />
+          </section>
+        ) : (
+          <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
+            <div className="space-y-2">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                Read-Only Entry
+              </p>
+              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+                This role cannot encode new readings.
+              </h2>
+              <p className="text-sm leading-6 text-muted-foreground">
+                Meter reading entry remains limited to field readers, managers, and admins.
+                You can still review pending submissions and recent reading history here.
+              </p>
+            </div>
+          </section>
+        )}
 
-        <PendingReadingApprovals readings={pendingReadings} />
-        <ReadingList readings={readings} />
+        <PendingReadingApprovals
+          readings={pendingReadings}
+          canApprove={canApproveReading}
+          canDeleteAny={canDeleteAnyReading}
+          canDeleteOwn={canDeleteOwnReading}
+          currentUserId={access.user.id}
+        />
+        <ReadingList
+          readings={readings}
+          canDeleteAny={canDeleteAnyReading}
+          canDeleteOwn={canDeleteOwnReading}
+          currentUserId={access.user.id}
+        />
     </AdminPageShell>
   );
 }

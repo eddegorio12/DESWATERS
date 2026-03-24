@@ -66,7 +66,7 @@ Current progress:
 
 ### EH2: Authorization & Staff Controls
 **Priority:** High
-**Status:** Not started
+**Status:** Complete
 **Depends on:** none
 
 Scope:
@@ -77,6 +77,20 @@ Scope:
 Exit criteria:
 - Roles affect access, not just display.
 - Sensitive actions reject authenticated but unauthorized users.
+
+Current progress:
+- Central role-based authorization now exists in `src/features/auth/lib/authorization.ts`.
+- Protected admin routes now enforce role access before loading module data.
+- Server actions now reject authenticated-but-unauthorized staff for customer, meter, tariff, reading, billing, and payment mutations.
+- The readings and tariffs surfaces now degrade into role-appropriate read-only states where mutation authority is intentionally absent.
+
+Implemented role access expectations:
+- `ADMIN`: full access across all protected admin modules and sensitive mutations.
+- `MANAGER`: full operational access across all protected admin modules and sensitive mutations.
+- `CUSTOMER_SERVICE`: customer and meter modules only.
+- `METER_READER`: dashboard plus reading-entry workspace, including deletion of their own pending readings only.
+- `BILLING_STAFF`: tariffs read-only, reading approval, billing, and collections visibility.
+- `CASHIER`: payments, printable bill view, and collections visibility.
 
 ### EH3: Reporting & Receivables Intelligence
 **Priority:** High

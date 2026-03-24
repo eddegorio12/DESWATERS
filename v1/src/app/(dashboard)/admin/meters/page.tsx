@@ -5,6 +5,8 @@ import { auth } from "@clerk/nextjs/server";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
+import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { MeterAssignmentForm } from "@/features/meters/components/meter-assignment-form";
 import { MeterForm } from "@/features/meters/components/meter-form";
 import { MeterList } from "@/features/meters/components/meter-list";
@@ -12,6 +14,12 @@ import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
 export default async function AdminMetersPage() {
+  const access = await getModuleAccess("meters");
+
+  if (access.status !== "authorized") {
+    return <ModuleAccessStateView module="meters" access={access} />;
+  }
+
   const { userId } = await auth();
 
   if (!userId) {

@@ -9,7 +9,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 ## Current State
 - The **MVP admin web app is implemented**.
 - The current live surface covers authentication, customer records, meter management, tariff setup, reading intake and approval, billing, payment encoding, printable consumer bills, daily collections reporting, and a public marketing site.
-- The repo has been moved back to a **PostgreSQL-first data path**, with final workflow validation still pending under EH1.
+- The repo now runs on a validated **PostgreSQL-first data path**.
 
 ## Product Principles
 - **Modularity is mandatory:** Features must be separated into focused modules.
@@ -27,11 +27,9 @@ Build a modular, robust web-based utility operations system that starts with a s
 7. **Public product surface:** Marketing pages that present DWDS as a finished MVP.
 
 ## Known MVP Limits
-- Authentication exists, but **fine-grained role authorization is not yet enforced** throughout feature actions and routes.
 - Reporting is limited to the **current operating day collections view**.
 - Overdue and disconnection handling are currently **display and status concepts**, not a full automated receivables workflow.
 - Payments support **manual cashier encoding only** in the implemented MVP.
-- PostgreSQL-first runtime wiring is now in repo, but full workflow parity still needs validation against a live PostgreSQL environment.
 
 ## Enhancement Roadmap
 
@@ -44,8 +42,7 @@ Expected outcomes:
 - environment parity for testing and deployment
 
 Current status:
-- PostgreSQL-first schema/runtime wiring and baseline migration are now in repo.
-- Full workflow parity still needs to be validated in a live PostgreSQL environment.
+- PostgreSQL-first schema/runtime wiring, baseline migration, and live workflow validation are complete.
 
 ### EH2: Authorization & Staff Controls
 Goal: Enforce role-based authorization beyond simple authentication and role storage.
@@ -54,6 +51,10 @@ Expected outcomes:
 - permission-aware server actions and route guards
 - clearer staff-role boundaries across dashboard modules
 - safer separation of cashier, billing, reader, and admin capabilities
+
+Current status:
+- Role-based authorization is now enforced in protected admin routes and server actions.
+- Mixed-access modules now expose read-only views where appropriate instead of relying on UI display alone.
 
 ### EH3: Reporting & Receivables Intelligence
 Goal: Expand reporting beyond today’s collections into a usable finance and follow-up workspace.

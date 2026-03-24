@@ -1,40 +1,14 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { BillStatus, PaymentStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { paymentFormSchema, type PaymentFormInput } from "@/features/payments/lib/payment-schema";
+import { requireStaffCapability } from "@/features/auth/lib/authorization";
 import { prisma } from "@/lib/prisma";
 
-async function requireAuthenticatedCashier() {
-  const { userId, isAuthenticated } = await auth();
-
-  if (!isAuthenticated || !userId) {
-    throw new Error("You must be signed in to record payments.");
-  }
-
-  const localUser = await prisma.user.findUnique({
-    where: {
-      clerkId: userId,
-    },
-    select: {
-      id: true,
-      active: true,
-    },
-  });
-
-  if (!localUser || !localUser.active) {
-    throw new Error(
-      "Your local staff profile is unavailable. Re-open the dashboard and let account sync complete."
-    );
-  }
-
-  return localUser;
-}
-
 export async function recordPayment(values: PaymentFormInput) {
-  await requireAuthenticatedCashier();
+  await requireStaffCapability("payments:record");
 
   const parsedValues = paymentFormSchema.safeParse(values);
 

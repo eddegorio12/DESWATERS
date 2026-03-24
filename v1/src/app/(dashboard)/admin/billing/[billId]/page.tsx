@@ -6,6 +6,8 @@ import { UserButton } from "@clerk/nextjs";
 import { auth } from "@clerk/nextjs/server";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { PrintBillButton } from "@/features/billing/components/print-bill-button";
 import {
   calculateBillIssueDate,
@@ -47,6 +49,12 @@ function formatDateTime(value: Date) {
 export default async function AdminBillTemplatePage({
   params,
 }: AdminBillTemplatePageProps) {
+  const access = await getModuleAccess("billPrint");
+
+  if (access.status !== "authorized") {
+    return <ModuleAccessStateView module="billPrint" access={access} />;
+  }
+
   const { userId } = await auth();
 
   if (!userId) {

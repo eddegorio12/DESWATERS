@@ -5,12 +5,20 @@ import { auth } from "@clerk/nextjs/server";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
+import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { CustomerForm } from "@/features/customers/components/customer-form";
 import { CustomerList } from "@/features/customers/components/customer-list";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
 export default async function AdminCustomersPage() {
+  const access = await getModuleAccess("customers");
+
+  if (access.status !== "authorized") {
+    return <ModuleAccessStateView module="customers" access={access} />;
+  }
+
   const { userId } = await auth();
 
   if (!userId) {

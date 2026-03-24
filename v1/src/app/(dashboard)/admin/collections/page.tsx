@@ -6,6 +6,8 @@ import { PaymentStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
+import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { CollectionsSummary } from "@/features/reports/components/collections-summary";
 import { DailyCollectionsList } from "@/features/reports/components/daily-collections-list";
 import {
@@ -16,6 +18,12 @@ import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
 export default async function AdminCollectionsPage() {
+  const access = await getModuleAccess("collections");
+
+  if (access.status !== "authorized") {
+    return <ModuleAccessStateView module="collections" access={access} />;
+  }
+
   const { userId } = await auth();
 
   if (!userId) {

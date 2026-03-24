@@ -52,6 +52,8 @@
   - Clerk route protection for `/admin/*` in Next.js 16
 - `src/lib/prisma.ts`
   - Central Prisma singleton used by server components and server actions with environment-driven PostgreSQL connections
+- `src/features/auth/lib/authorization.ts`
+  - Central role matrix for protected module access and sensitive server-side capability checks
 - `src/components/ui/`
   - Shared `shadcn/ui` primitives only
 
@@ -80,7 +82,7 @@
 ### Authentication
 - Clerk proves identity.
 - Local staff records are synchronized on first login.
-- Local role data exists in Prisma, but authorization remains incomplete.
+- Local role data is enforced through centralized route and capability checks before protected data loads or mutations execute.
 
 ### Meter Reading Workflow
 - Readings are encoded as `PENDING_REVIEW`.
@@ -111,8 +113,13 @@
 - EH1 validation has been completed. Remaining platform work now falls outside EH1.
 
 ### EH2: Authorization & Staff Controls
-- Introduce explicit authorization checks in server actions and route-level data access.
-- Keep authorization logic close to feature boundaries instead of embedding it into client UI.
+- Explicit authorization checks now exist in protected routes and server actions through `src/features/auth/lib/authorization.ts`.
+- The current implemented module boundaries are:
+  - `ADMIN` and `MANAGER`: full admin-surface access
+  - `CUSTOMER_SERVICE`: customers and meters
+  - `METER_READER`: readings entry/history, with deletion restricted to their own pending readings
+  - `BILLING_STAFF`: tariffs read-only, readings approval, billing, and collections
+  - `CASHIER`: payments, collections, and printable bill view
 - If permissions outgrow the current role enum, introduce a permission layer without collapsing feature modularity.
 
 ### EH3: Reporting & Receivables Intelligence

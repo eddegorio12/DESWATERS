@@ -1,45 +1,18 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { ReadingStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
+import { requireStaffCapability } from "@/features/auth/lib/authorization";
 
 import {
   readingFormSchema,
   type ReadingFormInput,
 } from "@/features/readings/lib/reading-schema";
 
-async function requireAuthenticatedReader() {
-  const { userId, isAuthenticated } = await auth();
-
-  if (!isAuthenticated || !userId) {
-    throw new Error("You must be signed in to log a meter reading.");
-  }
-
-  const localUser = await prisma.user.findUnique({
-    where: {
-      clerkId: userId,
-    },
-    select: {
-      id: true,
-      active: true,
-      name: true,
-    },
-  });
-
-  if (!localUser || !localUser.active) {
-    throw new Error(
-      "Your local staff profile is unavailable. Re-open the dashboard and let account sync complete."
-    );
-  }
-
-  return localUser;
-}
-
 export async function createReading(values: ReadingFormInput) {
-  const localUser = await requireAuthenticatedReader();
+  const localUser = await requireStaffCapability("readings:create");
 
   const parsedValues = readingFormSchema.safeParse(values);
 
@@ -108,7 +81,7 @@ export async function createReading(values: ReadingFormInput) {
 }
 
 export async function deleteReading(readingId: string) {
-  await requireAuthenticatedReader();
+  const localUser = await requireStaffCapability("readings:delete:own");
 
   const reading = await prisma.reading.findUnique({
     where: {
@@ -117,6 +90,7 @@ export async function deleteReading(readingId: string) {
     select: {
       id: true,
       status: true,
+      readerId: true,
       bill: {
         select: {
           id: true,
@@ -137,6 +111,12 @@ export async function deleteReading(readingId: string) {
     throw new Error("Only pending-review readings can be deleted.");
   }
 
+  const canDeleteAny = localUser.role === "ADMIN" || localUser.role === "MANAGER";
+
+  if (!canDeleteAny && reading.readerId !== localUser.id) {
+    throw new Error("You can only delete your own pending readings.");
+  }
+
   await prisma.reading.delete({
     where: {
       id: reading.id,
@@ -148,7 +128,7 @@ export async function deleteReading(readingId: string) {
 }
 
 export async function approveReading(readingId: string) {
-  await requireAuthenticatedReader();
+  await requireStaffCapability("readings:approve");
 
   const reading = await prisma.reading.findUnique({
     where: {
@@ -188,7 +168,7 @@ export async function approveReading(readingId: string) {
 }
 
 export async function approveReadings(readingIds: string[]) {
-  await requireAuthenticatedReader();
+  await requireStaffCapability("readings:approve");
 
   const uniqueReadingIds = [...new Set(readingIds.filter(Boolean))];
 

@@ -29,7 +29,7 @@ Document the stack that is actually implemented today, the target production sta
 - **PostgreSQL** for the intended runtime path
 - Direct Prisma client connections driven by `DATABASE_URL`
 
-This replaces the earlier SQLite adapter workaround, though live PostgreSQL validation is still pending under EH1.
+This replaces the earlier SQLite adapter workaround, and live PostgreSQL validation is complete.
 
 ## Target Production Stack
 
@@ -56,7 +56,8 @@ This replaces the earlier SQLite adapter workaround, though live PostgreSQL vali
 
 ### EH2: Authorization & Staff Controls
 - Keep **Clerk** for auth
-- Build authorization in app logic using the existing Prisma `Role` enum or a future permission layer if the role model becomes too coarse
+- Authorization is now implemented in app logic through the existing Prisma `Role` enum and the shared helper in `src/features/auth/lib/authorization.ts`
+- A future permission layer should only be introduced if the current role model becomes too coarse
 
 ### EH3: Reporting & Receivables Intelligence
 - The current repo does **not** yet include reporting-specific chart or table libraries beyond the base UI stack
@@ -88,5 +89,5 @@ This replaces the earlier SQLite adapter workaround, though live PostgreSQL vali
 
 ## Practical Summary
 - **Implemented now:** Next.js, TypeScript, Prisma v7, Clerk, Tailwind CSS, shadcn/ui, React Hook Form, Zod, PostgreSQL-first runtime path
-- **Target next for platform hardening:** PostgreSQL workflow validation and environment parity
+- **Target next after EH2:** reporting expansion and receivables intelligence under EH3
 - **Deferred until explicitly scoped:** Xendit, storage-backed uploads, notifications, advanced reporting libraries, receipt-generation tooling

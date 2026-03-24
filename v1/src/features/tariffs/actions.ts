@@ -1,26 +1,18 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
+import { requireStaffCapability } from "@/features/auth/lib/authorization";
 
 import {
   tariffFormSchema,
   type TariffFormValues,
 } from "@/features/tariffs/lib/tariff-schema";
 
-async function requireAuthenticatedUser() {
-  const { userId, isAuthenticated } = await auth();
-
-  if (!isAuthenticated || !userId) {
-    throw new Error("You must be signed in to manage tariffs.");
-  }
-}
-
 export async function createTariff(values: TariffFormValues) {
-  await requireAuthenticatedUser();
+  await requireStaffCapability("tariffs:create");
 
   const parsedValues = tariffFormSchema.safeParse(values);
 

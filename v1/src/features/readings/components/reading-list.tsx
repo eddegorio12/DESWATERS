@@ -18,12 +18,21 @@ type ReadingListProps = {
       } | null;
     };
     reader: {
+      id: string;
       name: string;
     };
   }[];
+  canDeleteAny: boolean;
+  canDeleteOwn: boolean;
+  currentUserId: string;
 };
 
-export function ReadingList({ readings }: ReadingListProps) {
+export function ReadingList({
+  readings,
+  canDeleteAny,
+  canDeleteOwn,
+  currentUserId,
+}: ReadingListProps) {
   return (
     <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -57,52 +66,58 @@ export function ReadingList({ readings }: ReadingListProps) {
             </thead>
             <tbody className="divide-y divide-border bg-background">
               {readings.length ? (
-                readings.map((reading) => (
-                  <tr key={reading.id} className="align-top text-sm">
-                    <td className="px-4 py-4">
-                      <div className="font-mono text-xs text-muted-foreground">
-                        {reading.meter.meterNumber}
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {reading.readingDate.toLocaleString()}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      {reading.meter.customer ? (
-                        <div>
-                          <div className="font-medium text-foreground">
-                            {reading.meter.customer.name}
-                          </div>
-                          <div className="mt-1 text-xs text-muted-foreground">
-                            {reading.meter.customer.accountNumber}
-                          </div>
+                readings.map((reading) => {
+                  const canDeleteReading =
+                    reading.status === "PENDING_REVIEW" &&
+                    (canDeleteAny || (canDeleteOwn && reading.reader.id === currentUserId));
+
+                  return (
+                    <tr key={reading.id} className="align-top text-sm">
+                      <td className="px-4 py-4">
+                        <div className="font-mono text-xs text-muted-foreground">
+                          {reading.meter.meterNumber}
                         </div>
-                      ) : (
-                        <span className="text-muted-foreground">No customer linked</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-muted-foreground">
-                      {reading.previousReading}
-                    </td>
-                    <td className="px-4 py-4 text-muted-foreground">{reading.currentReading}</td>
-                    <td className="px-4 py-4 font-medium text-foreground">
-                      {reading.consumption}
-                    </td>
-                    <td className="px-4 py-4 text-muted-foreground">{reading.reader.name}</td>
-                    <td className="px-4 py-4">
-                      <span className="inline-flex rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-                        {reading.status.replace("_", " ")}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      {reading.status === "PENDING_REVIEW" ? (
-                        <DeleteReadingButton readingId={reading.id} />
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Locked</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                        <div className="mt-1 text-xs text-muted-foreground">
+                          {reading.readingDate.toLocaleString()}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        {reading.meter.customer ? (
+                          <div>
+                            <div className="font-medium text-foreground">
+                              {reading.meter.customer.name}
+                            </div>
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              {reading.meter.customer.accountNumber}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">No customer linked</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 text-muted-foreground">
+                        {reading.previousReading}
+                      </td>
+                      <td className="px-4 py-4 text-muted-foreground">{reading.currentReading}</td>
+                      <td className="px-4 py-4 font-medium text-foreground">
+                        {reading.consumption}
+                      </td>
+                      <td className="px-4 py-4 text-muted-foreground">{reading.reader.name}</td>
+                      <td className="px-4 py-4">
+                        <span className="inline-flex rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
+                          {reading.status.replace("_", " ")}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 text-right">
+                        {canDeleteReading ? (
+                          <DeleteReadingButton readingId={reading.id} />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">Locked</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td

@@ -21,11 +21,13 @@ type ApprovedReadingBillQueueProps = {
       } | null;
     };
   }[];
+  canGenerateBills: boolean;
 };
 
 export function ApprovedReadingBillQueue({
   activeTariff,
   readings,
+  canGenerateBills,
 }: ApprovedReadingBillQueueProps) {
   return (
     <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
@@ -38,8 +40,9 @@ export function ApprovedReadingBillQueue({
             Approved readings ready for billing
           </h2>
           <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-            Generate bills manually from approved readings. Bills use the active tariff and
-            create unpaid accounts receivable records.
+            {canGenerateBills
+              ? "Generate bills manually from approved readings. Bills use the active tariff and create unpaid accounts receivable records."
+              : "Review the approved reading queue here. Bill generation remains limited to billing staff, managers, and admins."}
           </p>
         </div>
         <div className="rounded-[1.4rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#f8fbfa,#eff7f5)] px-4 py-3 text-sm">
@@ -104,7 +107,11 @@ export function ApprovedReadingBillQueue({
                       {reading.consumption}
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <GenerateBillButton readingId={reading.id} />
+                      {canGenerateBills ? (
+                        <GenerateBillButton readingId={reading.id} />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Read-only</span>
+                      )}
                     </td>
                   </tr>
                 ))
