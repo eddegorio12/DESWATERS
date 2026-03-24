@@ -15,6 +15,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH5 overdue, disconnection, and email-first follow-up notification support are validated and closed.
 - EH5 now also includes customer-notification support for low-cost email and SMS follow-up.
 - EH6 public-surface expansion is now validated and closed after testing.
+- EH6 now also includes the active DWDS logo system across core public/admin entry surfaces plus branded browser/app icons.
 - EH7 tooling recovery is now complete, and the searchable local design-assistant workflow is usable again from the repo.
 
 ## Product Principles
@@ -112,7 +113,7 @@ Expected outcomes:
 - optional notifications and online-payment integrations when explicitly scoped
 
 Current status:
-- The marketing site now includes DWDS brand assets, screenshot-style product previews, and stronger deployment-ready copy for the implemented operational surface.
+- The marketing site now includes DWDS brand assets, screenshot-style product previews, stronger deployment-ready copy, and shared logo treatment across the navbar, footer, auth shell, and dashboard entry surfaces.
 - Consumer portal routes, public notifications, and online consumer payments remain deferred until explicitly approved.
 - EH6 has been validated and is now complete.
 

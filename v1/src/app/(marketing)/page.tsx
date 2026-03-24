@@ -201,15 +201,15 @@ export default function HomePage() {
         </article>
         <article className="rounded-[2rem] border border-[#89c6c7]/40 bg-[linear-gradient(145deg,#daf2ee,#ffffff)] p-8 shadow-[0_24px_80px_-55px_rgba(12,60,64,0.6)]">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary/70">
-            EH6 Outcome
+            Rollout Position
           </p>
           <h3 className="mt-4 font-heading text-3xl text-foreground">
-            Built as the operations core for public rollout without overstating future channels.
+            Positioned as a credible utility operations platform without overstating future channels.
           </h3>
           <p className="mt-4 text-sm leading-7 text-muted-foreground">
-            The current release focuses on staff operations. EH6 makes that maturity visible
-            through stronger brand assets, concrete product previews, and clearer rollout
-            language for what exists now versus what comes later.
+            The current release focuses on staff operations. The public surface now makes
+            that maturity visible through stronger brand assets, concrete product previews,
+            and clearer rollout language for what exists now versus what comes later.
           </p>
           <div className="mt-8 space-y-3 text-sm text-foreground">
             {launchReadiness.map((item) => (
@@ -231,7 +231,7 @@ export default function HomePage() {
         <SectionHeading
           eyebrow="Brand Direction"
           title="DWDS now presents itself like a deployable utility product."
-          description="EH6 keeps the public identity aligned with the restrained, operational character already established in the admin workspace."
+          description="The public identity stays aligned with the restrained, operational character already established in the admin workspace."
         />
         <div className="grid gap-5 md:grid-cols-3">
           {brandPrinciples.map((item) => (
@@ -258,8 +258,8 @@ export default function HomePage() {
               Put your utility operations on one source of truth before scaling outward.
             </h2>
             <p className="mt-4 text-sm leading-7 text-primary-foreground/78">
-              DWDS already covers the operational chain your team uses every day. EH6
-              turns that into a stronger public-facing product surface while keeping future
+              DWDS already covers the operational chain your team uses every day. The
+              current public surface communicates that clearly while keeping future
               consumer channels explicitly phased.
             </p>
           </div>

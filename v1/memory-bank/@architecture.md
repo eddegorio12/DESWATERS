@@ -82,6 +82,10 @@
   - Notification templates, provider integrations, phone normalization, and delivery logging for customer notices
 - `src/features/marketing/`
   - Shared public-site layout, navigation, footer, brand lockup, screenshot showcase components, and centralized site content
+- `public/brand/`
+  - DWDS PNG logo assets used by the shared brand lockup and related public/admin brand surfaces
+- `src/app/icon.png` and `src/app/apple-icon.png`
+  - App Router icon files generated from the DWDS shield mark for browser and device icon usage
 
 ## Implemented Workflow Boundaries
 
@@ -169,6 +173,8 @@
 - Public marketing content should stay under `src/features/marketing/` unless a future consumer domain becomes large enough to justify its own feature tree.
 - Online payment or notification integrations should be attached to explicit feature modules when those channels are approved.
 - The current EH6 implementation adds reusable DWDS public brand assets under `public/brand/` and screenshot-style product previews under `public/marketing/`.
+- The shared `BrandLockup` component now scales the DWDS PNG logo by placement so navbar, footer, auth, and dashboard surfaces stay visually balanced without separate ad hoc markup.
+- App icon metadata is now represented through `src/app/icon.png` and `src/app/apple-icon.png`, derived from the DWDS shield mark.
 - Marketing pages now present deployment-ready product evidence without introducing consumer-portal routes ahead of approval.
 - EH6 has been user-validated and is now closed.
 

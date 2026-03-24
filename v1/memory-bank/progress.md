@@ -9,6 +9,7 @@
 - EH6 has now been validated after public-surface testing.
 - EH7 has now restored the searchable local design-tooling workflow.
 - The public GitHub repository surface has now been cleaned up with a stronger root README, CI workflow, license, and real redacted product screenshots.
+- DWDS now includes a custom PNG logo system with transparent brand asset handling, shared marketing/auth/dashboard lockups, and branded browser/app icons.
 
 ## Implemented Milestones
 
@@ -34,6 +35,7 @@
 - The marketing site and production-facing admin UI copy were implemented.
 - The admin dashboard was redesigned into a stronger operations hub.
 - The public marketing site now includes reusable DWDS brand assets, screenshot-style product previews, and clearer deployment-ready rollout messaging.
+- The marketing header and footer plus auth and dashboard entry surfaces now use the shared DWDS logo lockup with refined size handling for each placement.
 - The repository root now presents the product more clearly for public review, including real redacted screenshots of the dashboard, billing, and follow-up surfaces.
 
 ## Important Historical Constraints
@@ -74,7 +76,8 @@
 - The current product is ready to be positioned as a staff/admin utility operations system plus public marketing site.
 - The consumer portal remains deferred and should not be implied in deployment or repo copy.
 - The next operational step is production deployment setup, with Vercel currently treated as the preferred hosting target.
-- Production readiness still depends on real PostgreSQL, Clerk production configuration, and first-admin bootstrap in the target environment.
+- Production readiness still depends on real PostgreSQL, Clerk production configuration, first-admin bootstrap in the target environment, and a custom owned domain for Clerk Production.
+- Until a custom domain exists, the Vercel `vercel.app` deployment should be treated as a test or staging surface rather than the final public production release.
 
 ## Enhancement Phase Status
 
@@ -100,7 +103,7 @@
 
 ### EH6: Product Surface Expansion
 - Status: `complete`
-- Notes: Marketing expansion is implemented and user-validated through brand assets, product previews, and stronger deployment-ready copy. Consumer portal routes remain unstarted.
+- Notes: Marketing expansion is implemented and user-validated through brand assets, product previews, stronger deployment-ready copy, shared DWDS logo integration, and branded app icons. Consumer portal routes remain unstarted.
 
 ### EH7: Tooling & Design Workflow Recovery
 - Status: `complete`

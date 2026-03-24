@@ -31,6 +31,7 @@ Developers should not reopen completed MVP steps unless they are fixing regressi
 - Daily collections reporting implemented
 - Public marketing route group implemented
 - Admin dashboard redesigned into a production-facing operations hub
+- Shared DWDS PNG logo lockup and branded app icons integrated across marketing, auth, and dashboard surfaces
 - Public GitHub repo landing page polished with stronger README structure, CI, license, and real redacted product screenshots
 
 ## Current Validation Baseline
@@ -176,6 +177,7 @@ Exit criteria:
 Current progress:
 - The public marketing surface now includes reusable DWDS brand assets plus screenshot-style product previews aligned to the implemented dashboard, billing, and follow-up modules.
 - Home, platform, workflows, and rollout pages now use deployment-ready copy that distinguishes live operational scope from future consumer-facing expansion.
+- The shared DWDS logo lockup now uses transparent PNG brand assets across the navbar, footer, auth shell, and dashboard hero, with branded browser/app icons under `src/app/`.
 - EH6 has been user-validated and is now closed. Do not begin EH7 unless the user explicitly approves that tooling work.
 
 ### EH7: Tooling & Design Workflow Recovery
@@ -203,9 +205,13 @@ The next recommended task is **Vercel deployment setup** for the implemented DWD
 Target outcomes:
 1. Configure the Vercel project with root directory `v1`.
 2. Provision and connect a production PostgreSQL database.
-3. Set Clerk production environment variables and redirect URLs.
-4. Run Prisma production migrations.
-5. Define the first-admin bootstrap path before exposing the admin sign-in flow publicly.
+3. Attach a custom owned domain before switching Clerk from Development to Production, because Clerk Production cannot use the default `*.vercel.app` provider domain.
+4. Set Clerk production environment variables and redirect URLs.
+5. Run Prisma production migrations.
+6. Define the first-admin bootstrap path before exposing the admin sign-in flow publicly.
+
+Current dependency note:
+- Until the custom domain exists, keep the Vercel deployment on Clerk Development/test keys and treat that surface as staging rather than the final production release.
 
 ## Backlog Intake Rule
 Any new future work should be added here as a named enhancement phase with:

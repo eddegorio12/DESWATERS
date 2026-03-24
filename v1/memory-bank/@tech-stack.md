@@ -83,6 +83,7 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 ### EH6: Product Surface Expansion
 - Keep marketing, future consumer routes, and admin routes in the same codebase
 - Add online-payment or notification vendors only when those channels are actively scoped
+- DWDS branding currently relies on repo-served PNG assets under `public/brand/` plus App Router icon files under `src/app/`
 - EH6 marketing-surface expansion is implemented, validated, and closed.
 
 ### EH7: Tooling & Design Workflow Recovery
@@ -99,6 +100,6 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 - No custom auth build while Clerk is sufficient
 
 ## Practical Summary
-- **Implemented now:** Next.js, TypeScript, Prisma v7, Clerk, Tailwind CSS, shadcn/ui, React Hook Form, Zod, PostgreSQL-first runtime path, app-native printable receipts, notification logging, Resend-ready email, Semaphore-ready SMS, repo-local UI design search launcher
+- **Implemented now:** Next.js, TypeScript, Prisma v7, Clerk, Tailwind CSS, shadcn/ui, React Hook Form, Zod, PostgreSQL-first runtime path, app-native printable receipts, notification logging, Resend-ready email, Semaphore-ready SMS, repo-local UI design search launcher, repo-served DWDS PNG brand assets, App Router brand icons
 - **Currently validating:** no active enhancement phase
 - **Deferred until explicitly scoped:** Xendit, storage-backed uploads, notifications, advanced reporting libraries, PDF-specific receipt tooling, customer credit handling
