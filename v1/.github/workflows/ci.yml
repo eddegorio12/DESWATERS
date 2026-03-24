@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prisma generate
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dwds?schema=public
+        run: npm run prisma:generate
+
+      - name: Lint
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dwds?schema=public
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
+          CLERK_SECRET_KEY: sk_test_ci_placeholder
+          NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+          NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
+          NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: /admin/dashboard
+          NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: /admin/dashboard
+        run: npm run lint
+
+      - name: Build
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/dwds?schema=public
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_ci_placeholder
+          CLERK_SECRET_KEY: sk_test_ci_placeholder
+          NEXT_PUBLIC_CLERK_SIGN_IN_URL: /sign-in
+          NEXT_PUBLIC_CLERK_SIGN_UP_URL: /sign-up
+          NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL: /admin/dashboard
+          NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL: /admin/dashboard
+        run: npm run build

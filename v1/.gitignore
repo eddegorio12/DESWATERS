@@ -29,6 +29,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
 # env files (can opt-in for committing if needed)
 .env*
@@ -44,3 +45,16 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# local tooling and agent metadata
+/.agent/
+/.codex/
+AGENTS.md
+CLAUDE.md
+__pycache__/
+*.pyc
+
+# local databases
+*.db
+*.sqlite
+*.sqlite3
