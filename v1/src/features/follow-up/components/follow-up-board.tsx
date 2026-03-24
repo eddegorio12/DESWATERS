@@ -3,11 +3,6 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import {
-  BillStatus,
-  CustomerStatus,
-  ReceivableFollowUpStatus,
-} from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
@@ -17,6 +12,16 @@ import {
   updateReceivableFollowUp,
 } from "@/features/follow-up/actions";
 import { cn } from "@/lib/utils";
+
+type BillStatus = "UNPAID" | "PARTIALLY_PAID" | "PAID" | "OVERDUE";
+type CustomerStatus = "ACTIVE" | "INACTIVE" | "DISCONNECTED";
+type ReceivableFollowUpStatus =
+  | "CURRENT"
+  | "REMINDER_SENT"
+  | "FINAL_NOTICE_SENT"
+  | "DISCONNECTION_REVIEW"
+  | "DISCONNECTED"
+  | "RESOLVED";
 
 type FollowUpBoardProps = {
   customers: {
@@ -45,11 +50,11 @@ type FollowUpBoardProps = {
 };
 
 function getServiceStatusClasses(status: CustomerStatus) {
-  if (status === CustomerStatus.DISCONNECTED) {
+  if (status === "DISCONNECTED") {
     return "bg-destructive/10 text-destructive";
   }
 
-  if (status === CustomerStatus.INACTIVE) {
+  if (status === "INACTIVE") {
     return "bg-amber-100 text-amber-800";
   }
 
@@ -57,23 +62,23 @@ function getServiceStatusClasses(status: CustomerStatus) {
 }
 
 function getFollowUpStatusClasses(status: ReceivableFollowUpStatus) {
-  if (status === ReceivableFollowUpStatus.DISCONNECTED) {
+  if (status === "DISCONNECTED") {
     return "bg-destructive/10 text-destructive";
   }
 
-  if (status === ReceivableFollowUpStatus.DISCONNECTION_REVIEW) {
+  if (status === "DISCONNECTION_REVIEW") {
     return "bg-amber-100 text-amber-800";
   }
 
-  if (status === ReceivableFollowUpStatus.FINAL_NOTICE_SENT) {
+  if (status === "FINAL_NOTICE_SENT") {
     return "bg-orange-100 text-orange-800";
   }
 
-  if (status === ReceivableFollowUpStatus.REMINDER_SENT) {
+  if (status === "REMINDER_SENT") {
     return "bg-primary/10 text-primary";
   }
 
-  if (status === ReceivableFollowUpStatus.RESOLVED) {
+  if (status === "RESOLVED") {
     return "bg-emerald-100 text-emerald-700";
   }
 
@@ -82,20 +87,20 @@ function getFollowUpStatusClasses(status: ReceivableFollowUpStatus) {
 
 function getNextFollowUpAction(status: ReceivableFollowUpStatus) {
   switch (status) {
-    case ReceivableFollowUpStatus.CURRENT:
+    case "CURRENT":
       return {
         label: "Send reminder",
-        value: ReceivableFollowUpStatus.REMINDER_SENT,
+        value: "REMINDER_SENT" as const,
       };
-    case ReceivableFollowUpStatus.REMINDER_SENT:
+    case "REMINDER_SENT":
       return {
         label: "Send final notice",
-        value: ReceivableFollowUpStatus.FINAL_NOTICE_SENT,
+        value: "FINAL_NOTICE_SENT" as const,
       };
-    case ReceivableFollowUpStatus.FINAL_NOTICE_SENT:
+    case "FINAL_NOTICE_SENT":
       return {
         label: "Queue review",
-        value: ReceivableFollowUpStatus.DISCONNECTION_REVIEW,
+        value: "DISCONNECTION_REVIEW" as const,
       };
     default:
       return null;
@@ -249,14 +254,14 @@ export function FollowUpBoard({ customers }: FollowUpBoardProps) {
                       {customer.bills.map((bill) => {
                         const nextAction = getNextFollowUpAction(bill.followUpStatus);
                         const allowNextAction =
-                          bill.status === BillStatus.OVERDUE &&
-                          customer.status !== CustomerStatus.DISCONNECTED &&
+                          bill.status === "OVERDUE" &&
+                          customer.status !== "DISCONNECTED" &&
                           nextAction !== null;
                         const allowReset =
-                          bill.followUpStatus !== ReceivableFollowUpStatus.CURRENT &&
-                          bill.followUpStatus !== ReceivableFollowUpStatus.DISCONNECTED &&
-                          bill.followUpStatus !== ReceivableFollowUpStatus.RESOLVED &&
-                          customer.status !== CustomerStatus.DISCONNECTED;
+                          bill.followUpStatus !== "CURRENT" &&
+                          bill.followUpStatus !== "DISCONNECTED" &&
+                          bill.followUpStatus !== "RESOLVED" &&
+                          customer.status !== "DISCONNECTED";
 
                         return (
                           <tr key={bill.id} className="align-top text-sm">
@@ -272,7 +277,7 @@ export function FollowUpBoard({ customers }: FollowUpBoardProps) {
                             <td className="px-4 py-4">
                               <div className="text-foreground">{bill.dueDate}</div>
                               <div className="mt-1 text-xs text-muted-foreground">
-                                {bill.status === BillStatus.OVERDUE
+                                {bill.status === "OVERDUE"
                                   ? `${bill.daysPastDue} day${bill.daysPastDue === 1 ? "" : "s"} overdue`
                                   : "Current receivable"}
                               </div>
@@ -313,10 +318,7 @@ export function FollowUpBoard({ customers }: FollowUpBoardProps) {
                                     disabled={isPending}
                                     onClick={() =>
                                       runAction(`reset-${bill.id}`, () =>
-                                        updateReceivableFollowUp(
-                                          bill.id,
-                                          ReceivableFollowUpStatus.CURRENT
-                                        )
+                                        updateReceivableFollowUp(bill.id, "CURRENT")
                                       )
                                     }
                                   >
