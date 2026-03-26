@@ -27,8 +27,9 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - EH7 tooling recovery is complete, and the repo now includes a stable launcher for searchable `ui-ux-pro-max` execution.
 - The public repository surface is now presentation-ready enough for sharing, with real redacted screenshots and cleaner root-level documentation.
 - The current intended database runtime is **PostgreSQL via Prisma v7**.
-- EH1 through EH7 are complete.
-- The next recommended operational task is Vercel deployment setup for the current staff/admin DWDS release.
+- EH1 through EH9 are complete.
+- EH10 is now complete through the printable consumer-notice workflow.
+- Do not begin EH11 until the user explicitly requests that phase.
 
 ## 3. Enhancement Backlog Handling
 - Treat the enhancement roadmap in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md) as the canonical backlog instead of inventing new unnamed phases.

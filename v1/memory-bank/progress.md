@@ -18,6 +18,8 @@
 - Monthly billing now uses explicit billing-cycle controls, month-end checklist state, audited regeneration reasons, print-batch tracking, batch print views, and per-bill physical distribution statuses.
 - EH9 has now started with a protected operational exceptions workspace for server-side anomaly detection across readings, receivables, payments, and service-status mismatches.
 - EH9 has now been tested and validated.
+- EH10 has now started with printable customer notice generation tied to billing, follow-up, and service-status records.
+- EH10 has now been tested and validated.
 
 ## Implemented Milestones
 
@@ -50,6 +52,7 @@
 - The public marketing site now includes reusable DWDS brand assets, screenshot-style product previews, and clearer deployment-ready rollout messaging.
 - The marketing header and footer plus auth and dashboard entry surfaces now use the shared DWDS logo lockup with refined size handling for each placement.
 - The repository root now presents the product more clearly for public review, including real redacted screenshots of the dashboard, billing, and follow-up surfaces.
+- A dedicated printable notice route now exists for standardized customer communications linked to live billing and follow-up records.
 
 ## Important Historical Constraints
 
@@ -140,8 +143,8 @@
 - Notes: `/admin/exceptions` is now implemented and user-validated for the initial EH9 slice, with server-side severity modeling for missing readings, abnormal consumption, possible leaks, duplicate-payment patterns, disconnection-risk accounts, and service-status mismatches. Complaint intake, technician assignment, work-order tracking, repair history, leak reporting, and optional field-proof upload support remain future expansion within later EH9 revisions only if explicitly approved.
 
 ### EH10: Consumer Communication & Notice Management
-- Status: `planned`
-- Notes: This phase will standardize printable customer notices and keep them tied to billing, follow-up, and service-status events while extending the existing notification log model.
+- Status: `complete`
+- Notes: Printable billing reminders, overdue/final/disconnection notices, and reinstatement confirmations now log as first-class `PRINT` communication records and render through `/admin/notices/[notificationId]`. EH10 has now been user-validated and closed.
 
 ### EH11: Tariff Governance, Backup Recovery, and Admin Security
 - Status: `planned`
@@ -152,4 +155,4 @@
 - Notes: This phase will add route-aware reading and bill-distribution operations plus management dashboards for collections, delinquency, consumption, and service-trend visibility.
 
 ## Current Next-Step Recommendation
-EH9 is now closed. Do not begin EH10 until the user explicitly requests that next phase.
+EH10 is now closed. Do not begin EH11 until the user explicitly requests that next phase.

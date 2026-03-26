@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
@@ -11,6 +10,7 @@ import {
   reinstateCustomerService,
   updateReceivableFollowUp,
 } from "@/features/follow-up/actions";
+import { GenerateNoticeButton } from "@/features/notices/components/generate-notice-button";
 import { cn } from "@/lib/utils";
 
 type BillStatus = "UNPAID" | "PARTIALLY_PAID" | "PAID" | "OVERDUE";
@@ -105,6 +105,50 @@ function getNextFollowUpAction(status: ReceivableFollowUpStatus) {
     default:
       return null;
   }
+}
+
+function getPrintableNoticeTemplate(
+  status: ReceivableFollowUpStatus,
+  billStatus: BillStatus
+):
+  | {
+      label: string;
+      template:
+        | "BILLING_REMINDER"
+        | "FOLLOW_UP_REMINDER"
+        | "FINAL_NOTICE"
+        | "DISCONNECTION";
+    }
+  | null {
+  if (status === "DISCONNECTED") {
+    return {
+      label: "Disconnection notice",
+      template: "DISCONNECTION",
+    };
+  }
+
+  if (status === "FINAL_NOTICE_SENT" || status === "DISCONNECTION_REVIEW") {
+    return {
+      label: "Final notice",
+      template: "FINAL_NOTICE",
+    };
+  }
+
+  if (status === "REMINDER_SENT") {
+    return {
+      label: "Reminder notice",
+      template: "FOLLOW_UP_REMINDER",
+    };
+  }
+
+  if (billStatus === "UNPAID" || billStatus === "PARTIALLY_PAID") {
+    return {
+      label: "Billing reminder",
+      template: "BILLING_REMINDER",
+    };
+  }
+
+  return null;
 }
 
 export function FollowUpBoard({ customers }: FollowUpBoardProps) {
@@ -253,6 +297,10 @@ export function FollowUpBoard({ customers }: FollowUpBoardProps) {
                     <tbody className="divide-y divide-border bg-background">
                       {customer.bills.map((bill) => {
                         const nextAction = getNextFollowUpAction(bill.followUpStatus);
+                        const printableNotice = getPrintableNoticeTemplate(
+                          bill.followUpStatus,
+                          bill.status
+                        );
                         const allowNextAction =
                           bill.status === "OVERDUE" &&
                           customer.status !== "DISCONNECTED" &&
@@ -358,6 +406,16 @@ export function FollowUpBoard({ customers }: FollowUpBoardProps) {
                                 >
                                   Statement
                                 </Link>
+                                {printableNotice ? (
+                                  <GenerateNoticeButton
+                                    billId={bill.id}
+                                    template={printableNotice.template}
+                                    label={printableNotice.label}
+                                    variant="outline"
+                                    size="sm"
+                                    className="rounded-xl px-3"
+                                  />
+                                ) : null}
                               </div>
                             </td>
                           </tr>

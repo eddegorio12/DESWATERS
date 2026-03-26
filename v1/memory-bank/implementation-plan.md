@@ -273,7 +273,7 @@ Current progress:
 
 ### EH10: Consumer Communication & Notice Management
 **Priority:** Medium
-**Status:** Planned
+**Status:** Complete
 **Depends on:** EH5 complete; EH8 recommended; EH9 optional for service-related notices
 
 Scope:
@@ -292,6 +292,13 @@ Recommended implementation order:
 2. Build printable server-rendered notice views.
 3. Add notice generation actions from follow-up, billing, and service screens.
 4. Extend notification logs to cover printed/manual notices as first-class records.
+
+Current progress:
+- Notification logging now supports printable customer notices as first-class `PRINT` communication records.
+- A standalone printable notice route now exists at `/admin/notices/[notificationId]`.
+- Bill detail and follow-up workflows can now generate standardized billing reminders, overdue reminders, final notices, and disconnection notices from authoritative records.
+- Service disconnection and reinstatement actions now also leave printable notice records in the communication log.
+- EH10 has now been user-validated and closed. Broader interruption-announcement rollout remains pending for a later approved EH10 refinement only if requested.
 
 ### EH11: Tariff Governance, Backup Recovery, and Admin Security
 **Priority:** Highest
@@ -339,13 +346,13 @@ Recommended implementation order:
 
 ## Current Next Recommendation
 
-EH9 is closed. Do not begin EH10 until the user explicitly requests that next phase.
+EH10 is now closed. Do not begin EH11 until the user explicitly requests that next phase.
 
 Target outcomes:
 1. Keep the production stack simple: one Next.js app, one Supabase Postgres database, one Auth.js internal admin flow.
 2. Finish deployment wiring first: hosted PostgreSQL migration deployment, `AUTH_SECRET`, and first-admin bootstrap path.
 3. Preserve the implemented EH8 workflow and validated EH9 exceptions workspace as the current operational baseline.
-4. Do not begin EH10 until the user explicitly requests that next phase.
+4. Do not begin EH11 until the user explicitly requests that next phase.
 
 Current auth note:
 - Local Auth.js migration is now complete and working with a seeded `SUPER_ADMIN`.

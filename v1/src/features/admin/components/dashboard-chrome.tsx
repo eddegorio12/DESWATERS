@@ -8,6 +8,10 @@ function isStandaloneRoute(pathname: string) {
     return true;
   }
 
+  if (pathname.includes("/admin/notices/")) {
+    return true;
+  }
+
   const billingMatch = pathname.match(/^\/admin\/billing\/[^/]+$/);
   return Boolean(billingMatch);
 }

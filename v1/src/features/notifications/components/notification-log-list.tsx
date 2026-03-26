@@ -1,8 +1,12 @@
+import Link from "next/link";
 import type {
   NotificationChannel,
   NotificationStatus,
   NotificationTemplate,
 } from "@prisma/client";
+
+import { buttonVariants } from "@/components/ui/button-variants";
+import { cn } from "@/lib/utils";
 
 type NotificationLogListProps = {
   notifications: {
@@ -46,10 +50,10 @@ export function NotificationLogList({ notifications }: NotificationLogListProps)
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Notification Log
+            Communication Log
           </p>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Recent email and SMS activity
+            Recent print, email, and SMS activity
           </h2>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -68,6 +72,7 @@ export function NotificationLogList({ notifications }: NotificationLogListProps)
                 <th className="px-4 py-3 font-medium">Destination</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Detail</th>
+                <th className="px-4 py-3 text-right font-medium">Record</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border bg-background">
@@ -114,12 +119,30 @@ export function NotificationLogList({ notifications }: NotificationLogListProps)
                         {notification.errorMessage || "Queued and delivered without logged provider error."}
                       </div>
                     </td>
+                    <td className="px-4 py-4 text-right">
+                      {notification.channel === "PRINT" ? (
+                        <Link
+                          href={`/admin/notices/${notification.id}`}
+                          className={cn(
+                            buttonVariants({
+                              variant: "outline",
+                              size: "sm",
+                              className: "rounded-xl px-3",
+                            })
+                          )}
+                        >
+                          Open notice
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Logged delivery</span>
+                      )}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={7}
                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                   >
                     No notification attempts have been logged yet.

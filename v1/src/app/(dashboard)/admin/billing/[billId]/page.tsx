@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { BillStatus } from "@prisma/client";
 import { notFound } from "next/navigation";
 
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -14,6 +15,7 @@ import {
   formatCurrency,
   formatPenaltyNotice,
 } from "@/features/billing/lib/billing-calculations";
+import { GenerateNoticeButton } from "@/features/notices/components/generate-notice-button";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
@@ -114,6 +116,8 @@ export default async function AdminBillTemplatePage({
   const penaltyNotice = formatPenaltyNotice();
   const statusLabel = bill.status.replaceAll("_", " ");
   const canTrackReprint = canPerformCapability(access.user.role, "billing:print");
+  const canGenerateBillingReminder =
+    bill.status === BillStatus.UNPAID || bill.status === BillStatus.PARTIALLY_PAID;
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#eef6f4_0%,#f7faf9_35%,#ffffff_100%)] px-4 py-6 print:min-h-0 print:bg-white print:px-0 print:py-0 sm:px-6 sm:py-8">
@@ -135,6 +139,16 @@ export default async function AdminBillTemplatePage({
 
             <div className="flex flex-wrap items-center gap-3">
               <PrintBillButton />
+              {canGenerateBillingReminder ? (
+                <GenerateNoticeButton
+                  billId={bill.id}
+                  template="BILLING_REMINDER"
+                  label="Billing reminder"
+                  variant="outline"
+                  size="lg"
+                  className="h-10 rounded-xl px-4"
+                />
+              ) : null}
               {canTrackReprint ? <TrackBillReprintButton billId={bill.id} /> : null}
               <Link
                 href="/admin/billing"

@@ -1,0 +1,4 @@
+ALTER TYPE "NotificationChannel" ADD VALUE 'PRINT';
+
+ALTER TYPE "NotificationTemplate" ADD VALUE 'BILLING_REMINDER';
+ALTER TYPE "NotificationTemplate" ADD VALUE 'SERVICE_INTERRUPTION';

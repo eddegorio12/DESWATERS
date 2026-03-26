@@ -51,6 +51,8 @@
   - Auth landing route that redirects authenticated staff into `/admin/dashboard`
 - `src/app/(dashboard)/admin/`
   - Protected staff operations area for dashboard, staff access approvals, customers, meters, tariffs, readings, billing, payments, and collections
+- `src/app/(dashboard)/admin/notices/[notificationId]/`
+  - Standalone printable notice route for EH10 customer communication records
 
 ### Cross-Cutting Modules
 - `src/proxy.ts`
@@ -92,6 +94,8 @@
   - EH9 exception rules, severity modeling, and the dedicated operational-exceptions workspace
 - `src/features/notifications/`
   - Notification templates, provider integrations, phone normalization, and delivery logging for customer notices
+- `src/features/notices/`
+  - EH10 printable notice generation actions, print-log creation, and standalone notice rendering
 - `src/features/marketing/`
   - Shared public-site layout, navigation, footer, brand lockup, screenshot showcase components, and centralized site content
 - `public/brand/`
@@ -219,6 +223,13 @@
 - Initial exception modeling lives under `src/features/exceptions/` and currently covers missing reading gaps, abnormal consumption changes, possible leak spikes, duplicate-payment patterns, disconnection-risk receivables, and service-status mismatches.
 - This implemented exception-monitoring slice has now been user-validated and should be treated as the current EH9 baseline.
 - Complaint tickets, technician assignments, work orders, repair history, leak-report records, and optional field-proof uploads should layer onto this workspace later only if explicitly approved, without collapsing the current domain-driven module structure.
+
+### EH10: Consumer Communication & Notice Management
+- EH10 now introduces `NotificationChannel.PRINT` so printable customer notices live inside the same auditable communication log as email and SMS activity.
+- The first implemented EH10 slice renders printable records from `/admin/notices/[notificationId]` instead of relying on external document templates.
+- Billing and follow-up workflows now generate printable notice records directly from authoritative bill, receivable, and service-status data.
+- This implemented EH10 slice has now been user-validated and should be treated as the current communication-management baseline.
+- Broader service-interruption workflow support remains a later EH10 refinement and should not be conflated with EH11.
 
 ## Database Schema: Current Repository Snapshot
 The excerpt below captures the long-lived core entities. EH8 billing-governance additions now also exist in the live schema through `BillingCycle`, `BillPrintBatch`, `BillingCycleEvent`, and the related lifecycle/distribution fields attached to `Bill`.

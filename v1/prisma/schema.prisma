@@ -410,13 +410,16 @@ model NotificationLog {
 enum NotificationChannel {
   EMAIL
   SMS
+  PRINT
 }
 
 enum NotificationTemplate {
+  BILLING_REMINDER
   FOLLOW_UP_REMINDER
   FINAL_NOTICE
   DISCONNECTION
   REINSTATEMENT
+  SERVICE_INTERRUPTION
 }
 
 enum NotificationStatus {

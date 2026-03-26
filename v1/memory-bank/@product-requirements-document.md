@@ -24,6 +24,8 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH8 billing governance is now implemented, tested, and validated.
 - EH9 has now started with an operational exceptions workspace for server-side anomaly detection across readings, receivables, payments, and service-status mismatches.
 - EH9 has now been tested and validated for the implemented exceptions-monitoring slice.
+- EH10 has now started with printable customer notices tied to billing, follow-up, and service-status records.
+- EH10 has now been tested and validated.
 
 ## Product Principles
 - **Modularity is mandatory:** Features must be separated into focused modules.
@@ -210,6 +212,11 @@ Expected outcomes:
 Rationale:
 - Printed/template-driven notices provide immediate operational value even before full SMS integration is approved.
 - Customer communication should build on authoritative billing, overdue, and service-status data.
+
+Current status:
+- Printable notice generation now exists for billing reminders plus core follow-up and service-status notices, with records rendered from `/admin/notices/[notificationId]`.
+- Printed notices now appear in the same communication log as email and SMS activity through a first-class `PRINT` channel.
+- EH10 has now been validated and is complete.
 
 ### EH11: Tariff Governance, Backup Recovery, and Admin Security
 Goal: Strengthen production readiness by making rate changes traceable, data recovery explicit, and internal access controls more resilient.

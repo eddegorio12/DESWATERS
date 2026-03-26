@@ -16,6 +16,7 @@ import {
   syncReceivableStatuses,
 } from "@/features/follow-up/lib/workflow";
 import { dispatchFollowUpNotifications } from "@/features/notifications/lib/dispatch";
+import { createPrintedNoticeLog } from "@/features/notices/lib/logging";
 import { prisma } from "@/lib/prisma";
 
 const followUpProgression: Record<
@@ -209,6 +210,7 @@ export async function disconnectCustomerService(customerId: string) {
         },
         select: {
           id: true,
+          billingPeriod: true,
           dueDate: true,
           totalCharges: true,
           followUpStatus: true,
@@ -291,6 +293,31 @@ export async function disconnectCustomerService(customerId: string) {
     },
     template: NotificationTemplate.DISCONNECTION,
     triggeredById: staffUser.id,
+  }).catch(() => undefined);
+
+  const highestOverdueBalance = overdueBills.reduce((current, bill) => {
+    const outstandingBalance = getOutstandingBalance(bill.totalCharges, bill.payments);
+
+    return Math.max(current, outstandingBalance);
+  }, 0);
+
+  await createPrintedNoticeLog({
+    customer: {
+      id: customer.id,
+      name: customer.name,
+      accountNumber: customer.accountNumber,
+    },
+    template: NotificationTemplate.DISCONNECTION,
+    triggeredById: staffUser.id,
+    bill:
+      overdueBills[0] !== undefined
+        ? {
+            id: overdueBills[0].id,
+            billingPeriod: overdueBills[0].billingPeriod,
+            dueDate: overdueBills[0].dueDate,
+            outstandingBalance: highestOverdueBalance,
+          }
+        : undefined,
   }).catch(() => undefined);
 
   revalidateOperationalSurfaces();
@@ -399,6 +426,16 @@ export async function reinstateCustomerService(customerId: string) {
       accountNumber: customer.accountNumber,
       email: customer.email,
       contactNumber: customer.contactNumber,
+    },
+    template: NotificationTemplate.REINSTATEMENT,
+    triggeredById: staffUser.id,
+  }).catch(() => undefined);
+
+  await createPrintedNoticeLog({
+    customer: {
+      id: customer.id,
+      name: customer.name,
+      accountNumber: customer.accountNumber,
     },
     template: NotificationTemplate.REINSTATEMENT,
     triggeredById: staffUser.id,
