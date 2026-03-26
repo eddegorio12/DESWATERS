@@ -2,7 +2,7 @@ import { changeOwnPassword } from "@/features/auth/actions/auth-actions";
 
 export function ChangePasswordPanel() {
   return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
+    <section className="dwds-panel p-6">
       <div className="space-y-2">
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
           Password

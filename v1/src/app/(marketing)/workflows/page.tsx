@@ -22,13 +22,13 @@ const stepIcons = [Fingerprint, ClipboardCheck, CheckCircle2, FileClock, Wallet]
 
 export default function WorkflowsPage() {
   return (
-    <div className="space-y-20 pb-24 pt-10">
+    <div className="space-y-20 pb-24 pt-4">
       <PageHero
         eyebrow="Workflows"
         title="DWDS follows the same sequence your operations team already uses."
         description="The product reduces handoff friction by keeping data connected across readings, bills, cashiering, follow-up, and collections review."
       >
-        <article className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/92 p-4 shadow-[0_24px_80px_-50px_rgba(12,60,64,0.45)]">
+        <article className="dwds-panel overflow-hidden p-4">
           <Image
             src="/marketing/billing-preview.svg"
             alt="DWDS workflow billing preview"
@@ -53,7 +53,7 @@ export default function WorkflowsPage() {
             return (
               <article
                 key={step.title}
-                className="rounded-[2rem] border border-border/70 bg-white/88 p-6 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.55)]"
+                className="dwds-panel p-6"
               >
                 <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <Icon className="size-5" />
@@ -72,7 +72,7 @@ export default function WorkflowsPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <article className="rounded-[2rem] border border-primary/10 bg-[#0f3f43] p-8 text-primary-foreground shadow-[0_28px_90px_-60px_rgba(15,63,67,1)]">
+        <article className="dwds-panel-dark p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary-foreground/70">
             Control Points
           </p>
@@ -93,7 +93,7 @@ export default function WorkflowsPage() {
           </div>
         </article>
 
-        <article className="rounded-[2rem] border border-border/70 bg-white/90 p-8 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.55)]">
+        <article className="dwds-panel p-8">
           <SectionHeading
             eyebrow="Who Uses It"
             title="The workflow works across multiple DWDS roles."

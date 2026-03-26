@@ -37,17 +37,17 @@ export function AdminPageShell({
   className,
 }: AdminPageShellProps) {
   return (
-    <main className={cn("min-h-screen bg-transparent px-5 py-6 sm:px-6 sm:py-8", className)}>
+    <section className={cn("bg-transparent", className)}>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <section className="overflow-hidden rounded-[2rem] border border-[#d4e7e3] bg-[linear-gradient(135deg,#0f3f43,#19545a_52%,#2f7b82)] text-white shadow-[0_32px_90px_-48px_rgba(16,63,67,0.9)]">
+        <section className="dwds-panel-dark overflow-hidden">
           <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.12fr_0.88fr] lg:px-8 lg:py-8">
             <div className="space-y-5">
-              <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/78">
+              <span className="dwds-kicker border-white/14 bg-white/8 text-white/78">
                 {eyebrow}
               </span>
 
               <div className="space-y-3">
-                <h1 className="max-w-4xl font-heading text-4xl leading-tight tracking-tight sm:text-5xl">
+                <h1 className="max-w-4xl font-heading text-4xl leading-tight tracking-[-0.03em] sm:text-5xl">
                   {title}
                 </h1>
                 <p className="max-w-3xl text-sm leading-7 text-white/76 sm:text-base">
@@ -68,7 +68,7 @@ export function AdminPageShell({
                   {stats.map((stat) => (
                     <article
                       key={`${stat.label}-${stat.value}`}
-                      className="rounded-[1.6rem] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.16),rgba(255,255,255,0.06))] p-5 backdrop-blur"
+                      className="rounded-[1.6rem] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.16),rgba(255,255,255,0.04))] p-5 backdrop-blur"
                     >
                       <span
                         className={cn(
@@ -92,6 +92,6 @@ export function AdminPageShell({
 
         {children}
       </div>
-    </main>
+    </section>
   );
 }

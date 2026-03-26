@@ -27,12 +27,12 @@ export function PageHero({
   children,
 }: PageHeroProps) {
   return (
-    <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+    <section className="grid gap-8 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
       <div className="max-w-3xl space-y-6 py-4">
-        <p className="text-sm font-semibold uppercase tracking-[0.28em] text-primary/75">
+        <p className="dwds-kicker w-fit border-primary/10 bg-primary/6 text-primary/80">
           {eyebrow}
         </p>
-        <h1 className="max-w-4xl font-heading text-5xl leading-[0.96] tracking-tight text-foreground sm:text-6xl">
+        <h1 className="max-w-4xl font-heading text-5xl leading-[0.92] tracking-[-0.04em] text-foreground sm:text-6xl xl:text-7xl">
           {title}
         </h1>
         <p className="max-w-2xl text-base leading-8 text-muted-foreground sm:text-lg">
@@ -45,7 +45,8 @@ export function PageHero({
                 href={primaryAction.href}
                 className={cn(
                   buttonVariants({
-                    className: "h-11 rounded-full px-6 shadow-sm",
+                    className:
+                      "h-11 rounded-full bg-[linear-gradient(135deg,#163154,#15527a_56%,#10938d)] px-6 text-white shadow-[0_24px_50px_-30px_rgba(15,35,62,0.8)] hover:brightness-105",
                   })
                 )}
               >
@@ -58,7 +59,8 @@ export function PageHero({
                 className={cn(
                   buttonVariants({
                     variant: "outline",
-                    className: "h-11 rounded-full px-6",
+                    className:
+                      "h-11 rounded-full border-primary/12 bg-white/60 px-6 hover:bg-white",
                   })
                 )}
               >
@@ -68,7 +70,7 @@ export function PageHero({
           </div>
         )}
       </div>
-      <div>{children}</div>
+      <div className="relative">{children}</div>
     </section>
   );
 }

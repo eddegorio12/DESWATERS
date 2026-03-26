@@ -24,9 +24,9 @@ export function ProductShowcase({
       {items.map((item) => (
         <article
           key={item.title}
-          className="overflow-hidden rounded-[2rem] border border-border/70 bg-white/92 shadow-[0_24px_80px_-55px_rgba(12,60,64,0.55)]"
+          className="dwds-panel overflow-hidden"
         >
-          <div className="border-b border-border/70 bg-[linear-gradient(180deg,rgba(232,246,242,0.92),rgba(247,251,250,0.84))] p-4">
+          <div className="border-b border-border/70 bg-[linear-gradient(180deg,rgba(224,239,249,0.92),rgba(243,248,252,0.84))] p-4">
             <Image
               src={item.imageSrc}
               alt={item.imageAlt}
@@ -48,7 +48,7 @@ export function ProductShowcase({
                 buttonVariants({
                   variant: "outline",
                   className:
-                    "h-10 rounded-full border-primary/15 bg-transparent px-4 text-sm text-foreground hover:bg-primary/5",
+                    "h-10 rounded-full border-primary/12 bg-white/70 px-4 text-sm text-foreground hover:bg-white",
                 })
               )}
             >

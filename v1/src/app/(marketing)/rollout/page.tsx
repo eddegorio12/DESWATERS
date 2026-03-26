@@ -22,13 +22,13 @@ const futureIcons = [Smartphone, Zap, MessageSquareMore, Building2];
 
 export default function RolloutPage() {
   return (
-    <div className="space-y-20 pb-24 pt-10">
+    <div className="space-y-20 pb-24 pt-4">
       <PageHero
         eyebrow="Rollout Path"
         title="Start with operational accuracy, then expand into customer-facing services."
         description="DWDS is being built in phases so the billing, collections, and follow-up core stays stable before additional channels are layered in."
       >
-        <article className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/92 p-4 shadow-[0_24px_80px_-50px_rgba(12,60,64,0.45)]">
+        <article className="dwds-panel overflow-hidden p-4">
           <Image
             src="/marketing/follow-up-preview.svg"
             alt="DWDS rollout preview showing receivables follow-up operations"
@@ -50,7 +50,7 @@ export default function RolloutPage() {
           {rolloutPhases.map((phase) => (
             <article
               key={phase.title}
-              className="rounded-[2rem] border border-border/70 bg-white/88 p-6 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.55)]"
+              className="dwds-panel p-6"
             >
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary/70">
                 {phase.label}
@@ -65,7 +65,7 @@ export default function RolloutPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <article className="rounded-[2rem] border border-primary/10 bg-[#0f3f43] p-8 text-primary-foreground shadow-[0_28px_90px_-60px_rgba(15,63,67,1)]">
+        <article className="dwds-panel-dark p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary-foreground/70">
             What Comes Next
           </p>
@@ -89,7 +89,7 @@ export default function RolloutPage() {
           </div>
         </article>
 
-        <article className="rounded-[2rem] border border-border/70 bg-white/90 p-8 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.55)]">
+        <article className="dwds-panel p-8">
           <SectionHeading
             eyebrow="Implementation Notes"
             title="The site now communicates the actual product shape."

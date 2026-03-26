@@ -5,26 +5,33 @@ import { footerLinks } from "@/features/marketing/lib/site-content";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border/70 bg-white/70">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-5 py-10 sm:px-8 lg:flex-row lg:items-end lg:justify-between">
-        <div className="max-w-lg">
-          <BrandLockup size="sm" />
-          <p className="mt-2.5 max-w-md text-sm leading-7 text-muted-foreground">
-            Water utility operations software for customer management, metering,
-            billing, payments, and collections review.
-          </p>
+    <footer className="mx-auto mt-10 w-full max-w-7xl px-5 pb-8 sm:px-8">
+      <div className="dwds-panel overflow-hidden px-6 py-8 sm:px-8">
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-xl">
+            <div className="dwds-kicker border-primary/10 bg-primary/6 text-primary/76">
+              Water Utility Operations Platform
+            </div>
+            <div className="mt-5">
+              <BrandLockup size="sm" />
+            </div>
+            <p className="mt-4 max-w-lg text-sm leading-7 text-muted-foreground">
+              DWDS centralizes customer records, meter operations, billing, cashiering,
+              and collections review in one controlled operating system for utility teams.
+            </p>
+          </div>
+          <nav className="flex flex-wrap gap-x-5 gap-y-3 text-sm text-muted-foreground lg:justify-end">
+            {footerLinks.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-full px-1 py-1 transition-colors duration-200 hover:text-foreground"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
         </div>
-        <nav className="flex flex-wrap gap-x-5 gap-y-3 text-sm text-muted-foreground lg:justify-end">
-          {footerLinks.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="transition-colors duration-200 hover:text-foreground"
-            >
-              {item.label}
-            </Link>
-          ))}
-        </nav>
       </div>
     </footer>
   );

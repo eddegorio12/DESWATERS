@@ -8,36 +8,39 @@ type AuthShellProps = {
 
 export function AuthShell({ title, description, children }: AuthShellProps) {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/30 px-6 py-16">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl border border-border bg-background lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="flex flex-col justify-between border-b border-border bg-card px-8 py-10 lg:border-r lg:border-b-0 lg:px-12 lg:py-14">
+    <main className="dwds-shell flex min-h-dvh items-center justify-center px-6 py-16">
+      <div className="grid w-full max-w-6xl overflow-hidden rounded-[2rem] border border-white/65 bg-white/78 shadow-[0_32px_110px_-55px_rgba(15,35,62,0.42)] backdrop-blur lg:grid-cols-[1.08fr_0.92fr]">
+        <section className="dwds-panel-dark flex flex-col justify-between rounded-none border-0 px-8 py-10 lg:px-12 lg:py-14">
           <div className="space-y-5">
             <BrandLockup size="sm" />
             <div className="space-y-3">
-              <h1 className="max-w-md text-4xl font-semibold tracking-tight text-balance text-foreground">
+              <div className="dwds-kicker w-fit border-white/14 bg-white/8 text-white/78">
+                Protected Staff Access
+              </div>
+              <h1 className="max-w-md font-heading text-4xl tracking-[-0.03em] text-balance text-white sm:text-5xl">
                 {title}
               </h1>
-              <p className="max-w-lg text-base leading-7 text-muted-foreground">
+              <p className="max-w-lg text-base leading-7 text-white/76">
                 {description}
               </p>
             </div>
           </div>
           <div className="mt-10 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-2xl border border-border bg-background p-5">
-              <p className="text-sm font-medium text-foreground">Protected admin routes</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            <div className="rounded-[1.5rem] border border-white/12 bg-white/8 p-5">
+              <p className="text-sm font-medium text-white">Protected admin routes</p>
+              <p className="mt-2 text-sm leading-6 text-white/70">
                 `/dashboard` and `/admin/*` now require an authenticated internal admin session.
               </p>
             </div>
-            <div className="rounded-2xl border border-border bg-background p-5">
-              <p className="text-sm font-medium text-foreground">Admin-only access</p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+            <div className="rounded-[1.5rem] border border-white/12 bg-white/8 p-5">
+              <p className="text-sm font-medium text-white">Admin-only access</p>
+              <p className="mt-2 text-sm leading-6 text-white/70">
                 Email and password login only. New admins are created by a SUPER_ADMIN inside DWDS.
               </p>
             </div>
           </div>
         </section>
-        <section className="flex items-center justify-center px-6 py-10 lg:px-10 lg:py-14">
+        <section className="flex items-center justify-center bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(245,248,252,0.96))] px-6 py-10 lg:px-10 lg:py-14">
           {children}
         </section>
       </div>

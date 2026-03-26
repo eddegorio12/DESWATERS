@@ -41,7 +41,7 @@ const moduleIcons = [Users, Gauge, FileSpreadsheet, ReceiptText, WalletCards, Ba
 
 export default function HomePage() {
   return (
-    <div className="space-y-24 pb-24 pt-10">
+    <div className="space-y-24 pb-24 pt-4">
       <PageHero
         eyebrow="Water Utility Operations"
         title="Run DWDS from meter reading to daily collections in one controlled workspace."
@@ -49,8 +49,8 @@ export default function HomePage() {
         primaryAction={{ href: "/sign-in", label: "Open admin access" }}
         secondaryAction={{ href: "/platform", label: "Explore the platform" }}
       >
-        <article className="overflow-hidden rounded-[2.2rem] border border-white/80 bg-white/92 p-4 shadow-[0_28px_90px_-50px_rgba(12,60,64,0.48)] backdrop-blur">
-          <div className="rounded-[1.7rem] border border-border/70 bg-[linear-gradient(180deg,rgba(232,246,242,0.9),rgba(247,251,250,0.72))] p-3">
+        <article className="dwds-panel overflow-hidden p-4">
+          <div className="rounded-[1.7rem] border border-border/70 bg-[linear-gradient(180deg,rgba(224,239,249,0.94),rgba(247,250,253,0.76))] p-3">
             <Image
               src="/marketing/dashboard-preview.svg"
               alt="DWDS dashboard preview"
@@ -67,7 +67,7 @@ export default function HomePage() {
               return (
                 <article
                   key={stat.label}
-                  className="rounded-[1.6rem] border border-border/70 bg-white p-4"
+                  className="rounded-[1.6rem] border border-border/70 bg-white/88 p-4"
                 >
                   <Icon className="size-5 text-primary" />
                   <p className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
@@ -81,11 +81,11 @@ export default function HomePage() {
         </article>
       </PageHero>
 
-      <section className="grid gap-4 rounded-[2rem] border border-border/70 bg-white/84 p-6 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.4)] lg:grid-cols-3">
+      <section className="dwds-panel grid gap-4 p-6 lg:grid-cols-3">
         {proofStatements.map((statement) => (
           <div
             key={statement}
-            className="rounded-[1.4rem] border border-border/70 bg-secondary/30 px-4 py-4 text-sm leading-6 text-muted-foreground"
+            className="rounded-[1.4rem] border border-border/70 bg-secondary/45 px-4 py-4 text-sm leading-6 text-muted-foreground"
           >
             {statement}
           </div>
@@ -108,7 +108,7 @@ export default function HomePage() {
             ].map((item) => (
               <div
                 key={item}
-                className="rounded-[1.75rem] border border-border/70 bg-white/80 p-4 text-sm leading-6 text-muted-foreground shadow-[0_18px_60px_-40px_rgba(12,60,64,0.5)]"
+                className="rounded-[1.75rem] border border-border/70 bg-white/82 p-4 text-sm leading-6 text-muted-foreground shadow-[0_18px_60px_-40px_rgba(15,35,62,0.35)]"
               >
                 <BadgeCheck className="mb-3 size-4 text-primary" />
                 {item}
@@ -116,7 +116,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-        <article className="overflow-hidden rounded-[2rem] border border-primary/15 bg-[#0f3f43] p-8 text-primary-foreground shadow-[0_30px_100px_-60px_rgba(15,63,67,0.9)]">
+        <article className="dwds-panel-dark overflow-hidden p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary-foreground/70">
             Operating View
           </p>
@@ -154,7 +154,7 @@ export default function HomePage() {
             return (
               <article
                 key={item.title}
-                className="rounded-[2rem] border border-border/70 bg-white/88 p-6 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.55)] transition-transform duration-200 hover:-translate-y-1"
+                className="dwds-panel p-6"
               >
                 <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                   <Icon className="size-5" />
@@ -179,7 +179,7 @@ export default function HomePage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-        <article className="rounded-[2rem] border border-border/70 bg-white/90 p-8 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.55)]">
+        <article className="dwds-panel p-8">
           <SectionHeading
             eyebrow="Reporting Layer"
             title="Collections stay auditable from cashier posting to dashboard totals."
@@ -199,7 +199,7 @@ export default function HomePage() {
             ))}
           </div>
         </article>
-        <article className="rounded-[2rem] border border-[#89c6c7]/40 bg-[linear-gradient(145deg,#daf2ee,#ffffff)] p-8 shadow-[0_24px_80px_-55px_rgba(12,60,64,0.6)]">
+        <article className="rounded-[2rem] border border-primary/10 bg-[linear-gradient(145deg,#eef7fb,#ffffff)] p-8 shadow-[0_24px_80px_-55px_rgba(15,35,62,0.26)]">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary/70">
             Rollout Position
           </p>
@@ -237,7 +237,7 @@ export default function HomePage() {
           {brandPrinciples.map((item) => (
             <article
               key={item.title}
-              className="rounded-[2rem] border border-border/70 bg-white/88 p-6 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.55)]"
+              className="dwds-panel p-6"
             >
               <h3 className="font-heading text-2xl text-foreground">{item.title}</h3>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">
@@ -248,7 +248,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="rounded-[2.25rem] border border-primary/10 bg-[#0f3f43] px-8 py-10 text-primary-foreground shadow-[0_30px_100px_-60px_rgba(15,63,67,1)]">
+      <section className="dwds-panel-dark rounded-[2.25rem] px-8 py-10">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary-foreground/70">

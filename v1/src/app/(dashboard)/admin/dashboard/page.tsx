@@ -254,23 +254,23 @@ export default async function AdminDashboardPage() {
   const roleCapabilities = getRoleCapabilities(localUser.role);
 
   return (
-    <main className="min-h-screen bg-transparent px-5 py-6 sm:px-6 sm:py-8">
+    <section className="bg-transparent">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <section className="overflow-hidden rounded-[2rem] border border-[#d4e7e3] bg-[linear-gradient(135deg,#0f3f43,#19545a_52%,#2f7b82)] text-white shadow-[0_32px_90px_-48px_rgba(16,63,67,0.9)]">
+        <section className="dwds-panel-dark overflow-hidden">
           <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:py-8">
             <div className="space-y-5">
               <BrandLockup inverse size="lg" className="w-fit" />
               <div className="flex flex-wrap items-center gap-3">
-                <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/78">
+                <span className="dwds-kicker border-white/14 bg-white/8 text-white/78">
                   Operations Workspace
                 </span>
-                <span className="rounded-full border border-[#8ce1d5]/25 bg-[#8ce1d5]/12 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-[#d9fff6]">
+                <span className="dwds-kicker border-[#8ce1d5]/25 bg-[#8ce1d5]/12 text-[#d9fff6]">
                   DWDS
                 </span>
               </div>
 
               <div className="space-y-3">
-                <h1 className="max-w-3xl font-heading text-4xl leading-tight tracking-tight sm:text-5xl">
+                <h1 className="max-w-3xl font-heading text-4xl leading-tight tracking-[-0.03em] sm:text-5xl">
                   Utility operations, receivables, and collections in one daily control
                   room.
                 </h1>
@@ -323,7 +323,7 @@ export default async function AdminDashboardPage() {
                 </p>
               </article>
 
-              <article className="rounded-[1.75rem] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.16),rgba(255,255,255,0.06))] p-5 backdrop-blur">
+              <article className="rounded-[1.75rem] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.16),rgba(255,255,255,0.04))] p-5 backdrop-blur">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
                   Today&apos;s collections
                 </p>
@@ -361,7 +361,7 @@ export default async function AdminDashboardPage() {
           {operationsSnapshot.map((item) => (
             <article
               key={item.label}
-              className="rounded-[1.75rem] border border-border/80 bg-white/88 p-5 shadow-[0_18px_60px_-45px_rgba(16,63,67,0.55)] backdrop-blur"
+              className="dwds-panel p-5"
             >
               <div
                 className={cn(
@@ -380,7 +380,7 @@ export default async function AdminDashboardPage() {
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-          <article className="rounded-[2rem] border border-border/80 bg-white/90 p-6 shadow-[0_20px_70px_-45px_rgba(16,63,67,0.55)]">
+          <article className="dwds-panel p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary/72">
@@ -427,7 +427,7 @@ export default async function AdminDashboardPage() {
             </div>
           </article>
 
-          <article className="rounded-[2rem] border border-border/80 bg-white/90 p-6 shadow-[0_20px_70px_-45px_rgba(16,63,67,0.55)]">
+          <article className="dwds-panel p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary/72">
@@ -447,7 +447,7 @@ export default async function AdminDashboardPage() {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="cursor-pointer rounded-[1.6rem] border border-border/80 bg-white px-5 py-5 shadow-[0_18px_50px_-45px_rgba(16,63,67,0.55)] transition-colors duration-200 hover:bg-secondary/35"
+                    className="cursor-pointer rounded-[1.6rem] border border-border/80 bg-white/88 px-5 py-5 shadow-[0_18px_50px_-45px_rgba(16,63,67,0.32)] transition-colors duration-200 hover:bg-secondary/35"
                   >
                     <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                       <Icon className="size-5" />
@@ -469,6 +469,6 @@ export default async function AdminDashboardPage() {
 
         <ChangePasswordPanel />
       </div>
-    </main>
+    </section>
   );
 }

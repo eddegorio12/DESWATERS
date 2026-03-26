@@ -28,13 +28,13 @@ const sectionIcons = [FileSpreadsheet, HandCoins, BarChart3];
 
 export default function PlatformPage() {
   return (
-    <div className="space-y-20 pb-24 pt-10">
+    <div className="space-y-20 pb-24 pt-4">
       <PageHero
         eyebrow="Platform"
         title="A modular utility platform with a clear operating model."
         description="DWDS is structured around the work staff actually perform, with separate modules for records, billing, cashiering, follow-up, and reports instead of one overcrowded screen."
       >
-        <article className="overflow-hidden rounded-[2rem] border border-white/80 bg-white/92 p-4 shadow-[0_24px_80px_-50px_rgba(12,60,64,0.45)]">
+        <article className="dwds-panel overflow-hidden p-4">
           <Image
             src="/marketing/dashboard-preview.svg"
             alt="DWDS platform dashboard preview"
@@ -53,7 +53,7 @@ export default function PlatformPage() {
           return (
             <article
               key={pillar.title}
-              className="rounded-[2rem] border border-border/70 bg-white/88 p-6 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.55)]"
+              className="dwds-panel p-6"
             >
               <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Icon className="size-5" />
@@ -68,7 +68,7 @@ export default function PlatformPage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <article className="rounded-[2rem] border border-border/70 bg-white/90 p-8 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.55)]">
+        <article className="dwds-panel p-8">
           <SectionHeading
             eyebrow="Module Map"
             title="Each business function has a dedicated surface."
@@ -89,7 +89,7 @@ export default function PlatformPage() {
           </div>
         </article>
 
-        <article className="rounded-[2rem] border border-primary/10 bg-[#0f3f43] p-8 text-primary-foreground shadow-[0_28px_90px_-60px_rgba(15,63,67,1)]">
+        <article className="dwds-panel-dark p-8">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary-foreground/70">
             Product Principles
           </p>
@@ -125,7 +125,7 @@ export default function PlatformPage() {
             return (
               <article
                 key={item.title}
-                className="rounded-[2rem] border border-border/70 bg-white/88 p-6 shadow-[0_20px_70px_-45px_rgba(14,60,63,0.55)]"
+              className="dwds-panel p-6"
               >
                 <Icon className="size-5 text-primary" />
                 <h3 className="mt-5 font-heading text-2xl text-foreground">{item.title}</h3>
