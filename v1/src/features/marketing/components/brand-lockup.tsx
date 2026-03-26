@@ -19,25 +19,25 @@ export function BrandLockup({
   size = "md",
 }: BrandLockupProps) {
   const dimensions = compact
-    ? { width: 122, height: 45 }
+    ? { width: 146, height: 40 }
     : size === "sm"
-      ? { width: 126, height: 46 }
+      ? { width: 168, height: 46 }
       : size === "lg"
-        ? { width: 196, height: 72 }
-        : { width: 168, height: 62 };
+        ? { width: 264, height: 72 }
+        : { width: 212, height: 58 };
 
   return (
     <Link href={href} className={cn("inline-flex shrink-0", className)}>
-      <span className="flex items-center">
+      <span
+        className="relative block shrink-0"
+        style={{ width: dimensions.width, height: dimensions.height }}
+      >
         <Image
-          src="/brand/dwds-logo.png"
-          alt="DWDS logo"
-          width={dimensions.width}
-          height={dimensions.height}
-          className={cn(
-            "h-auto w-auto object-contain",
-            inverse && "brightness-0 invert"
-          )}
+          src={inverse ? "/brand/transparent.png" : "/brand/Official%20Logo.png"}
+          alt="DEGORIO WATER DISTRIBUTION SERVICES logo"
+          fill
+          sizes={`${dimensions.width}px`}
+          className="object-cover object-center"
           priority
         />
       </span>

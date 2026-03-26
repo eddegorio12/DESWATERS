@@ -31,6 +31,7 @@
 ### Core Records
 - Customer creation and listing were implemented.
 - Meter registration and assignment were implemented.
+- Meter holder replacement with transfer history, effective date, and turnover reading capture was implemented.
 - Tariff configuration with active-tier validation was implemented.
 
 ### Operations
@@ -60,6 +61,12 @@
 - Staff access now follows an implemented route and mutation matrix for super admin, admin, technician, meter reader, billing, cashier, and viewer roles.
 - There is no public registration path for DWDS admin access. Admin accounts are created internally by SUPER_ADMIN users.
 - The `/admin/staff-access` surface is now the internal admin-management page for account creation, role updates, and activation state changes.
+
+### Meter Account Transfer Constraint
+- Meter ownership changes are now modeled as account-holder transfers, not meter replacement.
+- The active holder still lives on `Meter.customerId` for compatibility with existing reading and billing flows.
+- Transfer events are now recorded in `MeterHolderTransfer` with previous holder, new holder, effective date, optional turnover reading, and optional reason.
+- Historical reading pages still resolve holder display from the meter's current `customerId`, so holder-as-of-reading-date display remains a future refinement.
 
 ### Reporting Constraint
 - Reporting now includes **historical collections filters plus receivables visibility** in the admin reporting workspace.

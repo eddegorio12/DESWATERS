@@ -75,7 +75,7 @@
 - `src/features/customers/`
   - Customer creation validation, action logic, and listing UI
 - `src/features/meters/`
-  - Meter registration, assignment, validation, and list UI
+  - Meter registration, assignment, holder-transfer validation/actions, and registry UI
 - `src/features/tariffs/`
   - Tariff creation, tier validation, and tariff registry UI
 - `src/features/readings/`
@@ -112,6 +112,12 @@
 - Readings are encoded as `PENDING_REVIEW`.
 - Approval transitions readings to `APPROVED`.
 - Billing only occurs from approved, still-unbilled readings.
+
+### Meter Holder Workflow
+- A physical meter remains attached to the service point while the active account holder can change over time.
+- `Meter.customerId` remains the live holder pointer for compatibility with downstream reading and billing queries.
+- `MeterHolderTransfer` records the holder-change audit trail, including initial assignment events and later reassignment events.
+- Transfer capture currently records previous holder, replacement holder, effective date, optional turnover reading, and optional reason.
 
 ### Billing Workflow
 - Bills are generated from approved readings using the active tariff.
@@ -269,6 +275,8 @@ model Customer {
   statusUpdatedById String?
   statusUpdatedBy User? @relation("CustomerStatusUpdatedBy", fields: [statusUpdatedById], references: [id])
   meters        Meter[]
+  receivedMeterTransfers MeterHolderTransfer[] @relation("MeterHolderTransferToCustomer")
+  releasedMeterTransfers MeterHolderTransfer[] @relation("MeterHolderTransferFromCustomer")
   bills         Bill[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
@@ -288,6 +296,7 @@ model Meter {
   customerId  String?
   customer    Customer?   @relation(fields: [customerId], references: [id])
   readings    Reading[]
+  holderTransfers MeterHolderTransfer[]
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 }
@@ -296,6 +305,21 @@ enum MeterStatus {
   ACTIVE
   DEFECTIVE
   REPLACED
+}
+
+model MeterHolderTransfer {
+  id              String    @id @default(uuid())
+  meterId         String
+  meter           Meter     @relation(fields: [meterId], references: [id])
+  fromCustomerId  String?
+  fromCustomer    Customer? @relation("MeterHolderTransferFromCustomer", fields: [fromCustomerId], references: [id])
+  toCustomerId    String
+  toCustomer      Customer  @relation("MeterHolderTransferToCustomer", fields: [toCustomerId], references: [id])
+  effectiveDate   DateTime
+  transferReading Float?
+  reason          String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model Reading {

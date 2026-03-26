@@ -9,6 +9,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 ## Current State
 - The **MVP admin web app is implemented**.
 - The current live surface covers authentication, customer records, meter management, tariff setup, reading intake and approval, billing, payment encoding, printable consumer bills, daily collections reporting, and a public marketing site.
+- Meter management now includes current-holder replacement with auditable transfer history rather than direct silent reassignment.
 - The repo now runs on a validated **PostgreSQL-first data path**.
 - The repo now uses internal Auth.js credentials authentication instead of Clerk.
 - Internal password management now exists for signed-in admins and SUPER_ADMIN-managed temporary-password resets.
@@ -30,6 +31,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 ## Implemented MVP Scope
 1. **Authentication:** internal admin email/password sign-in and protected admin routes.
 2. **Core records:** Customer, meter, and tariff management.
+   Meter records now preserve account-holder transfer history.
 3. **Meter operations:** Reading encoding plus approval workflow.
 4. **Billing:** Progressive-tier bill generation and printable consumer bill statements.
 5. **Cashiering:** Manual payment entry with bill settlement updates.
@@ -40,6 +42,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 - Reporting is limited to the **current operating day collections view**.
 - Overdue and disconnection handling are currently **display and status concepts**, not a full automated receivables workflow.
 - Payments support **manual cashier encoding only** in the implemented MVP.
+- Historical reading surfaces still do not resolve the holder strictly as of transfer date; they rely on the meter's current linked holder for some displays.
 
 ## Enhancement Roadmap
 

@@ -19,6 +19,7 @@ Developers should not reopen completed MVP steps unless they are fixing regressi
 ### Core Utility Records
 - Customer management implemented
 - Meter registry and customer assignment implemented
+- Meter holder transfer history and reassignment workflow implemented
 - Tariff configuration with progressive tiers implemented
 
 ### Operations Workflow
@@ -42,10 +43,11 @@ Use this as the minimum smoke test after major refactors:
 2. `/admin/dashboard` loads after sign-in with a valid internal admin account.
 3. Core admin routes for customers, meters, tariffs, readings, billing, payments, and collections all render without broken navigation.
 4. A customer can still move from meter assignment to reading, bill generation, payment recording, and printable bill view.
-5. Daily collections still match the sum of completed payments in the active operating-day window.
-6. The seeded `SUPER_ADMIN` can sign in at `/sign-in` and reach the protected dashboard successfully.
-7. Signed-in admins can update their own password, and SUPER_ADMIN can set a replacement temporary password for staff accounts.
-8. Temporary-password accounts are redirected to `/change-password` and cannot open `/dashboard` or `/admin/*` until they complete that change.
+5. A currently assigned meter can be transferred to a replacement account holder without deleting the meter or overwriting transfer history.
+6. Daily collections still match the sum of completed payments in the active operating-day window.
+7. The seeded `SUPER_ADMIN` can sign in at `/sign-in` and reach the protected dashboard successfully.
+8. Signed-in admins can update their own password, and SUPER_ADMIN can set a replacement temporary password for staff accounts.
+9. Temporary-password accounts are redirected to `/change-password` and cannot open `/dashboard` or `/admin/*` until they complete that change.
 
 ## Enhancement Roadmap
 

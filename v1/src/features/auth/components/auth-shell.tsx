@@ -12,7 +12,7 @@ export function AuthShell({ title, description, children }: AuthShellProps) {
       <div className="grid w-full max-w-6xl overflow-hidden rounded-[2rem] border border-white/65 bg-white/78 shadow-[0_32px_110px_-55px_rgba(15,35,62,0.42)] backdrop-blur lg:grid-cols-[1.08fr_0.92fr]">
         <section className="dwds-panel-dark flex flex-col justify-between rounded-none border-0 px-8 py-10 lg:px-12 lg:py-14">
           <div className="space-y-5">
-            <BrandLockup size="sm" />
+            <BrandLockup inverse size="sm" />
             <div className="space-y-3">
               <div className="dwds-kicker w-fit border-white/14 bg-white/8 text-white/78">
                 Protected Staff Access
