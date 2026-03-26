@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 
 function isProtectedPath(pathname: string) {
   return pathname === "/dashboard" || pathname.startsWith("/admin");
@@ -14,10 +15,23 @@ function isSignInPath(pathname: string) {
   return pathname === "/sign-in" || pathname.startsWith("/sign-in/");
 }
 
-export const proxy = auth((request) => {
+export const proxy = auth(async (request) => {
   const { nextUrl } = request;
-  const isAuthenticated = Boolean(request.auth?.user);
-  const mustChangePassword = Boolean(request.auth?.user?.mustChangePassword);
+  const sessionUserId = request.auth?.user?.id;
+  const sessionUser = sessionUserId
+    ? await prisma.user.findUnique({
+        where: {
+          id: sessionUserId,
+        },
+        select: {
+          id: true,
+          isActive: true,
+          mustChangePassword: true,
+        },
+      })
+    : null;
+  const isAuthenticated = Boolean(sessionUser?.id && sessionUser.isActive);
+  const mustChangePassword = Boolean(sessionUser?.mustChangePassword);
 
   if (isSignInPath(nextUrl.pathname) && isAuthenticated) {
     return NextResponse.redirect(

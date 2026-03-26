@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Role } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
@@ -25,8 +24,29 @@ export default async function AdminStaffAccessPage() {
       email: true,
       role: true,
       isActive: true,
+      failedSignInCount: true,
+      lockedUntil: true,
       lastLoginAt: true,
       createdAt: true,
+    },
+  });
+
+  const recentLoginAttempts = await prisma.adminLoginAttempt.findMany({
+    orderBy: [{ attemptedAt: "desc" }],
+    take: 20,
+    select: {
+      id: true,
+      email: true,
+      status: true,
+      failureReason: true,
+      ipAddress: true,
+      userAgent: true,
+      attemptedAt: true,
+      user: {
+        select: {
+          name: true,
+        },
+      },
     },
   });
 
@@ -72,14 +92,16 @@ export default async function AdminStaffAccessPage() {
           accent: "rose",
         },
         {
-          label: "Super Admins",
-          value: admins.filter((user) => user.role === Role.SUPER_ADMIN).length.toString(),
-          detail: "Accounts with admin-management authority",
+          label: "Locked",
+          value: admins
+            .filter((user) => user.lockedUntil && user.lockedUntil > new Date())
+            .length.toString(),
+          detail: "Accounts currently blocked by failed-login lockout",
           accent: "violet",
         },
       ]}
     >
-      <StaffAccessBoard admins={admins} />
+      <StaffAccessBoard admins={admins} recentLoginAttempts={recentLoginAttempts} />
     </AdminPageShell>
   );
 }

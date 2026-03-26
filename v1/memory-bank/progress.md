@@ -20,6 +20,8 @@
 - EH9 has now been tested and validated.
 - EH10 has now started with printable customer notice generation tied to billing, follow-up, and service-status records.
 - EH10 has now been tested and validated.
+- EH11 has now been tested and validated.
+- EH12 has now been tested and validated for the implemented route-operations and route-aware billing slice.
 
 ## Implemented Milestones
 
@@ -53,6 +55,8 @@
 - The marketing header and footer plus auth and dashboard entry surfaces now use the shared DWDS logo lockup with refined size handling for each placement.
 - The repository root now presents the product more clearly for public review, including real redacted screenshots of the dashboard, billing, and follow-up surfaces.
 - A dedicated printable notice route now exists for standardized customer communications linked to live billing and follow-up records.
+- A dedicated system-readiness route now exists for backup snapshot logging, restore guidance, environment-readiness checks, and recent sign-in security visibility.
+- A dedicated route-operations route now exists for service-zone setup, service-route setup, meter coverage mapping, route-owner assignment, and route-level overdue plus collection-efficiency visibility.
 
 ## Important Historical Constraints
 
@@ -68,6 +72,17 @@
 - Staff access now follows an implemented route and mutation matrix for super admin, admin, technician, meter reader, billing, cashier, and viewer roles.
 - There is no public registration path for DWDS admin access. Admin accounts are created internally by SUPER_ADMIN users.
 - The `/admin/staff-access` surface is now the internal admin-management page for account creation, role updates, and activation state changes.
+- EH11 now also adds failed-login lockout tracking, login-attempt history with IP/device capture, SUPER_ADMIN lockout clearing, and a shorter Auth.js admin session lifetime.
+
+### Tariff Governance Constraint
+- Tariffs are now versioned, effectivity-dated records instead of a purely mutable active-rule toggle.
+- New bills now store the tariff version used during generation through `Bill.tariffId`.
+- Older bills created before EH11 may not have a linked tariff version and should be treated as legacy billing records until explicitly backfilled.
+
+### Backup Recovery Constraint
+- Backup visibility now starts from an app-native manual log under `/admin/system-readiness`.
+- Managed PostgreSQL backups remain the primary recovery layer; DWDS now records monthly snapshot references and restore-test notes rather than running its own backup engine.
+- Restore procedure guidance is now visible in-app, but automated export/download tooling is still pending inside EH11.
 
 ### Meter Account Transfer Constraint
 - Meter ownership changes are now modeled as account-holder transfers, not meter replacement.
@@ -79,6 +94,13 @@
 - Reporting now includes **historical collections filters plus receivables visibility** in the admin reporting workspace.
 - Overdue and follow-up reporting is now visible, but automated enforcement workflows are still not implemented.
 - EH3 has been user-validated and is now closed.
+
+### Route Operations Constraint
+- EH12 now introduces first-class `ServiceZone`, `ServiceRoute`, and `StaffRouteAssignment` records instead of relying on free-text route grouping alone.
+- Meter routing is currently assigned through `/admin/routes`, and existing billing print-batch grouping can now persist linked route or zone IDs when the selected bills belong to a single mapped route or zone.
+- Meter-reader route ownership now narrows the live reading-entry meter list for `METER_READER` accounts to their assigned routes only.
+- Billing print and distribution tracking now auto-scopes bill selection by grouping, defaults batch labels from the active route or zone scope, and can auto-fill the assigned distributor from route ownership.
+- Broader EH12 management analytics such as billed-versus-collected trends, disconnection-to-reconnection trends, and complaint-area visibility remain pending for later EH12 slices.
 
 ### Cashiering Constraint
 - Cashier posting now supports auditable partial settlements plus printable official receipts.
@@ -147,12 +169,12 @@
 - Notes: Printable billing reminders, overdue/final/disconnection notices, and reinstatement confirmations now log as first-class `PRINT` communication records and render through `/admin/notices/[notificationId]`. EH10 has now been user-validated and closed.
 
 ### EH11: Tariff Governance, Backup Recovery, and Admin Security
-- Status: `planned`
-- Notes: This phase will add tariff versioning, fee/rule auditability, backup visibility and restore-readiness surfaces, plus stronger internal admin protections such as lockout, timeout, login history, and optional `SUPER_ADMIN` 2FA.
+- Status: `complete`
+- Notes: Tariff versioning, effectivity dates, fee-change audit notes, bill-to-tariff traceability, login-attempt history, failed-login lockout, shorter admin sessions, and the backup-readiness workspace are implemented and user-validated. Optional `SUPER_ADMIN` 2FA and automated export/download tooling remain future EH11 refinements only if explicitly approved.
 
 ### EH12: Route Operations & Management Analytics
-- Status: `planned`
-- Notes: This phase will add route-aware reading and bill-distribution operations plus management dashboards for collections, delinquency, consumption, and service-trend visibility.
+- Status: `complete`
+- Notes: The first EH12 slice now adds `ServiceZone`, `ServiceRoute`, and `StaffRouteAssignment` data structures, a protected `/admin/routes` workspace, meter-route mapping, meter-reader and bill-distribution ownership assignment, route-aware reading entry, route-aware print-batch metadata, grouping-driven print/distribution bill selection, smart batch labeling, and initial route/zone overdue plus collection-efficiency visibility. This implemented slice has now been tested and validated. Broader management trend dashboards remain pending for later EH12 refinements.
 
 ## Current Next-Step Recommendation
-EH10 is now closed. Do not begin EH11 until the user explicitly requests that next phase.
+EH12 is now validated for its first operational slice. The next recommended step is to extend the new route data into deeper management dashboards, especially billed-versus-collected trends, top-loss areas, and disconnection-to-reconnection reporting.

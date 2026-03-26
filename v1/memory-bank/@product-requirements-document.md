@@ -26,6 +26,8 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH9 has now been tested and validated for the implemented exceptions-monitoring slice.
 - EH10 has now started with printable customer notices tied to billing, follow-up, and service-status records.
 - EH10 has now been tested and validated.
+- EH11 has now been tested and validated.
+- EH12 has now been tested and validated for the implemented route-operations and route-aware billing slice.
 
 ## Product Principles
 - **Modularity is mandatory:** Features must be separated into focused modules.
@@ -245,6 +247,14 @@ Rationale:
 - Backup and restore capability is a core production requirement for a money-handling internal system.
 - Admin security controls are higher-value near-term safeguards than nonessential UI polish.
 
+Current status:
+- EH11 is now complete.
+- Tariffs now save as versioned, effectivity-dated records with change reasons, penalty/reconnection settings, and lightweight audit history.
+- New bills now link to the tariff version used during generation.
+- Admin login attempts are now logged with lockout handling and recent sign-in visibility.
+- `/admin/system-readiness` now provides backup snapshot logging, environment-readiness checks, and an in-app restore checklist.
+- Optional `SUPER_ADMIN` 2FA and automated backup/export downloads remain pending only as later EH11 refinements if explicitly approved.
+
 ### EH12: Route Operations & Management Analytics
 Goal: Improve day-to-day field execution and give owners/managers visibility into collection performance and operational risk.
 
@@ -265,6 +275,14 @@ Expected outcomes:
 Rationale:
 - Route-aware tooling improves actual reading and distribution operations, not just recordkeeping.
 - Management dashboards should support decisions, prioritization, and accountability rather than only exposing raw reports.
+
+Current status:
+- EH12 is now validated for the implemented first slice.
+- The repo now includes first-class service zones, service routes, staff route assignments, and routed-meter coverage.
+- `/admin/routes` now provides the first EH12 workspace for route setup, route ownership assignment, meter mapping, and route/zone overdue plus collection-efficiency visibility.
+- Route-aware reading entry is now active for meter readers assigned to specific routes.
+- Billing print and distribution tracking now auto-scopes bills by grouping, defaults batch labels from the selected route/zone scope, and can default the assigned distributor from route ownership.
+- Broader management trend dashboards remain pending for later EH12 slices.
 
 ## Rule of Thumb for Developers
 Always read [@architecture.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\@architecture.md) before changing schema or architecture. Every major addition must map either to the implemented MVP surface or to a named enhancement phase in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md).

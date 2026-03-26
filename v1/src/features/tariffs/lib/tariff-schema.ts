@@ -31,6 +31,14 @@ const tierSchema = z
 export const tariffFormSchema = z
   .object({
     name: z.string().trim().min(3, "Tariff name must be at least 3 characters."),
+    effectiveFrom: z
+      .string()
+      .trim()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Choose an effectivity date."),
+    changeReason: z
+      .string()
+      .trim()
+      .min(8, "Change reason must be at least 8 characters."),
     minimumCharge: numericField("Minimum charge").min(
       0,
       "Minimum charge cannot be negative."
@@ -42,6 +50,11 @@ export const tariffFormSchema = z
     installationFee: numericField("Installation fee").min(
       0,
       "Installation fee cannot be negative."
+    ),
+    penaltyRate: numericField("Penalty rate").min(0, "Penalty rate cannot be negative."),
+    reconnectionFee: numericField("Reconnection fee").min(
+      0,
+      "Reconnection fee cannot be negative."
     ),
     tiers: z.array(tierSchema).min(1, "Add at least one tariff tier."),
   })

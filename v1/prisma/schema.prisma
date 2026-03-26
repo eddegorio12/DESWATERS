@@ -11,6 +11,14 @@ model Tariff {
   id              String      @id @default(uuid())
   name            String      @unique // e.g., "Standard Residential Tariff"
   isActive        Boolean     @default(false)
+  version         Int         @default(1)
+  effectiveFrom   DateTime    @default(now())
+  effectiveTo     DateTime?
+  changeReason    String?
+  penaltyRate     Float       @default(0)
+  reconnectionFee Float       @default(0)
+  createdById     String?
+  createdBy       User?       @relation("CreatedTariffs", fields: [createdById], references: [id])
   
   minimumCharge   Float       // Base fee for 0 usage (e.g., 25)
   minimumUsage    Float       // Usage covered by base fee (e.g., 1 cu.m)
@@ -18,9 +26,14 @@ model Tariff {
   installationFee Float       // One-time fee (e.g., 3000)
   
   tiers           TariffTier[]
+  bills           Bill[]
+  auditEvents     TariffAuditEvent[]
   
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+
+  @@index([effectiveFrom(sort: Desc)])
+  @@index([isActive, effectiveFrom(sort: Desc)])
 }
 
 model TariffTier {
@@ -45,13 +58,20 @@ model User {
   mustChangePassword Boolean @default(false)
   role      Role     @default(VIEWER)
   isActive  Boolean  @default(true)
+  failedSignInCount Int @default(0)
+  lockedUntil DateTime?
+  lastFailedSignInAt DateTime?
   lastLoginAt DateTime?
 
   readings  Reading[] // Meter readings performed by this user (if METER_READER)
+  createdTariffs Tariff[] @relation("CreatedTariffs")
+  tariffAuditEvents TariffAuditEvent[] @relation("TariffAuditEventActor")
   recordedPayments Payment[] @relation("RecordedPayments")
   receivableFollowUpUpdates Bill[] @relation("ReceivableFollowUpUpdatedBy")
   customerStatusUpdates Customer[] @relation("CustomerStatusUpdatedBy")
   triggeredNotifications NotificationLog[] @relation("TriggeredNotifications")
+  loginAttempts AdminLoginAttempt[] @relation("AdminLoginAttemptUser")
+  backupSnapshotsCreated BackupSnapshot[] @relation("BackupSnapshotCreatedBy")
   finalizedBillingCycles BillingCycle[] @relation("BillingCycleFinalizedBy")
   reopenedBillingCycles BillingCycle[] @relation("BillingCycleReopenedBy")
   closedBillingCycles BillingCycle[] @relation("BillingCycleClosedBy")
@@ -62,6 +82,7 @@ model User {
   distributedPrintBatches BillPrintBatch[] @relation("BillPrintBatchDistributedBy")
   returnedPrintBatches BillPrintBatch[] @relation("BillPrintBatchReturnedBy")
   failedDeliveryPrintBatches BillPrintBatch[] @relation("BillPrintBatchFailedBy")
+  staffRouteAssignments StaffRouteAssignment[]
   finalizedBills Bill[] @relation("BillFinalizedBy")
   printedBills Bill[] @relation("BillPrintedBy")
   distributedBills Bill[] @relation("BillDistributedBy")
@@ -120,12 +141,19 @@ model Meter {
   
   customerId    String?
   customer      Customer? @relation(fields: [customerId], references: [id])
+  serviceZoneId String?
+  serviceZone   ServiceZone? @relation(fields: [serviceZoneId], references: [id])
+  serviceRouteId String?
+  serviceRoute  ServiceRoute? @relation(fields: [serviceRouteId], references: [id])
   
   readings      Reading[]
   holderTransfers MeterHolderTransfer[]
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([serviceZoneId])
+  @@index([serviceRouteId])
 }
 
 enum MeterStatus {
@@ -222,6 +250,10 @@ model BillPrintBatch {
   label           String
   grouping        BillPrintGrouping   @default(ALL)
   groupingValue   String?
+  serviceZoneId   String?
+  serviceZone     ServiceZone?        @relation(fields: [serviceZoneId], references: [id])
+  serviceRouteId  String?
+  serviceRoute    ServiceRoute?       @relation(fields: [serviceRouteId], references: [id])
   status          BillPrintBatchStatus @default(DRAFT)
   notes           String?
   assignedToId    String?
@@ -245,6 +277,8 @@ model BillPrintBatch {
   updatedAt       DateTime            @updatedAt
 
   @@index([billingCycleId, status])
+  @@index([serviceZoneId])
+  @@index([serviceRouteId])
 }
 
 enum BillPrintGrouping {
@@ -301,6 +335,8 @@ model Bill {
   billingPeriod String   // e.g., "Oct 2026"
   billingCycleId String?
   billingCycle  BillingCycle? @relation(fields: [billingCycleId], references: [id])
+  tariffId      String?
+  tariff        Tariff?  @relation(fields: [tariffId], references: [id])
   dueDate       DateTime
   
   customerId    String
@@ -348,6 +384,7 @@ model Bill {
   @@index([billingCycleId, lifecycleStatus])
   @@index([distributionStatus])
   @@index([printBatchId])
+  @@index([tariffId])
 }
 
 enum BillLifecycleStatus {
@@ -427,6 +464,128 @@ enum NotificationStatus {
   SENT
   FAILED
   SKIPPED
+}
+
+model TariffAuditEvent {
+  id        String               @id @default(uuid())
+  tariffId   String
+  tariff     Tariff              @relation(fields: [tariffId], references: [id])
+  actorId    String?
+  actor      User?               @relation("TariffAuditEventActor", fields: [actorId], references: [id])
+  type       TariffAuditEventType
+  note       String?
+  createdAt  DateTime            @default(now())
+
+  @@index([tariffId, createdAt(sort: Desc)])
+  @@index([type, createdAt(sort: Desc)])
+}
+
+enum TariffAuditEventType {
+  CREATED
+  RETIRED
+}
+
+model AdminLoginAttempt {
+  id            String                  @id @default(uuid())
+  email         String
+  userId        String?
+  user          User?                   @relation("AdminLoginAttemptUser", fields: [userId], references: [id])
+  status        AdminLoginAttemptStatus
+  failureReason String?
+  ipAddress     String?
+  userAgent     String?
+  attemptedAt   DateTime                @default(now())
+  createdAt     DateTime                @default(now())
+
+  @@index([email, attemptedAt(sort: Desc)])
+  @@index([userId, attemptedAt(sort: Desc)])
+  @@index([status, attemptedAt(sort: Desc)])
+}
+
+enum AdminLoginAttemptStatus {
+  SUCCESS
+  FAILED
+  LOCKED_OUT
+}
+
+model BackupSnapshot {
+  id               String               @id @default(uuid())
+  snapshotMonth    String
+  label            String
+  provider         String               @default("SUPABASE")
+  storageReference String
+  status           BackupSnapshotStatus @default(RECORDED)
+  notes            String?
+  createdById      String
+  createdBy        User                 @relation("BackupSnapshotCreatedBy", fields: [createdById], references: [id])
+  recordedAt       DateTime             @default(now())
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  @@index([snapshotMonth, recordedAt(sort: Desc)])
+  @@index([status, recordedAt(sort: Desc)])
+}
+
+enum BackupSnapshotStatus {
+  RECORDED
+  VERIFIED
+  RESTORE_TESTED
+  FAILED
+}
+
+model ServiceZone {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  code        String?          @unique
+  description String?
+  routes      ServiceRoute[]
+  meters      Meter[]
+  printBatches BillPrintBatch[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([name])
+}
+
+model ServiceRoute {
+  id           String                 @id @default(uuid())
+  name         String
+  code         String                 @unique
+  description  String?
+  zoneId       String
+  zone         ServiceZone            @relation(fields: [zoneId], references: [id])
+  meters       Meter[]
+  assignments  StaffRouteAssignment[]
+  printBatches BillPrintBatch[]
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+
+  @@unique([zoneId, name])
+  @@index([zoneId, name])
+}
+
+model StaffRouteAssignment {
+  id             String              @id @default(uuid())
+  userId         String
+  user           User                @relation(fields: [userId], references: [id])
+  serviceRouteId String
+  serviceRoute   ServiceRoute        @relation(fields: [serviceRouteId], references: [id])
+  responsibility RouteResponsibility
+  isPrimary      Boolean             @default(true)
+  assignedAt     DateTime            @default(now())
+  releasedAt     DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@unique([userId, serviceRouteId, responsibility])
+  @@index([serviceRouteId, responsibility])
+  @@index([userId, responsibility])
+  @@index([releasedAt])
+}
+
+enum RouteResponsibility {
+  METER_READING
+  BILL_DISTRIBUTION
 }
 
 // Payments applied to Bills

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { BillStatus, ReadingStatus, Role } from "@prisma/client";
+import { BillStatus, ReadingStatus, Role, RouteResponsibility } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
@@ -24,16 +24,23 @@ export default async function AdminBillingPage() {
     return <ModuleAccessStateView module="billing" access={access} />;
   }
 
+  const now = new Date();
   await syncReceivableStatuses();
 
   const [activeTariff, approvedReadings, unpaidBills, billingCycles, selectedCycle, staffOptions] =
     await Promise.all([
     prisma.tariff.findFirst({
       where: {
-        isActive: true,
+        effectiveFrom: {
+          lte: now,
+        },
+        OR: [{ effectiveTo: null }, { effectiveTo: { gte: now } }],
       },
+      orderBy: [{ effectiveFrom: "desc" }, { version: "desc" }],
       select: {
         name: true,
+        version: true,
+        effectiveFrom: true,
         minimumCharge: true,
         minimumUsage: true,
       },
@@ -53,9 +60,21 @@ export default async function AdminBillingPage() {
         meter: {
           select: {
             meterNumber: true,
+            serviceZone: {
+              select: {
+                name: true,
+              },
+            },
+            serviceRoute: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
             customer: {
               select: {
                 accountNumber: true,
+                address: true,
                 name: true,
               },
             },
@@ -90,6 +109,17 @@ export default async function AdminBillingPage() {
             meter: {
               select: {
                 meterNumber: true,
+                serviceZone: {
+                  select: {
+                    name: true,
+                  },
+                },
+                serviceRoute: {
+                  select: {
+                    code: true,
+                    name: true,
+                  },
+                },
               },
             },
           },
@@ -137,6 +167,7 @@ export default async function AdminBillingPage() {
             customer: {
               select: {
                 accountNumber: true,
+                address: true,
                 name: true,
               },
             },
@@ -145,6 +176,34 @@ export default async function AdminBillingPage() {
                 meter: {
                   select: {
                     meterNumber: true,
+                    serviceZone: {
+                      select: {
+                        name: true,
+                      },
+                    },
+                    serviceRoute: {
+                      select: {
+                        id: true,
+                        code: true,
+                        name: true,
+                        assignments: {
+                          where: {
+                            responsibility: RouteResponsibility.BILL_DISTRIBUTION,
+                            releasedAt: null,
+                          },
+                          orderBy: [{ isPrimary: "desc" }, { assignedAt: "desc" }],
+                          take: 1,
+                          select: {
+                            user: {
+                              select: {
+                                id: true,
+                                name: true,
+                              },
+                            },
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               },
@@ -168,6 +227,17 @@ export default async function AdminBillingPage() {
             assignedTo: {
               select: {
                 id: true,
+                name: true,
+              },
+            },
+            serviceZone: {
+              select: {
+                name: true,
+              },
+            },
+            serviceRoute: {
+              select: {
+                code: true,
                 name: true,
               },
             },
@@ -279,9 +349,9 @@ export default async function AdminBillingPage() {
       stats={[
         {
           label: "Active tariff",
-          value: activeTariff ? activeTariff.name : "Not set",
+          value: activeTariff ? `${activeTariff.name} v${activeTariff.version}` : "Not set",
           detail: activeTariff
-            ? "Current tariff driving bill calculations"
+            ? "Current tariff version driving new bill calculations"
             : "Create or activate a tariff before billing",
           accent: "violet",
         },

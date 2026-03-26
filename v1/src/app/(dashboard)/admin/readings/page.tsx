@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { MeterStatus } from "@prisma/client";
+import { MeterStatus, RouteResponsibility } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
@@ -23,6 +23,22 @@ export default async function AdminReadingsPage() {
     return <ModuleAccessStateView module="readings" access={access} />;
   }
 
+  const assignedReadingRouteIds =
+    access.user.role === "METER_READER"
+      ? (
+          await prisma.staffRouteAssignment.findMany({
+            where: {
+              userId: access.user.id,
+              responsibility: RouteResponsibility.METER_READING,
+              releasedAt: null,
+            },
+            select: {
+              serviceRouteId: true,
+            },
+          })
+        ).map((assignment) => assignment.serviceRouteId)
+      : [];
+
   const [meters, pendingReadings, readings] = await Promise.all([
     prisma.meter.findMany({
       where: {
@@ -30,6 +46,17 @@ export default async function AdminReadingsPage() {
           not: null,
         },
         status: MeterStatus.ACTIVE,
+        ...(access.user.role === "METER_READER"
+          ? assignedReadingRouteIds.length
+            ? {
+                serviceRouteId: {
+                  in: assignedReadingRouteIds,
+                },
+              }
+            : {
+                id: "__no_meter__",
+              }
+          : {}),
       },
       orderBy: [{ meterNumber: "asc" }],
       select: {
@@ -38,6 +65,17 @@ export default async function AdminReadingsPage() {
         customer: {
           select: {
             accountNumber: true,
+            name: true,
+          },
+        },
+        serviceZone: {
+          select: {
+            name: true,
+          },
+        },
+        serviceRoute: {
+          select: {
+            code: true,
             name: true,
           },
         },
@@ -53,6 +91,11 @@ export default async function AdminReadingsPage() {
     prisma.reading.findMany({
       where: {
         status: "PENDING_REVIEW",
+        ...(access.user.role === "METER_READER"
+          ? {
+              readerId: access.user.id,
+            }
+          : {}),
       },
       orderBy: [{ readingDate: "asc" }],
       select: {
@@ -64,6 +107,17 @@ export default async function AdminReadingsPage() {
         meter: {
           select: {
             meterNumber: true,
+            serviceZone: {
+              select: {
+                name: true,
+              },
+            },
+            serviceRoute: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
             customer: {
               select: {
                 accountNumber: true,
@@ -81,6 +135,12 @@ export default async function AdminReadingsPage() {
       },
     }),
     prisma.reading.findMany({
+      where:
+        access.user.role === "METER_READER"
+          ? {
+              readerId: access.user.id,
+            }
+          : undefined,
       orderBy: [{ readingDate: "desc" }],
       take: 20,
       select: {
@@ -93,6 +153,17 @@ export default async function AdminReadingsPage() {
         meter: {
           select: {
             meterNumber: true,
+            serviceZone: {
+              select: {
+                name: true,
+              },
+            },
+            serviceRoute: {
+              select: {
+                code: true,
+                name: true,
+              },
+            },
             customer: {
               select: {
                 accountNumber: true,
@@ -118,6 +189,9 @@ export default async function AdminReadingsPage() {
       meterNumber: meter.meterNumber,
       customerName: meter.customer!.name,
       accountNumber: meter.customer!.accountNumber,
+      zoneName: meter.serviceZone?.name ?? null,
+      routeName: meter.serviceRoute?.name ?? null,
+      routeCode: meter.serviceRoute?.code ?? null,
       previousReading: meter.readings[0]?.currentReading ?? 0,
     }));
 

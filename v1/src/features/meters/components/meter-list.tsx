@@ -6,6 +6,13 @@ type MeterListProps = {
     meterNumber: string;
     installDate: Date;
     status: MeterStatus;
+    serviceZone: {
+      name: string;
+    } | null;
+    serviceRoute: {
+      code: string;
+      name: string;
+    } | null;
     customer: {
       accountNumber: string;
       name: string;
@@ -52,6 +59,7 @@ export function MeterList({ meters }: MeterListProps) {
                 <th className="px-4 py-3 font-medium">Meter</th>
                 <th className="px-4 py-3 font-medium">Install date</th>
                 <th className="px-4 py-3 font-medium">Customer</th>
+                <th className="px-4 py-3 font-medium">Route coverage</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Holder history</th>
               </tr>
@@ -76,6 +84,19 @@ export function MeterList({ meters }: MeterListProps) {
                         </div>
                       ) : (
                         <span className="text-muted-foreground">Unassigned</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4">
+                      {meter.serviceRoute ? (
+                        <div>
+                          <div className="font-medium text-foreground">{meter.serviceRoute.name}</div>
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            {meter.serviceRoute.code}
+                            {meter.serviceZone ? ` • ${meter.serviceZone.name}` : ""}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">Not routed</span>
                       )}
                     </td>
                     <td className="px-4 py-4">
@@ -122,7 +143,7 @@ export function MeterList({ meters }: MeterListProps) {
               ) : (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                   >
                     No meters yet. Register the first service meter with the form on this page.

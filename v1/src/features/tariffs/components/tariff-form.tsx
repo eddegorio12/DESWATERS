@@ -21,6 +21,10 @@ const defaultTier: TariffFormValues["tiers"][number] = {
   ratePerCuM: 50,
 };
 
+function getTodayDateValue() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export function TariffForm() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -28,10 +32,14 @@ export function TariffForm() {
   const form = useForm<TariffFormValues>({
     resolver: zodResolver(tariffFormSchema),
     defaultValues: {
-      name: "Standard Residential Tariff",
+      name: "Residential Tariff",
+      effectiveFrom: getTodayDateValue(),
+      changeReason: "",
       minimumCharge: 25,
       minimumUsage: 1,
       installationFee: 3000,
+      penaltyRate: 0,
+      reconnectionFee: 0,
       tiers: [defaultTier],
     },
   });
@@ -48,9 +56,13 @@ export function TariffForm() {
         await createTariff(values);
         form.reset({
           name: "",
+          effectiveFrom: getTodayDateValue(),
+          changeReason: "",
           minimumCharge: 25,
           minimumUsage: 1,
           installationFee: 3000,
+          penaltyRate: 0,
+          reconnectionFee: 0,
           tiers: [defaultTier],
         });
         router.refresh();
@@ -73,8 +85,8 @@ export function TariffForm() {
           Configure progressive billing rules
         </h2>
         <p className="text-sm leading-6 text-muted-foreground">
-          Saving a new tariff marks it as the active computing tariff and retires the
-          previously active one.
+          Each save creates a new tariff version with its own effectivity date, audit
+          reason, and downstream billing traceability.
         </p>
       </div>
 
@@ -92,6 +104,21 @@ export function TariffForm() {
               {...form.register("name")}
             />
             <p className="mt-2 text-sm text-destructive">{form.formState.errors.name?.message}</p>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-foreground" htmlFor="effectiveFrom">
+              Effective from
+            </label>
+            <input
+              id="effectiveFrom"
+              type="date"
+              className={`${fieldClassName} bg-white`}
+              {...form.register("effectiveFrom")}
+            />
+            <p className="mt-2 text-sm text-destructive">
+              {form.formState.errors.effectiveFrom?.message}
+            </p>
           </div>
 
           <div>
@@ -139,6 +166,54 @@ export function TariffForm() {
             />
             <p className="mt-2 text-sm text-destructive">
               {form.formState.errors.installationFee?.message}
+            </p>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-foreground" htmlFor="penaltyRate">
+              Penalty rate
+            </label>
+            <input
+              id="penaltyRate"
+              type="number"
+              step="0.01"
+              className={`${fieldClassName} bg-white`}
+              {...form.register("penaltyRate", { valueAsNumber: true })}
+            />
+            <p className="mt-2 text-sm text-destructive">
+              {form.formState.errors.penaltyRate?.message}
+            </p>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-foreground" htmlFor="reconnectionFee">
+              Reconnection fee
+            </label>
+            <input
+              id="reconnectionFee"
+              type="number"
+              step="0.01"
+              className={`${fieldClassName} bg-white`}
+              {...form.register("reconnectionFee", { valueAsNumber: true })}
+            />
+            <p className="mt-2 text-sm text-destructive">
+              {form.formState.errors.reconnectionFee?.message}
+            </p>
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="text-sm font-medium text-foreground" htmlFor="changeReason">
+              Change reason
+            </label>
+            <textarea
+              id="changeReason"
+              rows={3}
+              className={`${fieldClassName} resize-y bg-white`}
+              placeholder="Document why this tariff version is being introduced."
+              {...form.register("changeReason")}
+            />
+            <p className="mt-2 text-sm text-destructive">
+              {form.formState.errors.changeReason?.message}
             </p>
           </div>
         </div>
@@ -267,7 +342,7 @@ export function TariffForm() {
           className="h-11 rounded-2xl px-5"
           disabled={isPending}
         >
-          {isPending ? "Saving tariff..." : "Save active tariff"}
+          {isPending ? "Saving tariff version..." : "Save tariff version"}
         </Button>
       </form>
     </section>

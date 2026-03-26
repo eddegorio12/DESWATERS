@@ -73,6 +73,7 @@ function revalidateAdminManagementPages() {
   revalidatePath("/dashboard");
   revalidatePath("/admin/dashboard");
   revalidatePath("/admin/staff-access");
+  revalidatePath("/admin/system-readiness");
 }
 
 function logAdminManagementEvent(input: {
@@ -264,6 +265,50 @@ export async function toggleAdminActiveState(formData: FormData) {
     targetUserId: targetAdmin.id,
     targetEmail: targetAdmin.email,
     detail: targetAdmin.isActive ? "Deactivated admin account." : "Reactivated admin account.",
+  });
+
+  revalidateAdminManagementPages();
+}
+
+export async function clearAdminLockout(formData: FormData) {
+  const actor = await requireStaffCapability("admins:unlock");
+  const userId = parseUserId(formData.get("userId"));
+
+  if (!userId) {
+    throw new Error("A valid admin account is required.");
+  }
+
+  const targetAdmin = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      email: true,
+      lockedUntil: true,
+    },
+  });
+
+  if (!targetAdmin) {
+    throw new Error("That admin account no longer exists.");
+  }
+
+  await prisma.user.update({
+    where: { id: targetAdmin.id },
+    data: {
+      failedSignInCount: 0,
+      lastFailedSignInAt: null,
+      lockedUntil: null,
+    },
+  });
+
+  logAdminManagementEvent({
+    action: "clear_lockout",
+    actorId: actor.id,
+    actorEmail: actor.email,
+    targetUserId: targetAdmin.id,
+    targetEmail: targetAdmin.email,
+    detail: targetAdmin.lockedUntil
+      ? "Cleared active admin lockout."
+      : "Reset failed sign-in counters.",
   });
 
   revalidateAdminManagementPages();

@@ -30,8 +30,15 @@ import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { prisma } from "@/lib/prisma";
 
 type ActiveTariffSnapshot = {
+  id: string;
+  name: string;
+  version: number;
+  effectiveFrom: Date;
   minimumCharge: number;
   minimumUsage: number;
+  penaltyRate: number;
+  reconnectionFee: number;
+  installationFee: number;
   tiers: {
     minVolume: number;
     maxVolume: number | null;
@@ -82,16 +89,29 @@ function revalidateBillingPaths() {
   revalidatePath("/admin/follow-up");
   revalidatePath("/admin/readings");
   revalidatePath("/admin/payments");
+  revalidatePath("/admin/routes");
 }
 
 async function getActiveTariffOrThrow() {
+  const now = new Date();
   const activeTariff = await prisma.tariff.findFirst({
     where: {
-      isActive: true,
+      effectiveFrom: {
+        lte: now,
+      },
+      OR: [{ effectiveTo: null }, { effectiveTo: { gte: now } }],
     },
+    orderBy: [{ effectiveFrom: "desc" }, { version: "desc" }],
     select: {
+      id: true,
+      name: true,
+      version: true,
+      effectiveFrom: true,
       minimumCharge: true,
       minimumUsage: true,
+      penaltyRate: true,
+      reconnectionFee: true,
+      installationFee: true,
       tiers: {
         orderBy: {
           minVolume: "asc",
@@ -124,6 +144,7 @@ function buildBillMutationPayload(reading: ReadingForBilling, activeTariff: Acti
 
   return {
     billingPeriod,
+    tariffId: activeTariff.id,
     dueDate,
     customerId: reading.meter.customer.id,
     readingId: reading.id,
@@ -652,6 +673,16 @@ export async function createBillPrintBatch(values: CreateBillPrintBatchInput) {
         },
         select: {
           id: true,
+          reading: {
+            select: {
+              meter: {
+                select: {
+                  serviceZoneId: true,
+                  serviceRouteId: true,
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -669,6 +700,29 @@ export async function createBillPrintBatch(values: CreateBillPrintBatchInput) {
     throw new Error("Some selected bills no longer belong to this billing cycle.");
   }
 
+  const selectedRouteIds = Array.from(
+    new Set(
+      cycle.bills
+        .map((bill) => bill.reading.meter.serviceRouteId)
+        .filter((value): value is string => Boolean(value))
+    )
+  );
+  const selectedZoneIds = Array.from(
+    new Set(
+      cycle.bills
+        .map((bill) => bill.reading.meter.serviceZoneId)
+        .filter((value): value is string => Boolean(value))
+    )
+  );
+
+  if (values.grouping === BillPrintGrouping.ROUTE && selectedRouteIds.length !== 1) {
+    throw new Error("Route-grouped print batches must contain bills from exactly one mapped route.");
+  }
+
+  if (values.grouping === BillPrintGrouping.ZONE && selectedZoneIds.length !== 1) {
+    throw new Error("Zone-grouped print batches must contain bills from exactly one mapped zone.");
+  }
+
   const createdBatch = await prisma.$transaction(async (tx) => {
     const batch = await tx.billPrintBatch.create({
       data: {
@@ -676,6 +730,8 @@ export async function createBillPrintBatch(values: CreateBillPrintBatchInput) {
         label,
         grouping: values.grouping,
         groupingValue: values.groupingValue?.trim() || null,
+        serviceZoneId: values.grouping === BillPrintGrouping.ZONE ? selectedZoneIds[0] : null,
+        serviceRouteId: values.grouping === BillPrintGrouping.ROUTE ? selectedRouteIds[0] : null,
         assignedToId: values.assignedToId || null,
         notes: values.notes?.trim() || null,
         createdById: staffUser.id,

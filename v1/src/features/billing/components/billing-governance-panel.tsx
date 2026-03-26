@@ -63,11 +63,26 @@ type BillingGovernancePanelProps = {
       reprintCount: number;
       customer: {
         accountNumber: string;
+        address: string;
         name: string;
       };
       reading: {
         meter: {
           meterNumber: string;
+          serviceZone: {
+            name: string;
+          } | null;
+          serviceRoute: {
+            id: string;
+            code: string;
+            name: string;
+            assignments: {
+              user: {
+                id: string;
+                name: string;
+              };
+            }[];
+          } | null;
         };
       };
     }[];
@@ -80,6 +95,13 @@ type BillingGovernancePanelProps = {
       notes: string | null;
       assignedTo: {
         id: string;
+        name: string;
+      } | null;
+      serviceZone: {
+        name: string;
+      } | null;
+      serviceRoute: {
+        code: string;
         name: string;
       } | null;
       createdAt: Date;
@@ -169,6 +191,36 @@ function getDistributionStatusClasses(status: BillDistributionStatus) {
   return "bg-secondary text-secondary-foreground";
 }
 
+function normalizeText(value: string) {
+  return value.trim().toLowerCase();
+}
+
+function getDefaultPrintBatchLabel(
+  billingPeriodLabel: string,
+  grouping: BillPrintGrouping,
+  groupingValue: string
+) {
+  const trimmedGroupingValue = groupingValue.trim();
+
+  if (grouping === BillPrintGrouping.ROUTE && trimmedGroupingValue) {
+    return `${trimmedGroupingValue} - ${billingPeriodLabel} Batch`;
+  }
+
+  if (grouping === BillPrintGrouping.ZONE && trimmedGroupingValue) {
+    return `${trimmedGroupingValue} - ${billingPeriodLabel} Batch`;
+  }
+
+  if (grouping === BillPrintGrouping.PUROK && trimmedGroupingValue) {
+    return `${trimmedGroupingValue} - ${billingPeriodLabel} Batch`;
+  }
+
+  if (grouping === BillPrintGrouping.MANUAL) {
+    return `${billingPeriodLabel} Manual Batch`;
+  }
+
+  return `${billingPeriodLabel} Master Batch`;
+}
+
 export function BillingGovernancePanel({
   cycles,
   selectedCycle,
@@ -180,15 +232,23 @@ export function BillingGovernancePanel({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [reopenReason, setReopenReason] = useState("");
   const [regenerateReason, setRegenerateReason] = useState("");
-  const [printBatchLabel, setPrintBatchLabel] = useState(
-    selectedCycle ? `${selectedCycle.billingPeriodLabel} field batch` : ""
+  const [manualPrintBatchLabel, setManualPrintBatchLabel] = useState(
+    selectedCycle
+      ? getDefaultPrintBatchLabel(
+          selectedCycle.billingPeriodLabel,
+          BillPrintGrouping.ALL,
+          ""
+        )
+      : ""
   );
+  const [isPrintBatchLabelDirty, setIsPrintBatchLabelDirty] = useState(false);
   const [printBatchGrouping, setPrintBatchGrouping] = useState<BillPrintGrouping>(
     BillPrintGrouping.ALL
   );
   const [printBatchGroupingValue, setPrintBatchGroupingValue] = useState("");
   const [printBatchNotes, setPrintBatchNotes] = useState("");
-  const [assignedToId, setAssignedToId] = useState("");
+  const [manualAssignedToId, setManualAssignedToId] = useState("");
+  const [isAssignedToDirty, setIsAssignedToDirty] = useState(false);
   const [selectedBillIds, setSelectedBillIds] = useState<string[]>(
     selectedCycle ? selectedCycle.bills.map((bill) => bill.id) : []
   );
@@ -205,6 +265,135 @@ export function BillingGovernancePanel({
     () => getBillingChecklistItems(checklistState),
     [checklistState]
   );
+  const cycleBills = useMemo(() => selectedCycle?.bills ?? [], [selectedCycle]);
+  const isManualSelection = printBatchGrouping === BillPrintGrouping.MANUAL;
+  const routeOptions = useMemo(() => {
+    const options = new Map<
+      string,
+      {
+        value: string;
+        label: string;
+        assignedTo: {
+          id: string;
+          name: string;
+        } | null;
+      }
+    >();
+
+    for (const bill of cycleBills) {
+      const route = bill.reading.meter.serviceRoute;
+
+      if (!route) {
+        continue;
+      }
+
+      if (!options.has(route.code)) {
+        options.set(route.code, {
+          value: route.code,
+          label: `${route.code} - ${route.name}`,
+          assignedTo: route.assignments[0]?.user ?? null,
+        });
+      }
+    }
+
+    return [...options.values()];
+  }, [cycleBills]);
+  const zoneOptions = useMemo(() => {
+    const options = new Map<string, { value: string; label: string }>();
+
+    for (const bill of cycleBills) {
+      const zone = bill.reading.meter.serviceZone;
+
+      if (!zone) {
+        continue;
+      }
+
+      if (!options.has(zone.name)) {
+        options.set(zone.name, {
+          value: zone.name,
+          label: zone.name,
+        });
+      }
+    }
+
+    return [...options.values()];
+  }, [cycleBills]);
+  const effectiveGroupingValue = useMemo(() => {
+    if (printBatchGrouping === BillPrintGrouping.ROUTE) {
+      return routeOptions.some((option) => option.value === printBatchGroupingValue)
+        ? printBatchGroupingValue
+        : (routeOptions[0]?.value ?? "");
+    }
+
+    if (printBatchGrouping === BillPrintGrouping.ZONE) {
+      return zoneOptions.some((option) => option.value === printBatchGroupingValue)
+        ? printBatchGroupingValue
+        : (zoneOptions[0]?.value ?? "");
+    }
+
+    return printBatchGroupingValue;
+  }, [printBatchGrouping, printBatchGroupingValue, routeOptions, zoneOptions]);
+  const visibleBills = useMemo(() => {
+    if (printBatchGrouping === BillPrintGrouping.ROUTE) {
+      return cycleBills.filter(
+        (bill) => bill.reading.meter.serviceRoute?.code === effectiveGroupingValue
+      );
+    }
+
+    if (printBatchGrouping === BillPrintGrouping.ZONE) {
+      return cycleBills.filter(
+        (bill) => bill.reading.meter.serviceZone?.name === effectiveGroupingValue
+      );
+    }
+
+    if (printBatchGrouping === BillPrintGrouping.PUROK) {
+      const normalizedGroupingValue = normalizeText(effectiveGroupingValue);
+
+      if (!normalizedGroupingValue) {
+        return [];
+      }
+
+      return cycleBills.filter((bill) =>
+        normalizeText(bill.customer.address).includes(normalizedGroupingValue)
+      );
+    }
+
+    return cycleBills;
+  }, [cycleBills, effectiveGroupingValue, printBatchGrouping]);
+  const effectiveSelectedBillIds = useMemo(() => {
+    if (isManualSelection) {
+      return selectedBillIds;
+    }
+
+    return visibleBills.map((bill) => bill.id);
+  }, [isManualSelection, selectedBillIds, visibleBills]);
+  const selectionModeLabel = isManualSelection ? "manual selection" : "automatic selection";
+  const defaultPrintBatchLabel = useMemo(
+    () =>
+      selectedCycle
+        ? getDefaultPrintBatchLabel(
+            selectedCycle.billingPeriodLabel,
+            printBatchGrouping,
+            effectiveGroupingValue
+          )
+        : "",
+    [effectiveGroupingValue, printBatchGrouping, selectedCycle]
+  );
+  const autoAssignedStaff = useMemo(() => {
+    if (printBatchGrouping !== BillPrintGrouping.ROUTE || !effectiveGroupingValue) {
+      return null;
+    }
+
+    return (
+      routeOptions.find((option) => option.value === effectiveGroupingValue)?.assignedTo ?? null
+    );
+  }, [effectiveGroupingValue, printBatchGrouping, routeOptions]);
+  const printBatchLabel = isPrintBatchLabelDirty
+    ? manualPrintBatchLabel
+    : defaultPrintBatchLabel;
+  const assignedToId = isAssignedToDirty
+    ? manualAssignedToId
+    : (autoAssignedStaff?.id ?? "");
 
   function runAction(action: () => Promise<unknown>) {
     setErrorMessage(null);
@@ -454,8 +643,8 @@ export function BillingGovernancePanel({
                 </h3>
               </div>
               <p className="text-sm text-muted-foreground">
-                {selectedBillIds.length} of {selectedCycle.bills.length} bill
-                {selectedCycle.bills.length === 1 ? "" : "s"} selected
+                {effectiveSelectedBillIds.length} of {selectedCycle.bills.length} bill
+                {selectedCycle.bills.length === 1 ? "" : "s"} selected via {selectionModeLabel}
               </p>
             </div>
 
@@ -464,25 +653,33 @@ export function BillingGovernancePanel({
                 <table className="min-w-full divide-y divide-border text-left">
                   <thead className="bg-secondary/55">
                     <tr className="text-sm text-muted-foreground">
-                      <th className="px-4 py-3 font-medium">Use</th>
+                      {isManualSelection ? (
+                        <th className="px-4 py-3 font-medium">Use</th>
+                      ) : null}
                       <th className="px-4 py-3 font-medium">Customer</th>
                       <th className="px-4 py-3 font-medium">Meter</th>
+                      <th className="px-4 py-3 font-medium">Route</th>
                       <th className="px-4 py-3 font-medium">Amount</th>
                       <th className="px-4 py-3 font-medium">Bill lock</th>
                       <th className="px-4 py-3 font-medium">Delivery</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border bg-background">
-                    {selectedCycle.bills.map((bill) => (
+                    {visibleBills.length ? (
+                      visibleBills.map((bill) => (
                       <tr key={bill.id} className="text-sm">
-                        <td className="px-4 py-4">
-                          <input
-                            type="checkbox"
-                            checked={selectedBillIds.includes(bill.id)}
-                            disabled={isPending || !capabilities.canManagePrintBatches}
-                            onChange={(event) => toggleBillSelection(bill.id, event.target.checked)}
-                          />
-                        </td>
+                        {isManualSelection ? (
+                          <td className="px-4 py-4">
+                            <input
+                              type="checkbox"
+                              checked={effectiveSelectedBillIds.includes(bill.id)}
+                              disabled={isPending || !capabilities.canManagePrintBatches}
+                              onChange={(event) =>
+                                toggleBillSelection(bill.id, event.target.checked)
+                              }
+                            />
+                          </td>
+                        ) : null}
                         <td className="px-4 py-4">
                           <div className="font-medium text-foreground">{bill.customer.name}</div>
                           <div className="mt-1 text-xs text-muted-foreground">
@@ -491,6 +688,18 @@ export function BillingGovernancePanel({
                         </td>
                         <td className="px-4 py-4 font-mono text-xs text-muted-foreground">
                           {bill.reading.meter.meterNumber}
+                        </td>
+                        <td className="px-4 py-4 text-xs text-muted-foreground">
+                          {bill.reading.meter.serviceRoute ? (
+                            <div>
+                              <div>{bill.reading.meter.serviceRoute.code}</div>
+                              <div className="mt-1">
+                                {bill.reading.meter.serviceZone?.name ?? "No zone"}
+                              </div>
+                            </div>
+                          ) : (
+                            "Not routed"
+                          )}
                         </td>
                         <td className="px-4 py-4 font-medium text-foreground">
                           {formatCurrency(bill.totalCharges)}
@@ -513,7 +722,17 @@ export function BillingGovernancePanel({
                           ) : null}
                         </td>
                       </tr>
-                    ))}
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={isManualSelection ? 7 : 6}
+                          className="px-4 py-10 text-center text-sm text-muted-foreground"
+                        >
+                          No bills match the current grouping filter.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -524,7 +743,10 @@ export function BillingGovernancePanel({
                 <input
                   value={printBatchLabel}
                   disabled={isPending || !capabilities.canManagePrintBatches}
-                  onChange={(event) => setPrintBatchLabel(event.target.value)}
+                  onChange={(event) => {
+                    setManualPrintBatchLabel(event.target.value);
+                    setIsPrintBatchLabelDirty(true);
+                  }}
                   className="w-full rounded-[1rem] border border-[#cfe0dc] bg-white px-4 py-3 text-sm outline-none placeholder:text-[#86a09b]"
                   placeholder="Print-batch label"
                 />
@@ -532,9 +754,26 @@ export function BillingGovernancePanel({
                   <select
                     value={printBatchGrouping}
                     disabled={isPending || !capabilities.canManagePrintBatches}
-                    onChange={(event) =>
-                      setPrintBatchGrouping(event.target.value as BillPrintGrouping)
-                    }
+                    onChange={(event) => {
+                      const nextGrouping = event.target.value as BillPrintGrouping;
+                      setPrintBatchGrouping(nextGrouping);
+                      setIsPrintBatchLabelDirty(false);
+                      setIsAssignedToDirty(false);
+
+                      if (nextGrouping === BillPrintGrouping.ROUTE) {
+                        setPrintBatchGroupingValue(routeOptions[0]?.value ?? "");
+                        return;
+                      }
+
+                      if (nextGrouping === BillPrintGrouping.ZONE) {
+                        setPrintBatchGroupingValue(zoneOptions[0]?.value ?? "");
+                        return;
+                      }
+
+                      if (nextGrouping === BillPrintGrouping.ALL) {
+                        setPrintBatchGroupingValue("");
+                      }
+                    }}
                     className="rounded-[1rem] border border-[#cfe0dc] bg-white px-4 py-3 text-sm outline-none"
                   >
                     {Object.entries(billPrintGroupingLabels).map(([value, label]) => (
@@ -543,13 +782,67 @@ export function BillingGovernancePanel({
                       </option>
                     ))}
                   </select>
-                  <input
-                    value={printBatchGroupingValue}
-                    disabled={isPending || !capabilities.canManagePrintBatches}
-                    onChange={(event) => setPrintBatchGroupingValue(event.target.value)}
-                    className="rounded-[1rem] border border-[#cfe0dc] bg-white px-4 py-3 text-sm outline-none placeholder:text-[#86a09b]"
-                    placeholder="Zone / route / purok"
-                  />
+                  {printBatchGrouping === BillPrintGrouping.ROUTE ? (
+                    <select
+                      value={effectiveGroupingValue}
+                      disabled={isPending || !capabilities.canManagePrintBatches || routeOptions.length === 0}
+                      onChange={(event) => {
+                        setPrintBatchGroupingValue(event.target.value);
+                        setIsPrintBatchLabelDirty(false);
+                        setIsAssignedToDirty(false);
+                      }}
+                      className="rounded-[1rem] border border-[#cfe0dc] bg-white px-4 py-3 text-sm outline-none"
+                    >
+                      {routeOptions.length ? (
+                        routeOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">No routed bills available</option>
+                      )}
+                    </select>
+                  ) : null}
+                  {printBatchGrouping === BillPrintGrouping.ZONE ? (
+                    <select
+                      value={effectiveGroupingValue}
+                      disabled={isPending || !capabilities.canManagePrintBatches || zoneOptions.length === 0}
+                      onChange={(event) => {
+                        setPrintBatchGroupingValue(event.target.value);
+                        setIsPrintBatchLabelDirty(false);
+                      }}
+                      className="rounded-[1rem] border border-[#cfe0dc] bg-white px-4 py-3 text-sm outline-none"
+                    >
+                      {zoneOptions.length ? (
+                        zoneOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))
+                      ) : (
+                        <option value="">No zoned bills available</option>
+                      )}
+                    </select>
+                  ) : null}
+                  {printBatchGrouping !== BillPrintGrouping.ROUTE &&
+                  printBatchGrouping !== BillPrintGrouping.ZONE ? (
+                    <input
+                      value={effectiveGroupingValue}
+                      disabled={isPending || !capabilities.canManagePrintBatches}
+                      onChange={(event) => {
+                        setPrintBatchGroupingValue(event.target.value);
+                        setIsPrintBatchLabelDirty(false);
+                        setIsAssignedToDirty(false);
+                      }}
+                      className="rounded-[1rem] border border-[#cfe0dc] bg-white px-4 py-3 text-sm outline-none placeholder:text-[#86a09b]"
+                      placeholder={
+                        printBatchGrouping === BillPrintGrouping.PUROK
+                          ? "Purok text from customer address"
+                          : "Zone / route / purok"
+                      }
+                    />
+                  ) : null}
                 </div>
               </div>
 
@@ -557,7 +850,10 @@ export function BillingGovernancePanel({
                 <select
                   value={assignedToId}
                   disabled={isPending || !capabilities.canManagePrintBatches}
-                  onChange={(event) => setAssignedToId(event.target.value)}
+                  onChange={(event) => {
+                    setManualAssignedToId(event.target.value);
+                    setIsAssignedToDirty(true);
+                  }}
                   className="w-full rounded-[1rem] border border-[#cfe0dc] bg-white px-4 py-3 text-sm outline-none"
                 >
                   <option value="">Unassigned</option>
@@ -567,6 +863,16 @@ export function BillingGovernancePanel({
                     </option>
                   ))}
                 </select>
+                {printBatchGrouping === BillPrintGrouping.ROUTE && autoAssignedStaff ? (
+                  <p className="text-xs text-muted-foreground">
+                    Defaulted from route distributor owner: {autoAssignedStaff.name}
+                  </p>
+                ) : null}
+                {printBatchGrouping === BillPrintGrouping.ROUTE && !autoAssignedStaff ? (
+                  <p className="text-xs text-muted-foreground">
+                    No active bill distributor is assigned to this route yet.
+                  </p>
+                ) : null}
                 <textarea
                   value={printBatchNotes}
                   disabled={isPending || !capabilities.canManagePrintBatches}
@@ -580,20 +886,20 @@ export function BillingGovernancePanel({
             <Button
               type="button"
               className="mt-4"
-              disabled={
-                isPending ||
-                !capabilities.canManagePrintBatches ||
-                selectedBillIds.length === 0 ||
-                selectedCycle.status === BillingCycleStatus.OPEN
-              }
+                disabled={
+                  isPending ||
+                  !capabilities.canManagePrintBatches ||
+                  effectiveSelectedBillIds.length === 0 ||
+                  selectedCycle.status === BillingCycleStatus.OPEN
+                }
               onClick={() =>
                 runAction(() =>
                   createBillPrintBatch({
                     billingCycleId: selectedCycle.id,
-                    billIds: selectedBillIds,
+                    billIds: effectiveSelectedBillIds,
                     label: printBatchLabel,
                     grouping: printBatchGrouping,
-                    groupingValue: printBatchGroupingValue,
+                    groupingValue: effectiveGroupingValue,
                     assignedToId,
                     notes: printBatchNotes,
                   })
@@ -655,6 +961,16 @@ export function BillingGovernancePanel({
                           {billPrintGroupingLabels[batch.grouping]}
                           {batch.groupingValue ? `: ${batch.groupingValue}` : ""}
                         </p>
+                        {batch.serviceRoute ? (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {batch.serviceRoute.code} • {batch.serviceRoute.name}
+                          </p>
+                        ) : null}
+                        {!batch.serviceRoute && batch.serviceZone ? (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Zone • {batch.serviceZone.name}
+                          </p>
+                        ) : null}
                       </div>
                       <span className="rounded-full bg-[#eef3ff] px-3 py-1 text-xs font-semibold text-[#294b8f]">
                         {billPrintBatchStatusLabels[batch.status]}

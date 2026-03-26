@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 
-import { auth } from "@/auth";
 import { AuthShell } from "@/features/auth/components/auth-shell";
+import { getCurrentStaffUser } from "@/features/auth/lib/authorization";
 import { SignInForm } from "@/features/auth/components/sign-in-form";
 
 export default async function SignInPage({
@@ -9,10 +9,10 @@ export default async function SignInPage({
 }: {
   searchParams: Promise<{ callbackUrl?: string }>;
 }) {
-  const session = await auth();
+  const currentUser = await getCurrentStaffUser();
   const resolvedSearchParams = await searchParams;
 
-  if (session?.user?.id) {
+  if (currentUser.isAuthenticated && currentUser.user?.id) {
     redirect("/dashboard");
   }
 

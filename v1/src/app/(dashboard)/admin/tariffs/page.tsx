@@ -20,16 +20,43 @@ export default async function AdminTariffsPage() {
     return <ModuleAccessStateView module="tariffs" access={access} />;
   }
 
+  const now = new Date();
   const tariffs = await prisma.tariff.findMany({
-    orderBy: [{ createdAt: "desc" }],
+    orderBy: [{ effectiveFrom: "desc" }, { createdAt: "desc" }],
     select: {
       id: true,
       name: true,
       isActive: true,
+      version: true,
+      effectiveFrom: true,
+      effectiveTo: true,
+      changeReason: true,
       minimumCharge: true,
       minimumUsage: true,
       installationFee: true,
+      penaltyRate: true,
+      reconnectionFee: true,
       createdAt: true,
+      createdBy: {
+        select: {
+          name: true,
+        },
+      },
+      auditEvents: {
+        orderBy: [{ createdAt: "desc" }],
+        take: 3,
+        select: {
+          id: true,
+          type: true,
+          note: true,
+          createdAt: true,
+          actor: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
       tiers: {
         orderBy: [{ minVolume: "asc" }],
         select: {
@@ -42,8 +69,13 @@ export default async function AdminTariffsPage() {
     },
   });
 
-  const activeTariff = tariffs.find((tariff) => tariff.isActive) ?? null;
+  const activeTariff =
+    tariffs.find(
+      (tariff) =>
+        tariff.effectiveFrom <= now && (!tariff.effectiveTo || tariff.effectiveTo >= now)
+    ) ?? null;
   const totalTierCount = tariffs.reduce((sum, tariff) => sum + tariff.tiers.length, 0);
+  const scheduledTariffCount = tariffs.filter((tariff) => tariff.effectiveFrom > now).length;
   const canCreateTariff = canPerformCapability(access.user.role, "tariffs:create");
 
   return (
@@ -96,10 +128,16 @@ export default async function AdminTariffsPage() {
           accent: "violet",
         },
         {
+          label: "Scheduled",
+          value: scheduledTariffCount.toString(),
+          detail: "Future tariff versions already queued by effectivity date",
+          accent: "amber",
+        },
+        {
           label: "Defined tiers",
           value: totalTierCount.toString(),
           detail: "Progressive usage bands across all saved tariffs",
-          accent: "amber",
+          accent: "sky",
         },
       ]}
     >

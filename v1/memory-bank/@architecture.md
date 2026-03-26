@@ -51,8 +51,12 @@
   - Auth landing route that redirects authenticated staff into `/admin/dashboard`
 - `src/app/(dashboard)/admin/`
   - Protected staff operations area for dashboard, staff access approvals, customers, meters, tariffs, readings, billing, payments, and collections
+- `src/app/(dashboard)/admin/routes/`
+  - EH12 protected route-operations workspace for zone setup, route ownership, coverage mapping, and route-level management visibility
 - `src/app/(dashboard)/admin/notices/[notificationId]/`
   - Standalone printable notice route for EH10 customer communication records
+- `src/app/(dashboard)/admin/system-readiness/`
+  - EH11 admin-only route for backup snapshot logging, restore guidance, and security/readiness visibility
 
 ### Cross-Cutting Modules
 - `src/proxy.ts`
@@ -68,6 +72,10 @@
   - Central role matrix for protected module access and sensitive server-side capability checks
 - `src/features/auth/actions/auth-actions.ts`
   - Auth sign-in/sign-out, self-service password change, and SUPER_ADMIN account-management actions
+- `src/features/system-readiness/`
+  - EH11 backup snapshot logging actions and the system-readiness workspace UI
+- `src/features/routes/`
+  - EH12 service-zone setup, service-route setup, staff route ownership, meter-route assignment, and route analytics
 - `src/components/ui/`
   - Shared `shadcn/ui` primitives only
 
@@ -88,6 +96,8 @@
   - Manual payment validation, cashier entry UI, payment history UI, and printable receipt workflow
 - `src/features/reports/`
   - Historical collections filtering, receivables analytics, and reporting components
+- `src/features/routes/`
+  - Route/zone data contracts, assignment actions, and route-level operational analytics
 - `src/features/follow-up/`
   - Overdue workflow actions, service-status enforcement, and the dedicated follow-up workspace
 - `src/features/exceptions/`
@@ -113,11 +123,13 @@
 - A seeded `SUPER_ADMIN` path now exists through `prisma/seed.mjs`, and local sign-in verification has succeeded against the migrated database.
 - Password changes are handled internally through server actions: signed-in users can change their own password, and SUPER_ADMIN can set a temporary replacement password for any admin account.
 - Temporary-password enforcement is implemented at both the proxy layer and the server-authorization layer so protected data is blocked until rotation is complete.
+- EH11 now also records admin login attempts, stores lockout counters and timestamps on `User`, captures request IP/user-agent where available, and enforces a shorter Auth.js session lifetime for protected admin use.
 
 ### Meter Reading Workflow
 - Readings are encoded as `PENDING_REVIEW`.
 - Approval transitions readings to `APPROVED`.
 - Billing only occurs from approved, still-unbilled readings.
+- EH12 now allows meter-reader access to be narrowed by assigned route ownership, so `METER_READER` accounts only see the meters mapped to their active reading routes.
 
 ### Meter Holder Workflow
 - A physical meter remains attached to the service point while the active account holder can change over time.
@@ -126,11 +138,13 @@
 - Transfer capture currently records previous holder, replacement holder, effective date, optional turnover reading, and optional reason.
 
 ### Billing Workflow
-- Bills are generated from approved readings using the active tariff.
+- Bills are generated from approved readings using the currently effective tariff.
+- EH11 now links each newly generated bill to the exact tariff version used at generation time through `Bill.tariffId`.
 - Bill generation now auto-attaches each bill to a month-specific `BillingCycle` so close, finalize, reopen, and regeneration rules are enforced per cycle.
 - Finalizing a billing cycle locks its bills into `FINALIZED` lifecycle state, while reopen remains restricted to `SUPER_ADMIN` and is blocked after completed payments exist.
 - Monthly print handling now runs through `BillPrintBatch` records with grouping, assigned staff, printed/distributed/returned/failed-delivery states, and auditable cycle events.
 - Printable bill views expose issue date, due date, grace period, EH8 lifecycle/distribution context, and single-bill reprint logging.
+- EH12 now lets route-grouped and zone-grouped print batches persist linked `ServiceRoute` and `ServiceZone` references when the selected bills belong to one mapped route or zone.
 
 ### Payment Workflow
 - Payments are recorded manually against open bills.
@@ -230,6 +244,22 @@
 - Billing and follow-up workflows now generate printable notice records directly from authoritative bill, receivable, and service-status data.
 - This implemented EH10 slice has now been user-validated and should be treated as the current communication-management baseline.
 - Broader service-interruption workflow support remains a later EH10 refinement and should not be conflated with EH11.
+
+### EH11: Tariff Governance, Backup Recovery, and Admin Security
+- Tariffs now move toward immutable, versioned records with effectivity windows, fee settings, and audit events instead of relying only on a mutable active flag.
+- Bill generation now resolves the currently effective tariff by date and stores the selected tariff on each new bill.
+- Login audit and session-security controls now live inside the existing Auth.js + Prisma model through `AdminLoginAttempt` plus lockout fields on `User`.
+- Backup visibility and restore-readiness guidance now live in the admin-only `/admin/system-readiness` workspace, with snapshot logging kept in the main relational schema.
+- This EH11 slice is now user-validated and should be treated as the current production-hardening baseline.
+- Optional `SUPER_ADMIN` 2FA and automated export/download tooling remain pending only as later EH11 refinements if explicitly approved.
+
+### EH12: Route Operations & Management Analytics
+- EH12 now introduces `ServiceZone`, `ServiceRoute`, and `StaffRouteAssignment` as first-class operational records linked to meters, print batches, and staff.
+- The first route-aware workspace now lives at `/admin/routes`, where staff can define zones, define routes, assign route ownership for reading and bill distribution, and map existing meters into route coverage.
+- Reading entry now consumes route ownership for `METER_READER` access narrowing, and route performance visibility now derives from live bill, payment, and meter data.
+- Billing batch preparation now also consumes route and zone ownership context so grouping can auto-scope bill selection, derive default labels, and default route distributors from active route assignments.
+- This implemented EH12 slice has now been user-validated and should be treated as the current route-operations baseline.
+- Future EH12 slices should extend this domain with broader management trends rather than bypassing it with ad hoc reporting logic.
 
 ## Database Schema: Current Repository Snapshot
 The excerpt below captures the long-lived core entities. EH8 billing-governance additions now also exist in the live schema through `BillingCycle`, `BillPrintBatch`, `BillingCycleEvent`, and the related lifecycle/distribution fields attached to `Bill`.

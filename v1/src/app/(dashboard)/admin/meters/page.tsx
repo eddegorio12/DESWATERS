@@ -27,6 +27,17 @@ export default async function AdminMetersPage() {
         meterNumber: true,
         installDate: true,
         status: true,
+        serviceZone: {
+          select: {
+            name: true,
+          },
+        },
+        serviceRoute: {
+          select: {
+            code: true,
+            name: true,
+          },
+        },
         customer: {
           select: {
             accountNumber: true,
@@ -79,6 +90,7 @@ export default async function AdminMetersPage() {
 
   const assignedMeterCount = meters.filter((meter) => meter.customer).length;
   const activeMeterCount = meters.filter((meter) => meter.status === "ACTIVE").length;
+  const routedMeterCount = meters.filter((meter) => meter.serviceRoute).length;
   const assignedMeters = meters.flatMap((meter) =>
     meter.customer
       ? [
@@ -109,6 +121,18 @@ export default async function AdminMetersPage() {
               )}
             >
               Customer module
+            </Link>
+            <Link
+              href="/admin/routes"
+              className={cn(
+                buttonVariants({
+                  variant: "outline",
+                  className:
+                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
+                })
+              )}
+            >
+              Route operations
             </Link>
             <Link
               href="/admin/dashboard"
@@ -143,6 +167,12 @@ export default async function AdminMetersPage() {
           value: activeMeterCount.toString(),
           detail: "Meters currently marked active",
           accent: "violet",
+        },
+        {
+          label: "Routed",
+          value: routedMeterCount.toString(),
+          detail: "Meters already mapped to a zone and route",
+          accent: "sky",
         },
         {
           label: "Unassigned",

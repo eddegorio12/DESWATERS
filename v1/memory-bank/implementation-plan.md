@@ -302,7 +302,7 @@ Current progress:
 
 ### EH11: Tariff Governance, Backup Recovery, and Admin Security
 **Priority:** Highest
-**Status:** Planned
+**Status:** Complete
 **Depends on:** EH1 and EH2 complete
 
 Scope:
@@ -323,9 +323,18 @@ Recommended implementation order:
 4. Expose backup status, exports, and restore documentation in an admin-only operations surface.
 5. Validate auth edge cases, tariff roll-forward behavior, and rollback/recovery documentation.
 
+Current progress:
+- Tariffs now save as versioned, effectivity-dated records with change reasons, penalty/reconnection settings, and lightweight tariff audit events.
+- New bill generation now links each bill to the tariff version used at generation time through `Bill.tariffId`.
+- Auth.js credentials sign-in now records login attempts, captures IP and user-agent metadata when available, enforces failed-login lockout, and uses a shorter session lifetime.
+- `/admin/staff-access` now shows lockout state plus recent login history, and `SUPER_ADMIN` can clear a locked account.
+- `/admin/system-readiness` now exposes backup snapshot logging, environment-readiness checks, and an in-app restore checklist.
+- EH11 has now been user-validated and is closed.
+- Optional `SUPER_ADMIN` 2FA, automated backup/export downloads, and deeper restore automation remain pending only as later EH11 refinements if explicitly approved.
+
 ### EH12: Route Operations & Management Analytics
 **Priority:** Medium
-**Status:** Planned
+**Status:** Complete
 **Depends on:** EH8 for route-based bill batches; EH9 recommended for richer field metrics
 
 Scope:
@@ -344,15 +353,24 @@ Recommended implementation order:
 3. Build route-focused operational reports.
 4. Add management dashboards using server-side queries first, with charting only if needed.
 
+Current progress:
+- Prisma now models `ServiceZone`, `ServiceRoute`, and `StaffRouteAssignment`, while `Meter` and `BillPrintBatch` now carry linked route/zone references.
+- `/admin/routes` now exists as the first EH12 workspace for zone setup, route setup, staff route ownership, meter-route mapping, and route/zone performance visibility.
+- `METER_READER` reading entry now narrows available meters by active route ownership, and routed meter details now surface inside the readings and meters workflows.
+- Route-grouped and zone-grouped print batches now persist linked route/zone IDs when all selected bills belong to a single mapped route or zone.
+- Billing print and distribution tracking now auto-filters bill selection by grouping, derives default batch labels from the chosen scope, and can auto-fill the assigned distributor from route ownership.
+- EH12 has now been user-validated for this implemented route-operations slice.
+- Broader management dashboards for billed-versus-collected trends, top-loss/high-complaint areas, and disconnection-to-reconnection trends remain pending.
+
 ## Current Next Recommendation
 
-EH10 is now closed. Do not begin EH11 until the user explicitly requests that next phase.
+EH12 is now validated through its first operational slice. Continue with route-aware dashboards and richer management analytics rather than reopening earlier phases.
 
 Target outcomes:
 1. Keep the production stack simple: one Next.js app, one Supabase Postgres database, one Auth.js internal admin flow.
 2. Finish deployment wiring first: hosted PostgreSQL migration deployment, `AUTH_SECRET`, and first-admin bootstrap path.
 3. Preserve the implemented EH8 workflow and validated EH9 exceptions workspace as the current operational baseline.
-4. Do not begin EH11 until the user explicitly requests that next phase.
+4. Keep subsequent EH12 work anchored to the new route and zone records instead of reintroducing free-text operational grouping.
 
 Current auth note:
 - Local Auth.js migration is now complete and working with a seeded `SUPER_ADMIN`.

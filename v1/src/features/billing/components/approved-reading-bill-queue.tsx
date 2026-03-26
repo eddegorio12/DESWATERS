@@ -4,6 +4,8 @@ import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 type ApprovedReadingBillQueueProps = {
   activeTariff: {
     name: string;
+    version: number;
+    effectiveFrom: Date;
     minimumCharge: number;
     minimumUsage: number;
   } | null;
@@ -48,10 +50,15 @@ export function ApprovedReadingBillQueue({
         <div className="rounded-[1.4rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#f8fbfa,#eff7f5)] px-4 py-3 text-sm">
           {activeTariff ? (
             <div className="space-y-1">
-              <p className="font-medium text-foreground">{activeTariff.name}</p>
+              <p className="font-medium text-foreground">
+                {activeTariff.name} v{activeTariff.version}
+              </p>
               <p className="text-muted-foreground">
                 Base {formatCurrency(activeTariff.minimumCharge)} for up to{" "}
                 {activeTariff.minimumUsage} cu.m
+              </p>
+              <p className="text-muted-foreground">
+                Effective {activeTariff.effectiveFrom.toLocaleDateString()}
               </p>
             </div>
           ) : (

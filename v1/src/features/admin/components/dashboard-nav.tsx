@@ -8,7 +8,9 @@ import {
   FileSpreadsheet,
   Gauge,
   LayoutDashboard,
+  MapPinned,
   ReceiptText,
+  Server,
   ShieldAlert,
   TriangleAlert,
   UserCog,
@@ -21,6 +23,8 @@ import { cn } from "@/lib/utils";
 const iconMap = {
   dashboard: LayoutDashboard,
   staffAccess: UserCog,
+  systemReadiness: Server,
+  routeOperations: MapPinned,
   customers: Users,
   meters: Gauge,
   exceptions: TriangleAlert,

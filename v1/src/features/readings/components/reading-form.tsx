@@ -21,6 +21,9 @@ type ReadingMeterOption = {
   meterNumber: string;
   customerName: string;
   accountNumber: string;
+  zoneName: string | null;
+  routeName: string | null;
+  routeCode: string | null;
   previousReading: number;
 };
 
@@ -115,6 +118,7 @@ export function ReadingForm({ meters }: ReadingFormProps) {
               meters.map((meter) => (
                 <option key={meter.id} value={meter.id}>
                   {meter.meterNumber} - {meter.accountNumber}
+                  {meter.routeCode ? ` - ${meter.routeCode}` : ""}
                 </option>
               ))
             ) : (
@@ -125,7 +129,7 @@ export function ReadingForm({ meters }: ReadingFormProps) {
         </div>
 
         {selectedMeter ? (
-          <div className="grid gap-4 rounded-[1.4rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#f8fbfa,#eff7f5)] p-4 sm:grid-cols-3">
+          <div className="grid gap-4 rounded-[1.4rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#f8fbfa,#eff7f5)] p-4 sm:grid-cols-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Customer
@@ -134,6 +138,18 @@ export function ReadingForm({ meters }: ReadingFormProps) {
                 {selectedMeter.customerName}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">{selectedMeter.accountNumber}</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Route
+              </p>
+              <p className="mt-2 text-sm font-medium text-foreground">
+                {selectedMeter.routeName ?? "No route assigned"}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {selectedMeter.routeCode ?? "Assign route from Route Operations"}
+                {selectedMeter.zoneName ? ` • ${selectedMeter.zoneName}` : ""}
+              </p>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">

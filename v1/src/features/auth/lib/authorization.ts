@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 export type AdminModule =
   | "dashboard"
   | "staffAccess"
+  | "systemReadiness"
+  | "routeOperations"
   | "customers"
   | "meters"
   | "exceptions"
@@ -19,11 +21,14 @@ export type AdminModule =
 
 export type StaffCapability =
   | "admins:manage"
+  | "admins:unlock"
+  | "routes:manage"
   | "customers:create"
   | "meters:register"
   | "meters:assign"
   | "meters:transfer"
   | "tariffs:create"
+  | "system:backup:log"
   | "readings:create"
   | "readings:approve"
   | "readings:delete:any"
@@ -50,6 +55,8 @@ const moduleAccess: Record<AdminModule, readonly Role[]> = {
     Role.VIEWER,
   ],
   staffAccess: [Role.SUPER_ADMIN],
+  systemReadiness: [Role.SUPER_ADMIN, Role.ADMIN],
+  routeOperations: [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
   customers: [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
   meters: [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
   exceptions: [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING, Role.CASHIER, Role.TECHNICIAN],
@@ -64,11 +71,14 @@ const moduleAccess: Record<AdminModule, readonly Role[]> = {
 
 const capabilityAccess: Record<StaffCapability, readonly Role[]> = {
   "admins:manage": [Role.SUPER_ADMIN],
+  "admins:unlock": [Role.SUPER_ADMIN],
+  "routes:manage": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
   "customers:create": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
   "meters:register": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
   "meters:assign": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
   "meters:transfer": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
   "tariffs:create": [Role.SUPER_ADMIN, Role.ADMIN],
+  "system:backup:log": [Role.SUPER_ADMIN, Role.ADMIN],
   "readings:create": [Role.SUPER_ADMIN, Role.ADMIN, Role.METER_READER],
   "readings:approve": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
   "readings:delete:any": [Role.SUPER_ADMIN, Role.ADMIN],
@@ -88,6 +98,8 @@ const capabilityAccess: Record<StaffCapability, readonly Role[]> = {
 const moduleLabels: Record<AdminModule, string> = {
   dashboard: "dashboard",
   staffAccess: "admin management",
+  systemReadiness: "system readiness",
+  routeOperations: "route operations",
   customers: "customer operations",
   meters: "meter operations",
   exceptions: "operational exception monitoring",
@@ -102,11 +114,14 @@ const moduleLabels: Record<AdminModule, string> = {
 
 const capabilityLabels: Record<StaffCapability, string> = {
   "admins:manage": "manage admin accounts",
+  "admins:unlock": "clear admin lockouts",
+  "routes:manage": "manage route operations",
   "customers:create": "create customer records",
   "meters:register": "register meters",
   "meters:assign": "assign meters",
   "meters:transfer": "transfer meter holders",
   "tariffs:create": "change tariff rules",
+  "system:backup:log": "record backup snapshots",
   "readings:create": "encode meter readings",
   "readings:approve": "approve meter readings",
   "readings:delete:any": "delete pending readings",
@@ -153,6 +168,8 @@ export type CurrentStaffUser = {
   mustChangePassword: boolean;
   role: Role;
   isActive: boolean;
+  failedSignInCount: number;
+  lockedUntil: Date | null;
   lastLoginAt: Date | null;
 };
 
@@ -179,6 +196,8 @@ export async function getCurrentStaffUser() {
       mustChangePassword: true,
       role: true,
       isActive: true,
+      failedSignInCount: true,
+      lockedUntil: true,
       lastLoginAt: true,
     },
   });
@@ -238,6 +257,10 @@ export async function requireStaffCapability(capability: StaffCapability) {
 
   if (!current.user.isActive) {
     throw new Error("Your DWDS admin account is inactive. Ask a SUPER_ADMIN to reactivate it.");
+  }
+
+  if (current.user.lockedUntil && current.user.lockedUntil > new Date()) {
+    throw new Error("Your DWDS admin account is temporarily locked. Ask a SUPER_ADMIN to clear the lockout or wait for it to expire.");
   }
 
   if (current.user.mustChangePassword) {

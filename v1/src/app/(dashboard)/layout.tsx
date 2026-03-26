@@ -30,6 +30,18 @@ const dashboardNavMeta = {
     description: "Role controls and internal account management.",
     icon: "staffAccess",
   },
+  systemReadiness: {
+    href: "/admin/system-readiness",
+    label: "System",
+    description: "Backup readiness, restore guidance, and security visibility.",
+    icon: "systemReadiness",
+  },
+  routeOperations: {
+    href: "/admin/routes",
+    label: "Routes",
+    description: "Zones, route ownership, and field planning analytics.",
+    icon: "routeOperations",
+  },
   customers: {
     href: "/admin/customers",
     label: "Customers",

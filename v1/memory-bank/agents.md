@@ -29,7 +29,8 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - The current intended database runtime is **PostgreSQL via Prisma v7**.
 - EH1 through EH9 are complete.
 - EH10 is now complete through the printable consumer-notice workflow.
-- Do not begin EH11 until the user explicitly requests that phase.
+- EH11 is now complete through tariff governance, admin security hardening, and the backup-readiness workspace.
+- EH12 is now validated for the implemented route-operations and route-aware billing slice.
 
 ## 3. Enhancement Backlog Handling
 - Treat the enhancement roadmap in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md) as the canonical backlog instead of inventing new unnamed phases.

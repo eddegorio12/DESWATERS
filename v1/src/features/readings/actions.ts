@@ -76,6 +76,7 @@ export async function createReading(values: ReadingFormInput) {
 
   revalidatePath("/admin/readings");
   revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/routes");
 
   return reading;
 }
@@ -125,6 +126,7 @@ export async function deleteReading(readingId: string) {
 
   revalidatePath("/admin/readings");
   revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/routes");
 }
 
 export async function approveReading(readingId: string) {
@@ -163,6 +165,7 @@ export async function approveReading(readingId: string) {
 
   revalidatePath("/admin/readings");
   revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/routes");
 
   return approvedReading;
 }
@@ -214,6 +217,7 @@ export async function approveReadings(readingIds: string[]) {
 
   revalidatePath("/admin/readings");
   revalidatePath("/admin/dashboard");
+  revalidatePath("/admin/routes");
 
   return {
     approvedCount: result.count,

@@ -7,8 +7,10 @@ import {
   ClipboardCheck,
   FileSpreadsheet,
   Gauge,
+  MapPinned,
   ShieldAlert,
   ReceiptText,
+  Server,
   TriangleAlert,
   Users,
   WalletCards,
@@ -44,12 +46,28 @@ const moduleCards: {
   icon: ComponentType<{ className?: string }>;
 }[] = [
   {
+    module: "routeOperations",
+    href: "/admin/routes",
+    title: "Route operations",
+    description: "Plan coverage by zone, assign staff ownership, and review route health.",
+    action: "Open routes",
+    icon: MapPinned,
+  },
+  {
     module: "staffAccess",
     href: "/admin/staff-access",
     title: "Admin management",
     description: "Create admins, update roles, and reactivate or deactivate internal accounts.",
     action: "Manage admins",
     icon: ShieldAlert,
+  },
+  {
+    module: "systemReadiness",
+    href: "/admin/system-readiness",
+    title: "System readiness",
+    description: "Review backup logging, restore guidance, and recent security signal visibility.",
+    action: "Open system tools",
+    icon: Server,
   },
   {
     module: "customers",
@@ -128,6 +146,7 @@ const moduleCards: {
 function getRoleCapabilities(role: Role) {
   return [
     canPerformCapability(role, "admins:manage") ? "Admin management" : null,
+    canPerformCapability(role, "routes:manage") ? "Route operations" : null,
     canPerformCapability(role, "customers:create") ? "Customer and meter setup" : null,
     canPerformCapability(role, "readings:create") ? "Reading entry" : null,
     canPerformCapability(role, "readings:approve") ? "Reading approval" : null,
@@ -135,6 +154,7 @@ function getRoleCapabilities(role: Role) {
     canPerformCapability(role, "payments:record") ? "Cashier posting" : null,
     canPerformCapability(role, "followup:update") ? "Receivables follow-up" : null,
     canPerformCapability(role, "tariffs:create") ? "Tariff changes" : null,
+    canPerformCapability(role, "system:backup:log") ? "Backup logging" : null,
   ].filter(Boolean) as string[];
 }
 
@@ -155,6 +175,8 @@ export default async function AdminDashboardPage() {
     pendingReadingCount,
     approvedReadingCount,
     openBillCount,
+    routedMeterCount,
+    activeRouteCount,
     todayPayments,
   ] = await Promise.all([
     prisma.customer.count(),
@@ -181,6 +203,14 @@ export default async function AdminDashboardPage() {
         },
       },
     }),
+    prisma.meter.count({
+      where: {
+        serviceRouteId: {
+          not: null,
+        },
+      },
+    }),
+    prisma.serviceRoute.count(),
     prisma.payment.findMany({
       where: {
         status: PaymentStatus.COMPLETED,
@@ -224,6 +254,12 @@ export default async function AdminDashboardPage() {
       accent: "bg-[#ede7fb] text-[#5a3ca3]",
     },
     {
+      label: "Active routes",
+      value: activeRouteCount.toString(),
+      detail: `${routedMeterCount} meters already mapped into route coverage`,
+      accent: "bg-[#e8f6ef] text-[#175447]",
+    },
+    {
       label: "Open bills",
       value: openBillCount.toString(),
       detail: "Still awaiting settlement",
@@ -231,6 +267,13 @@ export default async function AdminDashboardPage() {
     },
   ] as const;
   const workflowBoard = [
+    {
+      module: "routeOperations" as const,
+      title: "Route coverage",
+      summary: "Track zone ownership, route staffing, and overdue pressure by field area.",
+      count: `${activeRouteCount} routes`,
+      href: "/admin/routes",
+    },
     {
       module: "customers" as const,
       title: "Accounts and meters",
