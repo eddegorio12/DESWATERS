@@ -21,6 +21,7 @@ export type StaffCapability =
   | "customers:create"
   | "meters:register"
   | "meters:assign"
+  | "meters:transfer"
   | "tariffs:create"
   | "readings:create"
   | "readings:approve"
@@ -59,6 +60,7 @@ const capabilityAccess: Record<StaffCapability, readonly Role[]> = {
   "customers:create": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
   "meters:register": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
   "meters:assign": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
+  "meters:transfer": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
   "tariffs:create": [Role.SUPER_ADMIN, Role.ADMIN],
   "readings:create": [Role.SUPER_ADMIN, Role.ADMIN, Role.METER_READER],
   "readings:approve": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
@@ -90,6 +92,7 @@ const capabilityLabels: Record<StaffCapability, string> = {
   "customers:create": "create customer records",
   "meters:register": "register meters",
   "meters:assign": "assign meters",
+  "meters:transfer": "transfer meter holders",
   "tariffs:create": "change tariff rules",
   "readings:create": "encode meter readings",
   "readings:approve": "approve meter readings",

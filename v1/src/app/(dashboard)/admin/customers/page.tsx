@@ -34,6 +34,14 @@ export default async function AdminCustomersPage() {
           id: true,
           meterNumber: true,
           status: true,
+          holderTransfers: {
+            orderBy: [{ effectiveDate: "desc" }, { createdAt: "desc" }],
+            take: 1,
+            select: {
+              id: true,
+              effectiveDate: true,
+            },
+          },
         },
       },
     },

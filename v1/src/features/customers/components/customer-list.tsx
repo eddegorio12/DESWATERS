@@ -10,6 +10,10 @@ type CustomerListProps = {
       id: string;
       meterNumber: string;
       status: MeterStatus;
+      holderTransfers: {
+        id: string;
+        effectiveDate: Date;
+      }[];
     }[];
   })[];
 };
@@ -73,6 +77,9 @@ export function CustomerList({ customers }: CustomerListProps) {
                               className="inline-flex rounded-full bg-secondary/70 px-3 py-1 text-xs font-medium text-foreground"
                             >
                               {meter.meterNumber}
+                              {meter.holderTransfers[0]
+                                ? ` • moved ${meter.holderTransfers[0].effectiveDate.toLocaleDateString()}`
+                                : ""}
                             </span>
                           ))}
                         </div>

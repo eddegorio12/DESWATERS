@@ -10,6 +10,20 @@ type MeterListProps = {
       accountNumber: string;
       name: string;
     } | null;
+    holderTransfers: {
+      id: string;
+      effectiveDate: Date;
+      transferReading: number | null;
+      reason: string | null;
+      fromCustomer: {
+        accountNumber: string;
+        name: string;
+      } | null;
+      toCustomer: {
+        accountNumber: string;
+        name: string;
+      };
+    }[];
   }[];
 };
 
@@ -39,6 +53,7 @@ export function MeterList({ meters }: MeterListProps) {
                 <th className="px-4 py-3 font-medium">Install date</th>
                 <th className="px-4 py-3 font-medium">Customer</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Holder history</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border bg-background">
@@ -68,12 +83,46 @@ export function MeterList({ meters }: MeterListProps) {
                         {meter.status.replace("_", " ")}
                       </span>
                     </td>
+                    <td className="px-4 py-4 text-xs text-muted-foreground">
+                      {meter.holderTransfers.length ? (
+                        <div className="space-y-3">
+                          {meter.holderTransfers.map((transfer) => (
+                            <div
+                              key={transfer.id}
+                              className="rounded-2xl border border-border/70 bg-secondary/20 px-3 py-2"
+                            >
+                              <div className="font-medium text-foreground">
+                                {transfer.fromCustomer
+                                  ? `${transfer.fromCustomer.name} -> ${transfer.toCustomer.name}`
+                                  : `Initial assignment -> ${transfer.toCustomer.name}`}
+                              </div>
+                              <div className="mt-1">
+                                {transfer.effectiveDate.toLocaleDateString()}
+                                {transfer.transferReading !== null
+                                  ? ` • Reading ${transfer.transferReading}`
+                                  : ""}
+                              </div>
+                              <div className="mt-1">
+                                {transfer.fromCustomer
+                                  ? `${transfer.fromCustomer.accountNumber} -> ${transfer.toCustomer.accountNumber}`
+                                  : transfer.toCustomer.accountNumber}
+                              </div>
+                              {transfer.reason ? (
+                                <div className="mt-1 text-muted-foreground">{transfer.reason}</div>
+                              ) : null}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">No holder history yet</span>
+                      )}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                   >
                     No meters yet. Register the first service meter with the form on this page.

@@ -7,6 +7,7 @@ import { AdminSessionButton } from "@/features/auth/components/admin-session-but
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { MeterAssignmentForm } from "@/features/meters/components/meter-assignment-form";
 import { MeterForm } from "@/features/meters/components/meter-form";
+import { MeterHolderTransferForm } from "@/features/meters/components/meter-holder-transfer-form";
 import { MeterList } from "@/features/meters/components/meter-list";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,28 @@ export default async function AdminMetersPage() {
           select: {
             accountNumber: true,
             name: true,
+          },
+        },
+        holderTransfers: {
+          orderBy: [{ effectiveDate: "desc" }, { createdAt: "desc" }],
+          take: 3,
+          select: {
+            id: true,
+            effectiveDate: true,
+            transferReading: true,
+            reason: true,
+            fromCustomer: {
+              select: {
+                accountNumber: true,
+                name: true,
+              },
+            },
+            toCustomer: {
+              select: {
+                accountNumber: true,
+                name: true,
+              },
+            },
           },
         },
       },
@@ -56,6 +79,17 @@ export default async function AdminMetersPage() {
 
   const assignedMeterCount = meters.filter((meter) => meter.customer).length;
   const activeMeterCount = meters.filter((meter) => meter.status === "ACTIVE").length;
+  const assignedMeters = meters.flatMap((meter) =>
+    meter.customer
+      ? [
+          {
+            id: meter.id,
+            meterNumber: meter.meterNumber,
+            customer: meter.customer,
+          },
+        ]
+      : []
+  );
 
   return (
     <AdminPageShell
@@ -119,9 +153,10 @@ export default async function AdminMetersPage() {
       ]}
     >
 
-        <section className="grid gap-6 xl:grid-cols-2">
+        <section className="grid gap-6 xl:grid-cols-3">
           <MeterForm />
           <MeterAssignmentForm customers={customers} unassignedMeters={unassignedMeters} />
+          <MeterHolderTransferForm customers={customers} assignedMeters={assignedMeters} />
         </section>
 
         <MeterList meters={meters} />
