@@ -40,17 +40,17 @@ export function AdminPageShell({
     <section className={cn("bg-transparent", className)}>
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <section className="dwds-panel-dark overflow-hidden">
-          <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.12fr_0.88fr] lg:px-8 lg:py-8">
+          <div className="grid gap-4 px-5 py-5 sm:px-6 sm:py-6 lg:grid-cols-[1.12fr_0.88fr] lg:gap-6 lg:px-8 lg:py-8">
             <div className="space-y-5">
               <span className="dwds-kicker border-white/14 bg-white/8 text-white/78">
                 {eyebrow}
               </span>
 
               <div className="space-y-3">
-                <h1 className="max-w-4xl font-heading text-4xl leading-tight tracking-[-0.03em] sm:text-5xl">
+                <h1 className="max-w-4xl font-heading text-3xl leading-tight tracking-[-0.03em] sm:text-4xl lg:text-5xl">
                   {title}
                 </h1>
-                <p className="max-w-3xl text-sm leading-7 text-white/76 sm:text-base">
+                <p className="max-w-3xl text-sm leading-6 text-white/76 sm:text-base sm:leading-7">
                   {description}
                 </p>
               </div>
@@ -58,17 +58,17 @@ export function AdminPageShell({
 
             <div className="flex flex-col gap-4 self-start">
               {actions ? (
-                <div className="flex flex-wrap items-center justify-start gap-3 lg:justify-end">
+                <div className="grid gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap lg:justify-end">
                   {actions}
                 </div>
               ) : null}
 
               {stats.length ? (
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2">
                   {stats.map((stat) => (
                     <article
                       key={`${stat.label}-${stat.value}`}
-                      className="rounded-[1.6rem] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.16),rgba(255,255,255,0.04))] p-5 backdrop-blur"
+                      className="rounded-[1.45rem] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.16),rgba(255,255,255,0.04))] p-4 backdrop-blur sm:p-5"
                     >
                       <span
                         className={cn(
@@ -78,7 +78,7 @@ export function AdminPageShell({
                       >
                         {stat.label}
                       </span>
-                      <p className="mt-4 break-words text-2xl font-semibold tracking-tight text-white sm:text-3xl">
+                      <p className="mt-3 break-words text-2xl font-semibold tracking-tight text-white sm:text-3xl">
                         {stat.value}
                       </p>
                       <p className="mt-2 text-sm leading-6 text-white/70">{stat.detail}</p>

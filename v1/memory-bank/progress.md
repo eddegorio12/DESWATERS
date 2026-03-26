@@ -23,6 +23,13 @@
 - EH11 has now been tested and validated.
 - EH12 has now been tested and validated for the implemented route-operations and route-aware billing slice.
 - EH13 has now started with the first workflow-usability slice across the current admin surface.
+- The clearest next contribution path is now to finish EH13 rollout on remaining admin modules before reopening broader analytics, field-service, or security expansions.
+- EH13.2a is now validated on the meters module, EH13.2b is now validated on route operations, EH13.2c is now validated on collections plus exceptions, and EH13.2d is now validated on follow-up with an urgency-first queue, escalation filters, and separated service-action panels.
+- EH13.3a is now complete as a code-level narrow-screen audit covering the dashboard shell, sidebar navigation, follow-up, routes, and the current table-heavy list surfaces.
+- EH13.3b has now been validated.
+- EH13.4 is now implemented as the shared visual status-priority pass for pending, overdue, read-only, ready, success, and attention-required states across the active EH13 admin surfaces plus adjacent admin workflow boards.
+- EH13.5 is now implemented as the final usability consistency sweep for shared filter language, operator-facing copy cleanup, and stronger next-step empty states across the remaining admin boards.
+- EH13 has now been fully validated and closed.
 
 ## Implemented Milestones
 
@@ -59,8 +66,12 @@
 - A dedicated system-readiness route now exists for backup snapshot logging, restore guidance, environment-readiness checks, and recent sign-in security visibility.
 - A dedicated route-operations route now exists for service-zone setup, service-route setup, meter coverage mapping, route-owner assignment, and route-level overdue plus collection-efficiency visibility.
 - A memory-bank-backed usability assessment now identifies dashboard density, table-heavy list screens, and weak next-step guidance as the main current UX friction points.
-- A reusable record-list interaction pattern now exists for search, filtering, empty states, and next-step guidance, and its first rollout is active on customers, pending readings, billing queue, and payment history.
+- A reusable record-list interaction pattern now exists for search, filtering, empty states, and next-step guidance, and its active rollout now covers customers, pending readings, billing queue, payment history, and meters.
 - The dashboard and sidebar wording have now been tightened to reduce scan time on the core daily-use workspace.
+- The shared list/filter pattern now reaches route operations, collections, exceptions, and follow-up.
+- The audited EH13 list surfaces now also expose a shared narrow-screen fallback that swaps dense desktop tables for stacked summary cards below the chosen breakpoint.
+- A dedicated EH13.3a audit note now records the main narrow-screen pressure points: sidebar-first mobile stacking, horizontal-scroll-only table handling, tall hero shells before task controls, wrapped follow-up action rows, and route-scoreboard density.
+- The final EH13 consistency sweep now standardizes list-control wording around explicit filter actions, removes roadmap-step labels from live operator copy, and upgrades older empty states with clearer next-step guidance.
 
 ## Important Historical Constraints
 
@@ -104,12 +115,13 @@
 - Meter routing is currently assigned through `/admin/routes`, and existing billing print-batch grouping can now persist linked route or zone IDs when the selected bills belong to a single mapped route or zone.
 - Meter-reader route ownership now narrows the live reading-entry meter list for `METER_READER` accounts to their assigned routes only.
 - Billing print and distribution tracking now auto-scopes bill selection by grouping, defaults batch labels from the active route or zone scope, and can auto-fill the assigned distributor from route ownership.
-- Broader EH12 management analytics such as billed-versus-collected trends, disconnection-to-reconnection trends, and complaint-area visibility remain pending for later EH12 slices.
+- Broader EH12 management analytics such as billed-versus-collected trends, disconnection-to-reconnection trends, and complaint-area visibility remain pending for later EH12 slices after the active EH13 usability lane.
 
 ### Usability Constraint
 - The current DWDS product is structurally coherent but still dense on several day-to-day operator screens.
 - Dashboard, list, and queue surfaces should now be optimized for scan speed, prioritization, and next-step clarity before broader new-domain expansion.
 - Future UX work should stay inside the current modular feature structure and should prefer shared patterns over one-off page rewrites.
+- EH13.5 now implements the final consistency cleanup, and the full EH13 usability lane is now validated and closed.
 
 ### Cashiering Constraint
 - Cashier posting now supports auditable partial settlements plus printable official receipts.
@@ -186,8 +198,9 @@
 - Notes: The first EH12 slice now adds `ServiceZone`, `ServiceRoute`, and `StaffRouteAssignment` data structures, a protected `/admin/routes` workspace, meter-route mapping, meter-reader and bill-distribution ownership assignment, route-aware reading entry, route-aware print-batch metadata, grouping-driven print/distribution bill selection, smart batch labeling, and initial route/zone overdue plus collection-efficiency visibility. This implemented slice has now been tested and validated. Broader management trend dashboards remain pending for later EH12 refinements.
 
 ### EH13: Workflow Usability & Operator Efficiency
-- Status: `in_progress`
-- Notes: The first EH13 slice is now implemented for dashboard wording simplification, reusable searchable/filterable list surfaces, clearer empty states, shared status-pill treatment on the new list pattern, and stronger next-step guidance on customer, reading, and payment workflows. Narrow-screen resilience and broader list-pattern rollout remain pending inside EH13.
+- Status: `complete`
+- Notes: The first EH13 slice is now implemented for dashboard wording simplification, reusable searchable/filterable list surfaces, clearer empty states, shared status-pill treatment on the new list pattern, and stronger next-step guidance on customer, reading, and payment workflows. EH13.2a now extends that shared pattern to `/admin/meters` with server-side search and registry filters for active, unassigned, unrouted, defective, and replaced units plus stronger holder-history scanability. EH13.2b now extends the same usability pass to `/admin/routes` with server-side search, route-focus filters for ownership and coverage gaps, clearer route attention pills, and filtered zone plus overdue side panels, and that route pass has now been user-validated. EH13.2c now extends the shared interaction model to `/admin/collections` and `/admin/exceptions` with server-side search/filter handling, result counts, reset actions, and stronger urgency-first list treatment while preserving the existing reporting and anomaly logic, and that pass has now been user-validated. EH13.2d now applies the same EH13 baseline to `/admin/follow-up` with server-side search and escalation-focus filters, bill-level urgency ordering, and dedicated disconnection or reinstatement action panels while preserving the existing EH5 workflow rules, and that follow-up pass is now validated. EH13.3a now records the narrow-screen audit baseline in `memory-bank/eh13.3a-narrow-screen-audit.md`, including the current shell, hero, table, queue-action, and route-density findings that drive EH13.3b. EH13.3b has now been user-validated across the protected shell, dashboard/page-shell hero density, follow-up action groups, and the audited dense-table surfaces through shared stacked-card fallbacks. EH13.4 is now validated across the active admin workflow surfaces, and EH13.5 completes the final consistency sweep through explicit filter-action wording, roadmap-copy cleanup on live admin pages, and stronger next-step empty states on the remaining secondary boards. The full EH13 usability lane is now validated and closed.
+- Planned task order: `EH13.2a` meters, `EH13.2b` routes, `EH13.2c` collections and exceptions, `EH13.2d` follow-up, `EH13.3a` narrow-screen audit, `EH13.3b` responsive fallbacks, `EH13.4` shared status-priority system, and `EH13.5` final consistency sweep. All planned EH13 implementation slices are now in the repo.
 
 ## Current Next-Step Recommendation
-Continue EH13. Extend the new usability pattern to additional operational pages and audit narrow-screen behavior before reopening broader expansion work such as deeper management analytics.
+EH13 is now closed. The next recommended order is broader EH12 analytics first, then dedicated admin-management audit logging, then optional deferred EH11 and EH9 refinements only if they remain product priorities.

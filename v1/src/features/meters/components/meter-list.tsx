@@ -1,5 +1,9 @@
 import type { MeterStatus } from "@prisma/client";
 
+import { RecordListSection } from "@/features/admin/components/record-list-section";
+import { ResponsiveDataTable } from "@/features/admin/components/responsive-data-table";
+import { StatusPill } from "@/features/admin/components/status-pill";
+
 type MeterListProps = {
   meters: {
     id: string;
@@ -32,128 +36,230 @@ type MeterListProps = {
       };
     }[];
   }[];
+  totalCount: number;
+  query: string;
+  registry: "ALL" | MeterStatus | "UNASSIGNED" | "UNROUTED";
 };
 
-export function MeterList({ meters }: MeterListProps) {
-  return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Meter Registry
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Registered service meters
-          </h2>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {meters.length} meter{meters.length === 1 ? "" : "s"} recorded
-        </p>
-      </div>
+function getMeterStatusTone(status: MeterStatus) {
+  if (status === "ACTIVE") {
+    return "success" as const;
+  }
 
-      <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border text-left">
-            <thead className="bg-secondary/55">
-              <tr className="text-sm text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Meter</th>
-                <th className="px-4 py-3 font-medium">Install date</th>
-                <th className="px-4 py-3 font-medium">Customer</th>
-                <th className="px-4 py-3 font-medium">Route coverage</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Holder history</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border bg-background">
-              {meters.length ? (
-                meters.map((meter) => (
-                  <tr key={meter.id} className="align-top text-sm">
-                    <td className="px-4 py-4 font-mono text-xs text-muted-foreground">
-                      {meter.meterNumber}
-                    </td>
-                    <td className="px-4 py-4 text-muted-foreground">
-                      {meter.installDate.toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-4">
-                      {meter.customer ? (
-                        <div>
-                          <div className="font-medium text-foreground">{meter.customer.name}</div>
-                          <div className="mt-1 text-xs text-muted-foreground">
-                            {meter.customer.accountNumber}
+  if (status === "DEFECTIVE") {
+    return "attention" as const;
+  }
+
+  return "readonly" as const;
+}
+
+export function MeterList({ meters, totalCount, query, registry }: MeterListProps) {
+  const hasActiveFilters = Boolean(query || registry !== "ALL");
+  const resultsText = hasActiveFilters
+    ? `Showing ${meters.length} of ${totalCount} meter${totalCount === 1 ? "" : "s"}`
+    : `${meters.length} meter${meters.length === 1 ? "" : "s"} recorded`;
+
+  return (
+    <RecordListSection
+      eyebrow="Meter Registry"
+      title="Registered service meters"
+      description="Search by meter, customer, route, zone, or recent holder history to find the next unit that needs assignment, routing, or service review."
+      resultsText={resultsText}
+      searchName="query"
+      searchValue={query}
+      searchPlaceholder="Search meter, customer, route, zone, or holder"
+      filterName="registry"
+      filterValue={registry}
+      filterLabel="Registry filter"
+      filterOptions={[
+        { label: "All meters", value: "ALL" },
+        { label: "Active only", value: "ACTIVE" },
+        { label: "Unassigned", value: "UNASSIGNED" },
+        { label: "Unrouted", value: "UNROUTED" },
+        { label: "Defective", value: "DEFECTIVE" },
+        { label: "Replaced", value: "REPLACED" },
+      ]}
+      helperText="Use this registry to separate deployment gaps from hardware-status issues before the next reading cycle."
+      nextStep="Next: assign idle meters here, then open Routes to map any unit that is still unrouted."
+      resetHref="/admin/meters"
+      hasActiveFilters={hasActiveFilters}
+    >
+      <ResponsiveDataTable
+        columns={["Meter", "Install date", "Customer", "Route coverage", "Status", "Holder history"]}
+        colSpan={6}
+        hasRows={meters.length > 0}
+        emptyMessage={
+          hasActiveFilters
+            ? "No meters match the current search or registry filter."
+            : "No meters yet. Register the first service meter with the form on this page."
+        }
+        mobileCards={meters.map((meter) => (
+          <article key={meter.id} className="rounded-[1.35rem] border border-[#dbe9e5] bg-white p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="font-mono text-xs text-muted-foreground">{meter.meterNumber}</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Installed {meter.installDate.toLocaleDateString()}
+                </p>
+              </div>
+              <StatusPill priority={getMeterStatusTone(meter.status)}>
+                {meter.status.replace("_", " ")}
+              </StatusPill>
+            </div>
+
+            <dl className="mt-4 grid gap-3 text-sm">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Customer
+                </dt>
+                <dd className="mt-1">
+                  {meter.customer ? (
+                    <div>
+                      <div className="font-medium text-foreground">{meter.customer.name}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {meter.customer.accountNumber}
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">Unassigned</span>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Route coverage
+                </dt>
+                <dd className="mt-1">
+                  {meter.serviceRoute ? (
+                    <div>
+                      <div className="font-medium text-foreground">{meter.serviceRoute.name}</div>
+                      <div className="mt-1 text-xs text-muted-foreground">
+                        {meter.serviceRoute.code}
+                        {meter.serviceZone ? ` - ${meter.serviceZone.name}` : ""}
+                      </div>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">Not routed</span>
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Holder history
+                </dt>
+                <dd className="mt-2 text-xs text-muted-foreground">
+                  {meter.holderTransfers.length ? (
+                    <div className="space-y-3">
+                      {meter.holderTransfers.map((transfer) => (
+                        <div
+                          key={transfer.id}
+                          className="rounded-2xl border border-border/70 bg-secondary/20 px-3 py-2"
+                        >
+                          <div className="font-medium text-foreground">
+                            {transfer.fromCustomer
+                              ? `${transfer.fromCustomer.name} to ${transfer.toCustomer.name}`
+                              : `Initial assignment to ${transfer.toCustomer.name}`}
                           </div>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">Unassigned</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4">
-                      {meter.serviceRoute ? (
-                        <div>
-                          <div className="font-medium text-foreground">{meter.serviceRoute.name}</div>
-                          <div className="mt-1 text-xs text-muted-foreground">
-                            {meter.serviceRoute.code}
-                            {meter.serviceZone ? ` • ${meter.serviceZone.name}` : ""}
+                          <div className="mt-1">
+                            {transfer.effectiveDate.toLocaleDateString()}
+                            {transfer.transferReading !== null
+                              ? ` - Reading ${transfer.transferReading}`
+                              : ""}
                           </div>
+                          <div className="mt-1">
+                            {transfer.fromCustomer
+                              ? `${transfer.fromCustomer.accountNumber} to ${transfer.toCustomer.accountNumber}`
+                              : transfer.toCustomer.accountNumber}
+                          </div>
+                          {transfer.reason ? (
+                            <div className="mt-1 text-muted-foreground">{transfer.reason}</div>
+                          ) : null}
                         </div>
-                      ) : (
-                        <span className="text-muted-foreground">Not routed</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="inline-flex rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
-                        {meter.status.replace("_", " ")}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-xs text-muted-foreground">
-                      {meter.holderTransfers.length ? (
-                        <div className="space-y-3">
-                          {meter.holderTransfers.map((transfer) => (
-                            <div
-                              key={transfer.id}
-                              className="rounded-2xl border border-border/70 bg-secondary/20 px-3 py-2"
-                            >
-                              <div className="font-medium text-foreground">
-                                {transfer.fromCustomer
-                                  ? `${transfer.fromCustomer.name} -> ${transfer.toCustomer.name}`
-                                  : `Initial assignment -> ${transfer.toCustomer.name}`}
-                              </div>
-                              <div className="mt-1">
-                                {transfer.effectiveDate.toLocaleDateString()}
-                                {transfer.transferReading !== null
-                                  ? ` • Reading ${transfer.transferReading}`
-                                  : ""}
-                              </div>
-                              <div className="mt-1">
-                                {transfer.fromCustomer
-                                  ? `${transfer.fromCustomer.accountNumber} -> ${transfer.toCustomer.accountNumber}`
-                                  : transfer.toCustomer.accountNumber}
-                              </div>
-                              {transfer.reason ? (
-                                <div className="mt-1 text-muted-foreground">{transfer.reason}</div>
-                              ) : null}
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">No holder history yet</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">No holder history yet</span>
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </article>
+        ))}
+        rows={meters.map((meter) => (
+          <tr key={meter.id} className="align-top text-sm">
+            <td className="px-4 py-4 font-mono text-xs text-muted-foreground">
+              {meter.meterNumber}
+            </td>
+            <td className="px-4 py-4 text-muted-foreground">
+              {meter.installDate.toLocaleDateString()}
+            </td>
+            <td className="px-4 py-4">
+              {meter.customer ? (
+                <div>
+                  <div className="font-medium text-foreground">{meter.customer.name}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {meter.customer.accountNumber}
+                  </div>
+                </div>
               ) : (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-10 text-center text-sm text-muted-foreground"
-                  >
-                    No meters yet. Register the first service meter with the form on this page.
-                  </td>
-                </tr>
+                <span className="text-muted-foreground">Unassigned</span>
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
+            </td>
+            <td className="px-4 py-4">
+              {meter.serviceRoute ? (
+                <div>
+                  <div className="font-medium text-foreground">{meter.serviceRoute.name}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {meter.serviceRoute.code}
+                    {meter.serviceZone ? ` - ${meter.serviceZone.name}` : ""}
+                  </div>
+                </div>
+              ) : (
+                <span className="text-muted-foreground">Not routed</span>
+              )}
+            </td>
+            <td className="px-4 py-4">
+              <StatusPill priority={getMeterStatusTone(meter.status)}>
+                {meter.status.replace("_", " ")}
+              </StatusPill>
+            </td>
+            <td className="px-4 py-4 text-xs text-muted-foreground">
+              {meter.holderTransfers.length ? (
+                <div className="space-y-3">
+                  {meter.holderTransfers.map((transfer) => (
+                    <div
+                      key={transfer.id}
+                      className="rounded-2xl border border-border/70 bg-secondary/20 px-3 py-2"
+                    >
+                      <div className="font-medium text-foreground">
+                        {transfer.fromCustomer
+                          ? `${transfer.fromCustomer.name} to ${transfer.toCustomer.name}`
+                          : `Initial assignment to ${transfer.toCustomer.name}`}
+                      </div>
+                      <div className="mt-1">
+                        {transfer.effectiveDate.toLocaleDateString()}
+                        {transfer.transferReading !== null
+                          ? ` - Reading ${transfer.transferReading}`
+                          : ""}
+                      </div>
+                      <div className="mt-1">
+                        {transfer.fromCustomer
+                          ? `${transfer.fromCustomer.accountNumber} to ${transfer.toCustomer.accountNumber}`
+                          : transfer.toCustomer.accountNumber}
+                      </div>
+                      {transfer.reason ? (
+                        <div className="mt-1 text-muted-foreground">{transfer.reason}</div>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <span className="text-muted-foreground">No holder history yet</span>
+              )}
+            </td>
+          </tr>
+        ))}
+      />
+    </RecordListSection>
   );
 }

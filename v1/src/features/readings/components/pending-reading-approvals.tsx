@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { RecordListSection } from "@/features/admin/components/record-list-section";
+import { ResponsiveDataTable } from "@/features/admin/components/responsive-data-table";
 import { ApproveReadingButton } from "@/features/readings/components/approve-reading-button";
 import { DeleteReadingButton } from "@/features/readings/components/delete-reading-button";
 import { approveReadings } from "@/features/readings/actions";
@@ -53,18 +54,10 @@ export function PendingReadingApprovals({
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const allSelected = useMemo(
-    () => canApprove && readings.length > 0 && selectedIds.length === readings.length,
-    [canApprove, readings.length, selectedIds.length]
-  );
   const hasActiveFilters = Boolean(query);
   const resultsText = hasActiveFilters
     ? `Showing ${readings.length} of ${totalCount} pending reading${totalCount === 1 ? "" : "s"}`
     : `${readings.length} reading${readings.length === 1 ? "" : "s"} waiting for review`;
-
-  function handleToggleAll(checked: boolean) {
-    setSelectedIds(checked ? readings.map((reading) => reading.id) : []);
-  }
 
   function handleToggleOne(readingId: string, checked: boolean) {
     setSelectedIds((current) =>
@@ -128,114 +121,157 @@ export function PendingReadingApprovals({
         </p>
       ) : null}
 
-      <div className="overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border text-left">
-            <thead className="bg-secondary/55">
-              <tr className="text-sm text-muted-foreground">
-                <th className="w-12 px-4 py-3">
-                  {canApprove ? (
-                    <input
-                      type="checkbox"
-                      aria-label="Select all pending readings"
-                      className={checkboxClassName}
-                      checked={allSelected}
-                      onChange={(event) => handleToggleAll(event.target.checked)}
-                    />
-                  ) : null}
-                </th>
-                <th className="px-4 py-3 font-medium">Meter</th>
-                <th className="px-4 py-3 font-medium">Customer</th>
-                <th className="px-4 py-3 font-medium">Previous</th>
-                <th className="px-4 py-3 font-medium">Current</th>
-                <th className="px-4 py-3 font-medium">Consumption</th>
-                <th className="px-4 py-3 font-medium">Reader</th>
-                <th className="px-4 py-3 text-right font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border bg-background">
-              {readings.length ? (
-                readings.map((reading) => {
-                  const isSelected = selectedIds.includes(reading.id);
-                  const canDeleteReading =
-                    canDeleteAny || (canDeleteOwn && reading.reader.id === currentUserId);
+      <ResponsiveDataTable
+        columns={["", "Meter", "Customer", "Previous", "Current", "Consumption", "Reader", "Actions"]}
+        colSpan={8}
+        hasRows={readings.length > 0}
+        emptyMessage={
+          hasActiveFilters
+            ? "No pending readings match the current search."
+            : "No readings are waiting for review right now."
+        }
+        mobileCards={readings.map((reading) => {
+          const isSelected = selectedIds.includes(reading.id);
+          const canDeleteReading =
+            canDeleteAny || (canDeleteOwn && reading.reader.id === currentUserId);
 
-                  return (
-                    <tr key={reading.id} className="align-top text-sm">
-                      <td className="px-4 py-4">
-                        {canApprove ? (
-                          <input
-                            type="checkbox"
-                            aria-label={`Select reading for meter ${reading.meter.meterNumber}`}
-                            className={checkboxClassName}
-                            checked={isSelected}
-                            onChange={(event) =>
-                              handleToggleOne(reading.id, event.target.checked)
-                            }
-                          />
-                        ) : null}
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="font-mono text-xs text-muted-foreground">
-                          {reading.meter.meterNumber}
+          return (
+            <article key={reading.id} className="rounded-[1.35rem] border border-[#dbe9e5] bg-white p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-mono text-xs text-muted-foreground">
+                    {reading.meter.meterNumber}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {reading.readingDate.toLocaleString()}
+                  </p>
+                </div>
+                {canApprove ? (
+                  <input
+                    type="checkbox"
+                    aria-label={`Select reading for meter ${reading.meter.meterNumber}`}
+                    className={checkboxClassName}
+                    checked={isSelected}
+                    onChange={(event) => handleToggleOne(reading.id, event.target.checked)}
+                  />
+                ) : null}
+              </div>
+
+              <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Customer
+                  </dt>
+                  <dd className="mt-1">
+                    {reading.meter.customer ? (
+                      <div>
+                        <div className="font-medium text-foreground">
+                          {reading.meter.customer.name}
                         </div>
                         <div className="mt-1 text-xs text-muted-foreground">
-                          {reading.readingDate.toLocaleString()}
+                          {reading.meter.customer.accountNumber}
                         </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        {reading.meter.customer ? (
-                          <div>
-                            <div className="font-medium text-foreground">
-                              {reading.meter.customer.name}
-                            </div>
-                            <div className="mt-1 text-xs text-muted-foreground">
-                              {reading.meter.customer.accountNumber}
-                            </div>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground">No customer linked</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-4 text-muted-foreground">
-                        {reading.previousReading}
-                      </td>
-                      <td className="px-4 py-4 text-muted-foreground">
-                        {reading.currentReading}
-                      </td>
-                      <td className="px-4 py-4 font-medium text-foreground">
-                        {reading.consumption}
-                      </td>
-                      <td className="px-4 py-4 text-muted-foreground">{reading.reader.name}</td>
-                      <td className="px-4 py-4">
-                        <div className="flex flex-col items-end gap-2 sm:flex-row sm:justify-end">
-                          {canApprove ? <ApproveReadingButton readingId={reading.id} /> : null}
-                          {canDeleteReading ? (
-                            <DeleteReadingButton readingId={reading.id} />
-                          ) : (
-                            <span className="text-xs text-muted-foreground">No edit access</span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="px-4 py-10 text-center text-sm text-muted-foreground"
-                  >
-                    {hasActiveFilters
-                      ? "No pending readings match the current search."
-                      : "No readings are waiting for review right now."}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground">No customer linked</span>
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Reader
+                  </dt>
+                  <dd className="mt-1 text-muted-foreground">{reading.reader.name}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Previous / Current
+                  </dt>
+                  <dd className="mt-1 text-muted-foreground">
+                    {reading.previousReading} / {reading.currentReading}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Consumption
+                  </dt>
+                  <dd className="mt-1 font-medium text-foreground">{reading.consumption}</dd>
+                </div>
+              </dl>
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                {canApprove ? (
+                  <ApproveReadingButton readingId={reading.id} className="w-full justify-center" />
+                ) : null}
+                {canDeleteReading ? (
+                  <DeleteReadingButton readingId={reading.id} className="w-full justify-center" />
+                ) : (
+                  <span className="flex items-center text-xs text-muted-foreground">
+                    No edit access
+                  </span>
+                )}
+              </div>
+            </article>
+          );
+        })}
+        rows={readings.map((reading) => {
+          const isSelected = selectedIds.includes(reading.id);
+          const canDeleteReading =
+            canDeleteAny || (canDeleteOwn && reading.reader.id === currentUserId);
+
+          return (
+            <tr key={reading.id} className="align-top text-sm">
+              <td className="px-4 py-4">
+                {canApprove ? (
+                  <input
+                    type="checkbox"
+                    aria-label={`Select reading for meter ${reading.meter.meterNumber}`}
+                    className={checkboxClassName}
+                    checked={isSelected}
+                    onChange={(event) => handleToggleOne(reading.id, event.target.checked)}
+                  />
+                ) : null}
+              </td>
+              <td className="px-4 py-4">
+                <div className="font-mono text-xs text-muted-foreground">
+                  {reading.meter.meterNumber}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {reading.readingDate.toLocaleString()}
+                </div>
+              </td>
+              <td className="px-4 py-4">
+                {reading.meter.customer ? (
+                  <div>
+                    <div className="font-medium text-foreground">
+                      {reading.meter.customer.name}
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {reading.meter.customer.accountNumber}
+                    </div>
+                  </div>
+                ) : (
+                  <span className="text-muted-foreground">No customer linked</span>
+                )}
+              </td>
+              <td className="px-4 py-4 text-muted-foreground">{reading.previousReading}</td>
+              <td className="px-4 py-4 text-muted-foreground">{reading.currentReading}</td>
+              <td className="px-4 py-4 font-medium text-foreground">{reading.consumption}</td>
+              <td className="px-4 py-4 text-muted-foreground">{reading.reader.name}</td>
+              <td className="px-4 py-4">
+                <div className="flex flex-col items-end gap-2 sm:flex-row sm:justify-end">
+                  {canApprove ? <ApproveReadingButton readingId={reading.id} /> : null}
+                  {canDeleteReading ? (
+                    <DeleteReadingButton readingId={reading.id} />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">No edit access</span>
+                  )}
+                </div>
+              </td>
+            </tr>
+          );
+        })}
+      />
     </RecordListSection>
   );
 }

@@ -2,6 +2,11 @@ import { BillStatus, PaymentStatus } from "@prisma/client";
 
 import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
+import {
+  getSearchParamText,
+  matchesSearch,
+  type SearchParamValue,
+} from "@/features/admin/lib/list-filters";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { FollowUpBoard } from "@/features/follow-up/components/follow-up-board";
@@ -13,7 +18,13 @@ import {
 import { NotificationLogList } from "@/features/notifications/components/notification-log-list";
 import { prisma } from "@/lib/prisma";
 
-export default async function AdminFollowUpPage() {
+type AdminFollowUpPageProps = {
+  searchParams: Promise<Record<string, SearchParamValue>>;
+};
+
+export default async function AdminFollowUpPage({
+  searchParams,
+}: AdminFollowUpPageProps) {
   const access = await getModuleAccess("followUp");
 
   if (access.status !== "authorized") {
@@ -21,6 +32,15 @@ export default async function AdminFollowUpPage() {
   }
 
   await syncReceivableStatuses();
+  const searchParamValues = await searchParams;
+  const query = getSearchParamText(searchParamValues.query);
+  const focus = getSearchParamText(searchParamValues.focus) as
+    | "ALL"
+    | "NEEDS_REMINDER"
+    | "NEEDS_FINAL_NOTICE"
+    | "READY_FOR_DISCONNECTION"
+    | "DISCONNECTED_HOLD"
+    | "MONITORING";
 
   const [bills, notifications] = await Promise.all([
     prisma.bill.findMany({
@@ -185,6 +205,112 @@ export default async function AdminFollowUpPage() {
     }))
     .sort((left, right) => right.overdueBalance - left.overdueBalance);
 
+  const serviceActions = customers
+    .map((customer) => ({
+      id: customer.id,
+      accountNumber: customer.accountNumber,
+      name: customer.name,
+      status: customer.status,
+      totalOutstanding: customer.totalOutstanding,
+      overdueBalance: customer.overdueBalance,
+      canDisconnect: customer.canDisconnect,
+      canReinstate: customer.canReinstate,
+      statusNote: customer.statusNote,
+      highestDaysPastDue: customer.bills.reduce(
+        (max, bill) => Math.max(max, bill.daysPastDue),
+        0
+      ),
+      escalatedBillCount: customer.bills.filter(
+        (bill) =>
+          bill.status === BillStatus.OVERDUE &&
+          (bill.followUpStatus === "FINAL_NOTICE_SENT" ||
+            bill.followUpStatus === "DISCONNECTION_REVIEW")
+      ).length,
+    }))
+    .filter((customer) => customer.canDisconnect || customer.canReinstate)
+    .sort((left, right) => {
+      if (left.canDisconnect !== right.canDisconnect) {
+        return left.canDisconnect ? -1 : 1;
+      }
+
+      return right.overdueBalance - left.overdueBalance;
+    });
+
+  const queue = customers
+    .flatMap((customer) =>
+      customer.bills.map((bill) => {
+        const queueFocus: Exclude<
+          Parameters<typeof FollowUpBoard>[0]["focus"],
+          "ALL"
+        > =
+          customer.status === "DISCONNECTED"
+            ? "DISCONNECTED_HOLD"
+            : bill.status === BillStatus.OVERDUE &&
+                bill.followUpStatus === "CURRENT"
+              ? "NEEDS_REMINDER"
+              : bill.status === BillStatus.OVERDUE &&
+                  bill.followUpStatus === "REMINDER_SENT"
+                ? "NEEDS_FINAL_NOTICE"
+                : bill.status === BillStatus.OVERDUE &&
+                    (bill.followUpStatus === "FINAL_NOTICE_SENT" ||
+                      bill.followUpStatus === "DISCONNECTION_REVIEW")
+                  ? "READY_FOR_DISCONNECTION"
+                  : "MONITORING";
+        const priority =
+          queueFocus === "READY_FOR_DISCONNECTION"
+            ? 0
+            : queueFocus === "NEEDS_FINAL_NOTICE"
+              ? 1
+              : queueFocus === "NEEDS_REMINDER"
+                ? 2
+                : queueFocus === "DISCONNECTED_HOLD"
+                  ? 3
+                  : 4;
+
+        return {
+          ...bill,
+          customerId: customer.id,
+          customerName: customer.name,
+          accountNumber: customer.accountNumber,
+          customerStatus: customer.status,
+          customerStatusNote: customer.statusNote,
+          queueFocus,
+          priority,
+        };
+      })
+    )
+    .sort((left, right) => {
+      if (left.priority !== right.priority) {
+        return left.priority - right.priority;
+      }
+
+      if (left.daysPastDue !== right.daysPastDue) {
+        return right.daysPastDue - left.daysPastDue;
+      }
+
+      return right.outstandingBalance - left.outstandingBalance;
+    });
+
+  const filteredQueue = queue.filter((bill) => {
+    const matchesFocus = !focus || focus === "ALL" ? true : bill.queueFocus === focus;
+
+    return (
+      matchesFocus &&
+      matchesSearch(
+        [
+          bill.id,
+          bill.billingPeriod,
+          bill.meterNumber,
+          bill.customerName,
+          bill.accountNumber,
+          bill.followUpStatus.replaceAll("_", " "),
+          bill.queueFocus.replaceAll("_", " "),
+        ],
+        query
+      )
+    );
+  });
+
   const disconnectedCount = customers.filter((customer) => customer.status === "DISCONNECTED").length;
   const overdueCustomerCount = customers.filter((customer) => customer.overdueBalance > 0).length;
   const totalOutstanding = customers.reduce((sum, customer) => sum + customer.totalOutstanding, 0);
@@ -193,7 +319,7 @@ export default async function AdminFollowUpPage() {
     <AdminPageShell
       eyebrow="Receivables Follow-up"
       title="Move overdue balances through reminder, escalation, disconnection, and reinstatement states."
-      description="EH5 turns printed overdue language into an operational workflow with explicit staff actions, customer service-status control, and server-enforced reinstatement rules."
+      description="Turn overdue balances into a staffed workflow with explicit escalation actions, customer service-status control, and server-enforced reinstatement rules."
       actions={
         <AdminPageActions
           links={[
@@ -204,15 +330,15 @@ export default async function AdminFollowUpPage() {
       }
       stats={[
         {
-          label: "Overdue customers",
-          value: overdueCustomerCount.toString(),
-          detail: "Accounts with balances already past due",
+          label: "Action-ready",
+          value: serviceActions.filter((customer) => customer.canDisconnect).length.toString(),
+          detail: "Customers already at final notice or disconnection review",
           accent: "rose",
         },
         {
           label: "Disconnected",
           value: disconnectedCount.toString(),
-          detail: "Customer accounts currently under service hold",
+          detail: "Customer accounts currently under service hold or reinstatement review",
           accent: "amber",
         },
         {
@@ -222,12 +348,18 @@ export default async function AdminFollowUpPage() {
             currency: "PHP",
             maximumFractionDigits: 0,
           }).format(totalOutstanding),
-          detail: "Open receivables visible inside the EH5 workflow",
+          detail: `${overdueCustomerCount} overdue customer${overdueCustomerCount === 1 ? "" : "s"} still in scope`,
           accent: "sky",
         },
       ]}
     >
-      <FollowUpBoard customers={customers} />
+      <FollowUpBoard
+        queue={filteredQueue}
+        totalCount={queue.length}
+        query={query}
+        focus={focus || "ALL"}
+        serviceActions={serviceActions}
+      />
       <NotificationLogList notifications={notifications} />
     </AdminPageShell>
   );

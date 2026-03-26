@@ -246,7 +246,7 @@ export default async function AdminBillTemplatePage({
                 <div className="grid gap-3 print:gap-2 sm:grid-cols-3">
                   <div className="rounded-[1.25rem] border border-[#dbe9e5] bg-white px-4 py-3 print:px-3 print:py-2">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6b8481]">
-                      EH8 Bill State
+                      Bill state
                     </p>
                     <p className="mt-2 text-base font-semibold text-[#14383c] print:mt-1 print:text-sm">
                       {bill.lifecycleStatus}

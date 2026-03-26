@@ -316,9 +316,9 @@ export default async function AdminDashboardPage() {
     <section className="bg-transparent">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <section className="dwds-panel-dark overflow-hidden">
-          <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:py-8">
+          <div className="grid gap-4 px-5 py-5 sm:px-6 sm:py-6 lg:grid-cols-[1.2fr_0.8fr] lg:gap-6 lg:px-8 lg:py-8">
             <div className="space-y-5">
-              <BrandLockup inverse size="lg" className="w-fit" />
+              <BrandLockup inverse size="lg" className="w-fit max-sm:max-w-[10rem]" />
               <div className="flex flex-wrap items-center gap-3">
                 <span className="dwds-kicker border-white/14 bg-white/8 text-white/78">
                   Operations Workspace
@@ -329,23 +329,23 @@ export default async function AdminDashboardPage() {
               </div>
 
               <div className="space-y-3">
-                <h1 className="max-w-3xl font-heading text-4xl leading-tight tracking-[-0.03em] sm:text-5xl">
+                <h1 className="max-w-3xl font-heading text-3xl leading-tight tracking-[-0.03em] sm:text-4xl xl:text-5xl">
                   Run daily DWDS work from one control room.
                 </h1>
-                <p className="max-w-2xl text-sm leading-7 text-white/76 sm:text-base">
+                <p className="max-w-2xl text-sm leading-6 text-white/76 sm:text-base sm:leading-7">
                   See what needs action now, then jump straight into the queue, module, or
                   report that moves the workflow forward.
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="grid gap-3 sm:grid-cols-2">
                 {accessibleModules.has("readings") ? (
                   <Link
                     href="/admin/readings"
                     className={cn(
                       buttonVariants({
                         className:
-                          "h-11 rounded-full bg-white px-6 text-primary hover:bg-white/90",
+                          "h-11 w-full rounded-full bg-white px-6 text-primary hover:bg-white/90",
                       })
                     )}
                   >
@@ -359,7 +359,7 @@ export default async function AdminDashboardPage() {
                       buttonVariants({
                         variant: "outline",
                         className:
-                          "h-11 rounded-full border-white/18 bg-white/8 px-6 text-white hover:bg-white/12 hover:text-white",
+                          "h-11 w-full rounded-full border-white/18 bg-white/8 px-6 text-white hover:bg-white/12 hover:text-white",
                       })
                     )}
                   >
@@ -369,7 +369,7 @@ export default async function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 self-start sm:grid-cols-2 lg:grid-cols-1">
+            <div className="grid gap-3 self-start sm:grid-cols-2 lg:grid-cols-1">
               <article className="rounded-[1.75rem] border border-white/12 bg-white/8 p-5 backdrop-blur">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
                   Signed-in staff
@@ -394,7 +394,7 @@ export default async function AdminDashboardPage() {
                 </p>
               </article>
 
-              <div className="flex items-center justify-between rounded-[1.75rem] border border-white/12 bg-white/8 px-5 py-4 sm:col-span-2 lg:col-span-1">
+              <div className="flex flex-col gap-4 rounded-[1.75rem] border border-white/12 bg-white/8 px-5 py-4 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between lg:col-span-1">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
                     Role coverage
@@ -414,7 +414,7 @@ export default async function AdminDashboardPage() {
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           {operationsSnapshot.map((item) => (
             <article
               key={item.label}

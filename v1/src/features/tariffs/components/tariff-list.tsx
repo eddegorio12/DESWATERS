@@ -1,5 +1,7 @@
 import { TariffAuditEventType } from "@prisma/client";
 
+import { StatusPill } from "@/features/admin/components/status-pill";
+
 type TariffListProps = {
   tariffs: {
     id: string;
@@ -79,15 +81,15 @@ export function TariffList({ tariffs }: TariffListProps) {
                 <div className="space-y-2">
                   <div className="flex flex-wrap items-center gap-3">
                     <h3 className="text-lg font-semibold text-foreground">{tariff.name}</h3>
-                    <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${
+                    <StatusPill
+                      priority={
                         tariff.effectiveFrom <= now &&
                         (!tariff.effectiveTo || tariff.effectiveTo >= now)
-                          ? "bg-primary/10 text-primary"
+                          ? "ready"
                           : tariff.effectiveFrom > now
-                            ? "bg-[#e5f1fb] text-[#1d4f84]"
-                            : "bg-secondary text-secondary-foreground"
-                      }`}
+                            ? "pending"
+                            : "readonly"
+                      }
                     >
                       {tariff.effectiveFrom <= now &&
                       (!tariff.effectiveTo || tariff.effectiveTo >= now)
@@ -95,10 +97,10 @@ export function TariffList({ tariffs }: TariffListProps) {
                         : tariff.effectiveFrom > now
                           ? "Scheduled"
                           : "Retired"}
-                    </span>
-                    <span className="inline-flex rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
+                    </StatusPill>
+                    <StatusPill priority="readonly">
                       Version {tariff.version}
-                    </span>
+                    </StatusPill>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     Effective {formatDate(tariff.effectiveFrom)}
@@ -212,7 +214,7 @@ export function TariffList({ tariffs }: TariffListProps) {
           ))
         ) : (
           <div className="rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted-foreground">
-            No tariffs yet. Create the first tariff on this page to configure billing.
+            No tariffs are saved yet. Create the first tariff on this page to enable billing and future version tracking.
           </div>
         )}
       </div>

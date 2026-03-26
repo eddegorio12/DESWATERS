@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { BillDistributionStatus, BillLifecycleStatus, BillStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { StatusPill } from "@/features/admin/components/status-pill";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 import { cn } from "@/lib/utils";
 
@@ -28,32 +29,32 @@ type UnpaidBillListProps = {
   }[];
 };
 
-function getStatusClasses(status: BillStatus) {
+function getBillStatusPriority(status: BillStatus) {
   if (status === "OVERDUE") {
-    return "bg-destructive/10 text-destructive";
+    return "overdue" as const;
   }
 
   if (status === "PARTIALLY_PAID") {
-    return "bg-primary/10 text-primary";
+    return "pending" as const;
   }
 
-  return "bg-secondary text-secondary-foreground";
+  return "readonly" as const;
 }
 
-function getDistributionClasses(status: BillDistributionStatus) {
+function getDistributionPriority(status: BillDistributionStatus) {
   if (status === "DISTRIBUTED") {
-    return "bg-[#dff3eb] text-[#145c3b]";
+    return "success" as const;
   }
 
   if (status === "RETURNED" || status === "FAILED_DELIVERY") {
-    return "bg-[#ffe4e1] text-[#8d2a21]";
+    return "attention" as const;
   }
 
   if (status === "PRINTED") {
-    return "bg-[#eef3ff] text-[#294b8f]";
+    return "ready" as const;
   }
 
-  return "bg-secondary text-secondary-foreground";
+  return "pending" as const;
 }
 
 export function UnpaidBillList({ bills }: UnpaidBillListProps) {
@@ -85,7 +86,7 @@ export function UnpaidBillList({ bills }: UnpaidBillListProps) {
                 <th className="px-4 py-3 font-medium">Total charges</th>
                 <th className="px-4 py-3 font-medium">Due date</th>
                 <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">EH8 state</th>
+                <th className="px-4 py-3 font-medium">Cycle state</th>
                 <th className="px-4 py-3 text-right font-medium">Template</th>
               </tr>
             </thead>
@@ -116,26 +117,22 @@ export function UnpaidBillList({ bills }: UnpaidBillListProps) {
                       {bill.dueDate.toLocaleDateString()}
                     </td>
                     <td className="px-4 py-4">
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getStatusClasses(
-                          bill.status
-                        )}`}
-                      >
+                      <StatusPill priority={getBillStatusPriority(bill.status)}>
                         {bill.status.replace("_", " ")}
-                      </span>
+                      </StatusPill>
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex flex-col gap-2">
-                        <span className="inline-flex rounded-full bg-[#eef7f4] px-3 py-1 text-xs font-medium text-[#21514b]">
-                          {bill.lifecycleStatus === "FINALIZED" ? "Locked" : "Draft"}
-                        </span>
-                        <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getDistributionClasses(
-                            bill.distributionStatus
-                          )}`}
+                        <StatusPill
+                          priority={
+                            bill.lifecycleStatus === "FINALIZED" ? "readonly" : "pending"
+                          }
                         >
+                          {bill.lifecycleStatus === "FINALIZED" ? "Locked" : "Draft"}
+                        </StatusPill>
+                        <StatusPill priority={getDistributionPriority(bill.distributionStatus)}>
                           {bill.distributionStatus.replaceAll("_", " ")}
-                        </span>
+                        </StatusPill>
                       </div>
                     </td>
                     <td className="px-4 py-4 text-right">
@@ -160,7 +157,7 @@ export function UnpaidBillList({ bills }: UnpaidBillListProps) {
                     colSpan={9}
                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                   >
-                    No unpaid bills have been generated yet.
+                    No unpaid bills are in the queue yet. Generate bills above to open payment and print work.
                   </td>
                 </tr>
               )}

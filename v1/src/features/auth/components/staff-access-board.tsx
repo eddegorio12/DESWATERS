@@ -1,5 +1,6 @@
 import { AdminLoginAttemptStatus, Role } from "@prisma/client";
 
+import { StatusPill } from "@/features/admin/components/status-pill";
 import {
   clearAdminLockout,
   createAdminAccount,
@@ -64,6 +65,30 @@ function formatLoginAttemptStatus(status: AdminLoginAttemptStatus) {
     default:
       return "Failed";
   }
+}
+
+function getAdminStatePriority(admin: AdminManagementUser) {
+  if (admin.lockedUntil && admin.lockedUntil > new Date()) {
+    return "attention" as const;
+  }
+
+  if (!admin.isActive) {
+    return "readonly" as const;
+  }
+
+  return "success" as const;
+}
+
+function getLoginAttemptPriority(status: AdminLoginAttemptStatus) {
+  if (status === AdminLoginAttemptStatus.SUCCESS) {
+    return "success" as const;
+  }
+
+  if (status === AdminLoginAttemptStatus.LOCKED_OUT) {
+    return "attention" as const;
+  }
+
+  return "readonly" as const;
 }
 
 export function StaffAccessBoard({
@@ -185,22 +210,19 @@ export function StaffAccessBoard({
                   <p className="text-lg font-semibold text-foreground">{admin.name}</p>
                   <p className="text-sm text-muted-foreground">{admin.email}</p>
                   <div className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                    <span className="rounded-full bg-[#e4f3ef] px-3 py-1 text-[#19545a]">
+                    <StatusPill priority="ready" className="uppercase tracking-[0.18em]">
                       {roleDisplayName[admin.role]}
-                    </span>
-                    <span
-                      className={
-                        admin.isActive
-                          ? "rounded-full bg-[#e4f3ef] px-3 py-1 text-[#19545a]"
-                          : "rounded-full bg-[#fae4e2] px-3 py-1 text-[#8a2f28]"
-                      }
+                    </StatusPill>
+                    <StatusPill
+                      priority={getAdminStatePriority(admin)}
+                      className="uppercase tracking-[0.18em]"
                     >
                       {admin.isActive ? "Active" : "Inactive"}
-                    </span>
+                    </StatusPill>
                     {admin.lockedUntil && admin.lockedUntil > new Date() ? (
-                      <span className="rounded-full bg-[#fae4e2] px-3 py-1 text-[#8a2f28]">
+                      <StatusPill priority="attention" className="uppercase tracking-[0.18em]">
                         Locked until {formatDate(admin.lockedUntil)}
-                      </span>
+                      </StatusPill>
                     ) : null}
                   </div>
                   <p className="text-sm text-muted-foreground">
@@ -329,15 +351,9 @@ export function StaffAccessBoard({
                         </div>
                       </td>
                       <td className="px-4 py-4">
-                        <span
-                          className={
-                            attempt.status === AdminLoginAttemptStatus.SUCCESS
-                              ? "rounded-full bg-[#e4f3ef] px-3 py-1 text-xs font-medium text-[#19545a]"
-                              : "rounded-full bg-[#fae4e2] px-3 py-1 text-xs font-medium text-[#8a2f28]"
-                          }
-                        >
+                        <StatusPill priority={getLoginAttemptPriority(attempt.status)}>
                           {formatLoginAttemptStatus(attempt.status)}
-                        </span>
+                        </StatusPill>
                       </td>
                       <td className="px-4 py-4 text-muted-foreground">
                         {attempt.ipAddress ?? "Unavailable"}

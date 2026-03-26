@@ -190,6 +190,7 @@
 - DWDS is already structurally sound, but its next UX gains should come from workflow compression rather than new top-level modules.
 - Future usability work should favor shared interaction patterns inside existing feature domains instead of one-off page rewrites.
 - The goal is not consumer-style simplification; the goal is lower operator effort for repetitive daily work.
+- The most useful near-term architecture work is rollout and consistency work inside existing modules, not new domain sprawl.
 
 ## Usability Architecture Targets
 
@@ -226,6 +227,23 @@
 - Use stronger severity, pending, overdue, and success states consistently across exceptions, billing, readings, and follow-up.
 - Reserve dense descriptive copy for secondary help text; primary surfaces should communicate state through structure and emphasis first.
 - Build shared visual rules for "attention required", "read-only", "ready", and "completed" states across modules.
+
+### Current Usability Sequence
+1. Extend the EH13 shared record-list and status treatment to remaining record-heavy modules such as follow-up, then validate that pass before moving on. This is now complete through the validated follow-up pass.
+2. Audit `/admin/dashboard`, dashboard navigation, queue surfaces, and table-heavy modules for narrow-screen fallback quality. This is now complete through `memory-bank/eh13.3a-narrow-screen-audit.md`.
+3. Validate the implemented EH13.3b responsive fallbacks on the audited admin surfaces, then continue the wider EH13 consistency pass.
+4. Keep future EH12 analytics work attached to existing route/reporting domains after the operator-efficiency pass is stable, rather than bypassing EH13 with isolated dashboard additions.
+5. Treat dedicated admin-management audit logging as the next auditability refinement once the active usability pass is in better shape.
+
+### EH13 Execution Order
+1. `EH13.2a` Meters should be the first remaining module brought onto the shared list/filter/status baseline. This is now implemented on `/admin/meters`.
+2. `EH13.2b` Route operations are now on the shared scanability baseline with search, focus filters, ownership cues, and filtered route-support panels. This route pass is now validated.
+3. `EH13.2c` Collections and exceptions are now on the same interaction baseline with server-side search/filter handling, shared result-count and reset behavior, and stronger urgency cues for finance and anomaly review. This pass is now validated.
+4. `EH13.2d` Follow-up now receives a stronger urgency-first hierarchy for receivables actions through server-side escalation filters, bill-level ordering, and separated service-action panels. This pass is now validated.
+5. `EH13.3a` is now complete as a code-level audit of the current narrow-screen pressure points across the protected shell, dashboard, queue cards, and table-heavy modules.
+6. `EH13.3b` has now validated the narrow-screen and responsive fallback behavior across those updated surfaces.
+7. `EH13.4` is now implemented through a shared status-priority layer that standardizes pending, overdue, read-only, ready, success, and attention-required treatment across the active admin workflow surfaces.
+8. `EH13.5` is now implemented as the final consistency sweep across shared filter wording, live operator copy, and empty-state next-step guidance on the remaining secondary admin boards. EH13 is now fully validated and closed.
 
 ## Enhancement Architecture Targets
 
@@ -329,8 +347,14 @@
 - Any EH13 work should improve scanability and actionability for trained staff without weakening server-side rules, auditability, or role boundaries.
 - Candidate first-pass targets are `/admin/dashboard`, customer registry, readings queue, billing queue, and payments history because they are the most likely daily-use operator surfaces.
 - The current implemented EH13 baseline now includes `src/features/admin/components/record-list-section.tsx`, `src/features/admin/components/status-pill.tsx`, and `src/features/admin/lib/list-filters.ts` as the shared primitives for searchable/filterable record surfaces.
-- The first EH13 rollout now applies those primitives to the customer registry, pending-reading approvals, approved-reading billing queue, and payment history, while dashboard and sidebar copy have been shortened for faster scanning.
+- The first EH13 rollout now applies those primitives to the customer registry, pending-reading approvals, approved-reading billing queue, payment history, and the meters registry, while dashboard and sidebar copy have been shortened for faster scanning.
 - High-frequency forms now also expose more explicit next-step cues, but broader narrow-screen fallback work remains pending for later EH13 slices.
+- `/admin/meters` now also uses server-side search and registry filters to separate active, unassigned, unrouted, defective, and replaced units without changing any server-authoritative workflow rules.
+- The next EH13 rollout should prioritize route operations and the other record-heavy modules that still lag behind the new shared interaction pattern.
+- The `EH13.3a` audit now confirms that the main remaining responsive gaps are shell navigation density, dashboard/page-shell height on narrow screens, horizontal-scroll-only tables, wrapped follow-up action groups, and route-scoreboard density.
+- Later EH13 slices should keep using shared primitives instead of introducing per-page filtering, status, or responsive behavior that drifts from the new baseline.
+- The final EH13 sweep now also standardizes shared list-control wording around explicit filter actions and removes roadmap-phase language from live operator copy so the production UI reads as an operations tool rather than an implementation checklist.
+- Meters were treated as the first implementation target because they are a frequent operational surface and a clean bridge between customer, route, and reading workflows.
 
 ## Database Schema: Current Repository Snapshot
 The excerpt below captures the long-lived core entities. EH8 billing-governance additions now also exist in the live schema through `BillingCycle`, `BillPrintBatch`, `BillingCycleEvent`, and the related lifecycle/distribution fields attached to `Bill`.

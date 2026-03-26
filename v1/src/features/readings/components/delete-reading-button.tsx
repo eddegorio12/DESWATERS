@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { deleteReading } from "@/features/readings/actions";
+import { cn } from "@/lib/utils";
 
 type DeleteReadingButtonProps = {
   readingId: string;
+  className?: string;
 };
 
-export function DeleteReadingButton({ readingId }: DeleteReadingButtonProps) {
+export function DeleteReadingButton({ readingId, className }: DeleteReadingButtonProps) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -45,7 +47,7 @@ export function DeleteReadingButton({ readingId }: DeleteReadingButtonProps) {
         type="button"
         variant="destructive"
         size="sm"
-        className="rounded-xl px-3"
+        className={cn("rounded-xl px-3", className)}
         disabled={isPending}
         onClick={handleDelete}
       >

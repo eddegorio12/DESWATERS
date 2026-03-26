@@ -2,6 +2,11 @@ import { BillStatus, PaymentStatus } from "@prisma/client";
 
 import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
+import {
+  getSearchParamText,
+  matchesSearch,
+  type SearchParamValue,
+} from "@/features/admin/lib/list-filters";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
@@ -15,7 +20,7 @@ import { summarizeReceivables } from "@/features/reports/lib/receivables";
 import { prisma } from "@/lib/prisma";
 
 type AdminCollectionsPageProps = {
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  searchParams: Promise<Record<string, SearchParamValue>>;
 };
 
 export default async function AdminCollectionsPage({
@@ -29,7 +34,8 @@ export default async function AdminCollectionsPage({
 
   await syncReceivableStatuses();
 
-  const filters = getCollectionRangeFromSearchParams(await searchParams);
+  const searchParamValues = await searchParams;
+  const filters = getCollectionRangeFromSearchParams(searchParamValues);
 
   const [payments, openBills] = await Promise.all([
     prisma.payment.findMany({
@@ -102,6 +108,63 @@ export default async function AdminCollectionsPage({
 
   const totalCollections = payments.reduce((sum, payment) => sum + payment.amount, 0);
   const receivables = summarizeReceivables(openBills);
+  const paymentQuery = getSearchParamText(searchParamValues.paymentQuery);
+  const paymentMethod = getSearchParamText(searchParamValues.paymentMethod) as
+    | "ALL"
+    | "CASH"
+    | "BANK_TRANSFER"
+    | "GCASH"
+    | "MAYA"
+    | "CARD";
+  const receivableQuery = getSearchParamText(searchParamValues.receivableQuery);
+  const receivableStatus = getSearchParamText(searchParamValues.receivableStatus) as
+    | "ALL"
+    | "UNPAID"
+    | "PARTIALLY_PAID"
+    | "OVERDUE";
+  const filteredPayments = payments.filter((payment) => {
+    const matchesMethod =
+      !paymentMethod || paymentMethod === "ALL" ? true : payment.method === paymentMethod;
+
+    return (
+      matchesMethod &&
+      matchesSearch(
+        [
+          payment.id,
+          payment.bill.customer.name,
+          payment.bill.customer.accountNumber,
+          payment.bill.billingPeriod,
+          payment.referenceId,
+          payment.method.replaceAll("_", " "),
+        ],
+        paymentQuery
+      )
+    );
+  });
+  const filteredReceivables = receivables.accounts.filter((account) => {
+    const matchesStatus =
+      !receivableStatus || receivableStatus === "ALL"
+        ? true
+        : account.status === receivableStatus;
+
+    return (
+      matchesStatus &&
+      matchesSearch(
+        [
+          account.id,
+          account.customer.name,
+          account.customer.accountNumber,
+          account.billingPeriod,
+          account.reading.meter.meterNumber,
+        ],
+        receivableQuery
+      )
+    );
+  });
+  const hiddenDateFields = [
+    { name: "startDate", value: filters.startDateInput },
+    { name: "endDate", value: filters.endDateInput },
+  ];
 
   return (
     <AdminPageShell
@@ -159,8 +222,21 @@ export default async function AdminCollectionsPage({
         partiallyPaidCount={receivables.partiallyPaidCount}
         overdueCount={receivables.overdueCount}
       />
-      <CollectionsPaymentList payments={payments} rangeLabel={filters.rangeLabel} />
-      <ReceivablesList accounts={receivables.accounts} />
+      <CollectionsPaymentList
+        payments={filteredPayments}
+        totalCount={payments.length}
+        rangeLabel={filters.rangeLabel}
+        query={paymentQuery}
+        method={paymentMethod || "ALL"}
+        hiddenFields={hiddenDateFields}
+      />
+      <ReceivablesList
+        accounts={filteredReceivables}
+        totalCount={receivables.accounts.length}
+        query={receivableQuery}
+        status={receivableStatus || "ALL"}
+        hiddenFields={hiddenDateFields}
+      />
     </AdminPageShell>
   );
 }

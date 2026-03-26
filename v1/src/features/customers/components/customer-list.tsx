@@ -1,6 +1,7 @@
 import type { Customer, CustomerStatus, MeterStatus } from "@prisma/client";
 
 import { RecordListSection } from "@/features/admin/components/record-list-section";
+import { ResponsiveDataTable } from "@/features/admin/components/responsive-data-table";
 import { StatusPill } from "@/features/admin/components/status-pill";
 
 type CustomerListProps = {
@@ -53,89 +54,137 @@ export function CustomerList({ customers, totalCount, query, status }: CustomerL
       resetHref="/admin/customers"
       hasActiveFilters={hasActiveFilters}
     >
-      <div className="overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border text-left">
-            <thead className="bg-secondary/55">
-              <tr className="text-sm text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Account</th>
-                <th className="px-4 py-3 font-medium">Name</th>
-                <th className="px-4 py-3 font-medium">Address</th>
-                <th className="px-4 py-3 font-medium">Contact</th>
-                <th className="px-4 py-3 font-medium">Linked meter</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border bg-background">
-              {customers.length ? (
-                customers.map((customer) => (
-                  <tr key={customer.id} className="align-top text-sm">
-                    <td className="px-4 py-4 font-mono text-xs text-muted-foreground">
-                      {customer.accountNumber}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="font-medium text-foreground">{customer.name}</div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        Added {customer.createdAt.toLocaleDateString()}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-muted-foreground">{customer.address}</td>
-                    <td className="px-4 py-4 text-muted-foreground">
-                      <div>{customer.contactNumber || "No contact number"}</div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {customer.email || "No email address"}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      {customer.meters.length ? (
-                        <div className="flex flex-wrap gap-2">
-                          {customer.meters.map((meter) => (
-                            <span
-                              key={meter.id}
-                              className="inline-flex rounded-full bg-secondary/70 px-3 py-1 text-xs font-medium text-foreground"
-                            >
-                              {meter.meterNumber}
-                              {meter.holderTransfers[0]
-                                ? ` - moved ${meter.holderTransfers[0].effectiveDate.toLocaleDateString()}`
-                                : ""}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">No meter assigned</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4">
-                      <StatusPill
-                        tone={
-                          customer.status === "ACTIVE"
-                            ? "success"
-                            : customer.status === "DISCONNECTED"
-                              ? "danger"
-                              : "warning"
-                        }
-                      >
-                        {customer.status.replace("_", " ")}
-                      </StatusPill>
-                    </td>
-                  </tr>
-                ))
+      <ResponsiveDataTable
+        columns={["Account", "Name", "Address", "Contact", "Linked meter", "Status"]}
+        colSpan={6}
+        hasRows={customers.length > 0}
+        emptyMessage={
+          hasActiveFilters
+            ? "No customer accounts match the current search or status filter."
+            : "No customers yet. Create the first record with the form on this page."
+        }
+        mobileCards={customers.map((customer) => (
+          <article key={customer.id} className="rounded-[1.35rem] border border-[#dbe9e5] bg-white p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="font-medium text-foreground">{customer.name}</p>
+                <p className="mt-1 font-mono text-xs text-muted-foreground">
+                  {customer.accountNumber}
+                </p>
+              </div>
+              <StatusPill
+                priority={
+                  customer.status === "ACTIVE"
+                    ? "success"
+                    : customer.status === "DISCONNECTED"
+                      ? "attention"
+                      : "readonly"
+                }
+              >
+                {customer.status.replace("_", " ")}
+              </StatusPill>
+            </div>
+
+            <dl className="mt-4 grid gap-3 text-sm">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Address
+                </dt>
+                <dd className="mt-1 text-muted-foreground">{customer.address}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Contact
+                </dt>
+                <dd className="mt-1 text-muted-foreground">
+                  <div>{customer.contactNumber || "No contact number"}</div>
+                  <div className="mt-1 text-xs">{customer.email || "No email address"}</div>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Linked meter
+                </dt>
+                <dd className="mt-2">
+                  {customer.meters.length ? (
+                    <div className="flex flex-wrap gap-2">
+                      {customer.meters.map((meter) => (
+                        <span
+                          key={meter.id}
+                          className="inline-flex rounded-full bg-secondary/70 px-3 py-1 text-xs font-medium text-foreground"
+                        >
+                          {meter.meterNumber}
+                          {meter.holderTransfers[0]
+                            ? ` - moved ${meter.holderTransfers[0].effectiveDate.toLocaleDateString()}`
+                            : ""}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">No meter assigned</span>
+                  )}
+                </dd>
+              </div>
+            </dl>
+
+            <p className="mt-4 text-xs text-muted-foreground">
+              Added {customer.createdAt.toLocaleDateString()}
+            </p>
+          </article>
+        ))}
+        rows={customers.map((customer) => (
+          <tr key={customer.id} className="align-top text-sm">
+            <td className="px-4 py-4 font-mono text-xs text-muted-foreground">
+              {customer.accountNumber}
+            </td>
+            <td className="px-4 py-4">
+              <div className="font-medium text-foreground">{customer.name}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Added {customer.createdAt.toLocaleDateString()}
+              </div>
+            </td>
+            <td className="px-4 py-4 text-muted-foreground">{customer.address}</td>
+            <td className="px-4 py-4 text-muted-foreground">
+              <div>{customer.contactNumber || "No contact number"}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {customer.email || "No email address"}
+              </div>
+            </td>
+            <td className="px-4 py-4">
+              {customer.meters.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {customer.meters.map((meter) => (
+                    <span
+                      key={meter.id}
+                      className="inline-flex rounded-full bg-secondary/70 px-3 py-1 text-xs font-medium text-foreground"
+                    >
+                      {meter.meterNumber}
+                      {meter.holderTransfers[0]
+                        ? ` - moved ${meter.holderTransfers[0].effectiveDate.toLocaleDateString()}`
+                        : ""}
+                    </span>
+                  ))}
+                </div>
               ) : (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-10 text-center text-sm text-muted-foreground"
-                  >
-                    {hasActiveFilters
-                      ? "No customer accounts match the current search or status filter."
-                      : "No customers yet. Create the first record with the form on this page."}
-                  </td>
-                </tr>
+                <span className="text-muted-foreground">No meter assigned</span>
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </td>
+            <td className="px-4 py-4">
+              <StatusPill
+                priority={
+                  customer.status === "ACTIVE"
+                    ? "success"
+                    : customer.status === "DISCONNECTED"
+                      ? "attention"
+                      : "readonly"
+                }
+              >
+                {customer.status.replace("_", " ")}
+              </StatusPill>
+            </td>
+          </tr>
+        ))}
+      />
     </RecordListSection>
   );
 }

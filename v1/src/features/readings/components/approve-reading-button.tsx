@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { approveReading } from "@/features/readings/actions";
+import { cn } from "@/lib/utils";
 
 type ApproveReadingButtonProps = {
   readingId: string;
+  className?: string;
 };
 
-export function ApproveReadingButton({ readingId }: ApproveReadingButtonProps) {
+export function ApproveReadingButton({ readingId, className }: ApproveReadingButtonProps) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -36,7 +38,7 @@ export function ApproveReadingButton({ readingId }: ApproveReadingButtonProps) {
       <Button
         type="button"
         size="sm"
-        className="rounded-xl px-3"
+        className={cn("rounded-xl px-3", className)}
         disabled={isPending}
         onClick={handleApprove}
       >

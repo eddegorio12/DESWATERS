@@ -92,13 +92,15 @@ This is the simplest robust default because it avoids self-hosted database work,
 - Prefer reusable search/filter/status-chip controls implemented inside the current React/Tailwind/shadcn stack
 - Avoid introducing heavy grid frameworks or admin-template dependencies just to compensate for weak page-level UX
 - Fix dense operational pages by improving structure and interaction patterns first, not by adding more tooling
+- Finish the shared usability pattern rollout on remaining admin modules before adding dashboard-specific libraries or isolated analytics widgets
+- Treat meters as the first remaining rollout target because it is a high-frequency operational module and a good baseline for the remaining EH13 passes
 
 ## Current Repo Alignment
 - The repo already aligns with this direction: Next.js, TypeScript, Prisma, PostgreSQL-first runtime, Auth.js credentials auth, Tailwind, shadcn/ui, React Hook Form, and Zod
 - EH8 now keeps billing-cycle state, bill finalization locks, print batches, distribution statuses, and audit history inside the same Prisma/PostgreSQL core instead of pushing that workflow into external tools
 - Current notification hooks remain optional integrations, not required core infrastructure
 - Current printable outputs should continue to use app-native rendering unless archival/download requirements become stronger
-- The next planned improvement lane is EH13 usability refinement on top of the existing stack, not a tooling or platform rewrite
+- The next planned improvement lane is EH13 usability refinement on top of the existing stack, not a tooling or platform rewrite, with management analytics and audit/security refinements sequenced after that active product-surface pass
 
 ## Practical Summary
 - **Keep:** Next.js, TypeScript, PostgreSQL, Prisma, Auth.js Credentials, bcrypt, Tailwind CSS, shadcn/ui, React Hook Form, Zod

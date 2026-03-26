@@ -6,6 +6,7 @@ import type {
 } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { StatusPill } from "@/features/admin/components/status-pill";
 import { cn } from "@/lib/utils";
 
 type NotificationLogListProps = {
@@ -28,20 +29,20 @@ type NotificationLogListProps = {
   }[];
 };
 
-function getStatusClasses(status: NotificationStatus) {
+function getStatusPriority(status: NotificationStatus) {
   if (status === "SENT") {
-    return "bg-emerald-100 text-emerald-700";
+    return "success" as const;
   }
 
   if (status === "FAILED") {
-    return "bg-destructive/10 text-destructive";
+    return "attention" as const;
   }
 
   if (status === "SKIPPED") {
-    return "bg-amber-100 text-amber-800";
+    return "readonly" as const;
   }
 
-  return "bg-secondary text-secondary-foreground";
+  return "pending" as const;
 }
 
 export function NotificationLogList({ notifications }: NotificationLogListProps) {
@@ -103,13 +104,9 @@ export function NotificationLogList({ notifications }: NotificationLogListProps)
                     </td>
                     <td className="px-4 py-4 text-muted-foreground">{notification.destination}</td>
                     <td className="px-4 py-4">
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getStatusClasses(
-                          notification.status
-                        )}`}
-                      >
+                      <StatusPill priority={getStatusPriority(notification.status)}>
                         {notification.status}
-                      </span>
+                      </StatusPill>
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-foreground">
@@ -145,7 +142,7 @@ export function NotificationLogList({ notifications }: NotificationLogListProps)
                     colSpan={7}
                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                   >
-                    No notification attempts have been logged yet.
+                    No notification attempts are logged yet. Send a reminder, final notice, or print notice to start the communication trail.
                   </td>
                 </tr>
               )}

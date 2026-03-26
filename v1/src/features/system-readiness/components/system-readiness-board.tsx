@@ -1,5 +1,6 @@
 import { BackupSnapshotStatus } from "@prisma/client";
 
+import { StatusPill } from "@/features/admin/components/status-pill";
 import { logBackupSnapshot } from "@/features/system-readiness/actions";
 
 type BackupSnapshotRow = {
@@ -36,6 +37,34 @@ const statusOptions = [
   BackupSnapshotStatus.RESTORE_TESTED,
   BackupSnapshotStatus.FAILED,
 ] as const;
+
+function getBackupStatusPriority(status: BackupSnapshotStatus) {
+  if (status === BackupSnapshotStatus.FAILED) {
+    return "attention" as const;
+  }
+
+  if (status === BackupSnapshotStatus.RESTORE_TESTED) {
+    return "success" as const;
+  }
+
+  if (status === BackupSnapshotStatus.VERIFIED) {
+    return "ready" as const;
+  }
+
+  return "pending" as const;
+}
+
+function getLoginAttemptPriority(status: LoginAttemptRow["status"]) {
+  if (status === "SUCCESS") {
+    return "success" as const;
+  }
+
+  if (status === "LOCKED_OUT") {
+    return "attention" as const;
+  }
+
+  return "readonly" as const;
+}
 
 export function SystemReadinessBoard({
   backupSnapshots,
@@ -191,6 +220,11 @@ export function SystemReadinessBoard({
                   <p className="mt-2 text-sm text-muted-foreground">
                     {item.ready ? "Configured in the current environment." : "Missing in the current environment."}
                   </p>
+                  <div className="mt-3">
+                    <StatusPill priority={item.ready ? "ready" : "attention"}>
+                      {item.ready ? "Ready" : "Needs setup"}
+                    </StatusPill>
+                  </div>
                 </article>
               ))}
             </div>
@@ -202,7 +236,7 @@ export function SystemReadinessBoard({
                 Restore Procedure
               </p>
               <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                Minimum EH11 recovery checklist
+                Minimum recovery checklist
               </h2>
             </div>
 
@@ -251,7 +285,11 @@ export function SystemReadinessBoard({
                           {formatDate(snapshot.recordedAt)}
                         </div>
                       </td>
-                      <td className="px-4 py-4 text-muted-foreground">{snapshot.status}</td>
+                      <td className="px-4 py-4">
+                        <StatusPill priority={getBackupStatusPriority(snapshot.status)}>
+                          {snapshot.status}
+                        </StatusPill>
+                      </td>
                       <td className="px-4 py-4 text-muted-foreground">
                         <div>{snapshot.storageReference}</div>
                         {snapshot.notes ? (
@@ -269,7 +307,7 @@ export function SystemReadinessBoard({
                       colSpan={4}
                       className="px-4 py-10 text-center text-sm text-muted-foreground"
                     >
-                      No backup snapshots have been logged yet.
+                      No backup snapshots are logged yet. Record the current monthly export to start the recovery trail.
                     </td>
                   </tr>
                 )}
@@ -296,7 +334,11 @@ export function SystemReadinessBoard({
               className="rounded-[1.4rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#fbfdfc,#f4f8f7)] p-4"
             >
               <p className="text-sm font-semibold text-foreground">{attempt.email}</p>
-              <p className="mt-2 text-sm text-muted-foreground">{attempt.status}</p>
+              <div className="mt-2">
+                <StatusPill priority={getLoginAttemptPriority(attempt.status)}>
+                  {attempt.status}
+                </StatusPill>
+              </div>
               <p className="mt-2 text-xs text-muted-foreground">{formatDate(attempt.attemptedAt)}</p>
             </article>
           ))}

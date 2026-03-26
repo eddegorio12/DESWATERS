@@ -7,6 +7,11 @@ import {
 import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import {
+  getSearchParamText,
+  matchesSearch,
+  type SearchParamValue,
+} from "@/features/admin/lib/list-filters";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { ExceptionsBoard } from "@/features/exceptions/components/exceptions-board";
 import {
@@ -20,7 +25,13 @@ function getDaysAgo(days: number, now = new Date()) {
   return new Date(now.getTime() - days * 86_400_000);
 }
 
-export default async function AdminExceptionsPage() {
+type AdminExceptionsPageProps = {
+  searchParams: Promise<Record<string, SearchParamValue>>;
+};
+
+export default async function AdminExceptionsPage({
+  searchParams,
+}: AdminExceptionsPageProps) {
   const access = await getModuleAccess("exceptions");
 
   if (access.status !== "authorized") {
@@ -173,6 +184,36 @@ export default async function AdminExceptionsPage() {
     statusMismatchReadings,
     now,
   });
+  const filters = await searchParams;
+  const query = getSearchParamText(filters.query);
+  const severity = getSearchParamText(filters.severity) as
+    | "ALL"
+    | "CRITICAL"
+    | "HIGH"
+    | "MEDIUM";
+  const filteredAlerts = alerts.filter((alert) => {
+    const matchesSeverity =
+      !severity || severity === "ALL"
+        ? true
+        : alert.severity.toUpperCase() === severity;
+
+    return (
+      matchesSeverity &&
+      matchesSearch(
+        [
+          alert.title,
+          alert.summary,
+          alert.metric,
+          alert.accountNumber,
+          alert.customerName,
+          alert.meterNumber,
+          alert.category.replaceAll("_", " "),
+          alert.severity,
+        ],
+        query
+      )
+    );
+  });
 
   const criticalCount = alerts.filter((alert) => alert.severity === "critical").length;
   const highCount = alerts.filter((alert) => alert.severity === "high").length;
@@ -186,7 +227,7 @@ export default async function AdminExceptionsPage() {
     <AdminPageShell
       eyebrow="Operational Exceptions"
       title="Catch reading, receivable, payment, and service anomalies before they become field disputes."
-      description="EH9 starts with a dedicated exceptions workspace that scans live DWDS records for missing readings, suspicious consumption changes, duplicate cashier posting patterns, disconnection risks, and office-versus-field status mismatches."
+      description="Scan live DWDS records for missing readings, suspicious consumption changes, duplicate cashier posting patterns, disconnection risks, and office-versus-field status mismatches."
       actions={
         <AdminPageActions
           links={[
@@ -216,7 +257,13 @@ export default async function AdminExceptionsPage() {
         },
       ]}
     >
-      <ExceptionsBoard alerts={alerts} rules={exceptionRuleCatalog} />
+      <ExceptionsBoard
+        alerts={filteredAlerts}
+        totalCount={alerts.length}
+        query={query}
+        severity={severity || "ALL"}
+        rules={exceptionRuleCatalog}
+      />
     </AdminPageShell>
   );
 }

@@ -1,33 +1,33 @@
 import Link from "next/link";
 
+import { buttonVariants } from "@/components/ui/button-variants";
+import { RecordListSection } from "@/features/admin/components/record-list-section";
+import { StatusPill } from "@/features/admin/components/status-pill";
 import type {
   ExceptionAlert,
   ExceptionRuleCard,
   ExceptionSeverity,
 } from "@/features/exceptions/lib/monitoring";
+import { cn } from "@/lib/utils";
 
 const severityMeta: Record<
   ExceptionSeverity,
   {
     label: string;
-    containerClassName: string;
-    badgeClassName: string;
+    countPriority: "overdue" | "attention" | "pending";
   }
 > = {
   critical: {
     label: "Critical",
-    containerClassName: "border-[#f0b7b0] bg-[#fff4f2]",
-    badgeClassName: "bg-[#f8d4cf] text-[#8a2f28]",
+    countPriority: "overdue",
   },
   high: {
     label: "High",
-    containerClassName: "border-[#f4dcc0] bg-[#fff9f0]",
-    badgeClassName: "bg-[#f8e6c8] text-[#7a4f11]",
+    countPriority: "attention",
   },
   medium: {
     label: "Medium",
-    containerClassName: "border-[#dbe9e5] bg-white/92",
-    badgeClassName: "bg-[#dff4ef] text-[#17525a]",
+    countPriority: "pending",
   },
 };
 
@@ -40,37 +40,43 @@ const categoryLabels: Record<ExceptionAlert["category"], string> = {
   service_status_mismatch: "Status mismatch",
 };
 
-function groupAlertsBySeverity(alerts: ExceptionAlert[]) {
-  return {
-    critical: alerts.filter((alert) => alert.severity === "critical"),
-    high: alerts.filter((alert) => alert.severity === "high"),
-    medium: alerts.filter((alert) => alert.severity === "medium"),
-  } satisfies Record<ExceptionSeverity, ExceptionAlert[]>;
-}
-
 export function ExceptionsBoard({
   alerts,
+  totalCount,
+  query,
+  severity,
   rules,
 }: {
   alerts: ExceptionAlert[];
+  totalCount: number;
+  query: string;
+  severity: "ALL" | "CRITICAL" | "HIGH" | "MEDIUM";
   rules: ExceptionRuleCard[];
 }) {
-  const groupedAlerts = groupAlertsBySeverity(alerts);
+  const hasActiveFilters = Boolean(query || severity !== "ALL");
+  const resultsText = hasActiveFilters
+    ? `Showing ${alerts.length} of ${totalCount} alert${totalCount === 1 ? "" : "s"}`
+    : `${alerts.length} alert${alerts.length === 1 ? "" : "s"} currently flagged`;
+  const counts = {
+    critical: alerts.filter((alert) => alert.severity === "critical").length,
+    high: alerts.filter((alert) => alert.severity === "high").length,
+    medium: alerts.filter((alert) => alert.severity === "medium").length,
+  };
 
   return (
     <>
-      <section className="dwds-panel p-6">
+      <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
         <div className="max-w-3xl">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary/72">
             Detection Policy
           </p>
           <h2 className="mt-3 font-heading text-3xl text-foreground">
-            EH9 now starts with server-defined exception rules and severity.
+            Review server-defined exception rules without losing scan speed.
           </h2>
           <p className="mt-3 text-sm leading-7 text-muted-foreground">
-            This first EH9 slice is intentionally schema-light. It uses live billing,
-            payment, customer, meter, and reading records to surface anomalies before we
-            add complaint tickets and technician work orders.
+            Alerts still derive directly from live billing, payment, customer, meter, and
+            reading records. Search, severity filters, and linked module actions help staff
+            move from detection to resolution faster.
           </p>
         </div>
 
@@ -90,82 +96,105 @@ export function ExceptionsBoard({
         </div>
       </section>
 
-      <section className="grid gap-6">
-        {(["critical", "high", "medium"] as const).map((severity) => {
-          const alertsForSeverity = groupedAlerts[severity];
-          const meta = severityMeta[severity];
+      <div className="grid gap-4 md:grid-cols-3">
+        {(["critical", "high", "medium"] as const).map((band) => (
+          <article
+            key={band}
+            className="rounded-[1.6rem] border border-[#dbe9e5] bg-white/92 p-5 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.45)]"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                {severityMeta[band].label}
+              </p>
+              <StatusPill priority={severityMeta[band].countPriority}>
+                {counts[band]} alert{counts[band] === 1 ? "" : "s"}
+              </StatusPill>
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              {band === "critical"
+                ? "Immediate review or field coordination likely needed."
+                : band === "high"
+                  ? "Should move before the next billing or field cycle slips."
+                  : "Keep visible so lower-severity anomalies do not age into larger issues."}
+            </p>
+          </article>
+        ))}
+      </div>
 
-          return (
-            <article
-              key={severity}
-              className={`rounded-[1.9rem] border p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.3)] ${meta.containerClassName}`}
-            >
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary/72">
-                    {meta.label} severity
-                  </p>
-                  <h2 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
-                    {alertsForSeverity.length
-                      ? `${alertsForSeverity.length} ${meta.label.toLowerCase()} alert${alertsForSeverity.length === 1 ? "" : "s"}`
-                      : `No ${meta.label.toLowerCase()} alerts`}
-                  </h2>
-                </div>
-                <span
-                  className={`inline-flex rounded-full px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] ${meta.badgeClassName}`}
+      <RecordListSection
+        eyebrow="Alert Queue"
+        title="Operational exceptions needing review"
+        description="Search by alert type, customer, account, meter, or metric, then narrow by severity to separate immediate risks from lower-priority review work."
+        resultsText={resultsText}
+        searchName="query"
+        searchValue={query}
+        searchPlaceholder="Search alert, customer, account, meter, or metric"
+        filterName="severity"
+        filterValue={severity}
+        filterLabel="Alert severity"
+        filterOptions={[
+          { label: "All severities", value: "ALL" },
+          { label: "Critical", value: "CRITICAL" },
+          { label: "High", value: "HIGH" },
+          { label: "Medium", value: "MEDIUM" },
+        ]}
+        helperText="Filter by severity first, then drill into the affected account, meter, or billing record."
+        nextStep="Next: open the linked module from the alert row to resolve the underlying record instead of handling the alert in isolation."
+        resetHref="/admin/exceptions"
+        hasActiveFilters={hasActiveFilters}
+      >
+        <div className="grid gap-4">
+          {alerts.length ? (
+            alerts.map((alert) => {
+              const meta = severityMeta[alert.severity];
+
+              return (
+                <article
+                  key={alert.id}
+                  className="rounded-[1.5rem] border border-[#dbe9e5] bg-white/92 p-5 shadow-[0_18px_40px_-38px_rgba(16,63,67,0.3)]"
                 >
-                  {meta.label}
-                </span>
-              </div>
-
-              {alertsForSeverity.length ? (
-                <div className="mt-6 grid gap-4">
-                  {alertsForSeverity.map((alert) => (
-                    <article
-                      key={alert.id}
-                      className="rounded-[1.5rem] border border-black/6 bg-white/85 p-5"
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusPill priority={meta.countPriority}>{meta.label}</StatusPill>
+                      <StatusPill priority="ready">{categoryLabels[alert.category]}</StatusPill>
+                      <span className="text-sm font-medium text-muted-foreground">
+                        {alert.metric}
+                      </span>
+                    </div>
+                    <Link
+                      href={alert.href}
+                      className={cn(
+                        buttonVariants({
+                          variant: "outline",
+                          size: "sm",
+                          className: "rounded-xl px-3",
+                        })
+                      )}
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="rounded-full bg-primary/10 px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em] text-primary">
-                            {categoryLabels[alert.category]}
-                          </span>
-                          <span className="text-sm font-medium text-muted-foreground">
-                            {alert.metric}
-                          </span>
-                        </div>
-                        <Link
-                          href={alert.href}
-                          className="text-sm font-semibold text-primary underline-offset-4 hover:underline"
-                        >
-                          Open module
-                        </Link>
-                      </div>
+                      Open module
+                    </Link>
+                  </div>
 
-                      <h3 className="mt-4 text-lg font-semibold text-foreground">
-                        {alert.title}
-                      </h3>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                        {alert.summary}
-                      </p>
+                  <h3 className="mt-4 text-lg font-semibold text-foreground">{alert.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted-foreground">{alert.summary}</p>
 
-                      <div className="mt-4 flex flex-wrap gap-3 text-sm text-muted-foreground">
-                        {alert.customerName ? <span>{alert.customerName}</span> : null}
-                        {alert.accountNumber ? <span>{alert.accountNumber}</span> : null}
-                        {alert.meterNumber ? <span>Meter {alert.meterNumber}</span> : null}
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <p className="mt-6 text-sm leading-6 text-muted-foreground">
-                  The current dataset does not produce any alerts in this severity band.
-                </p>
-              )}
-            </article>
-          );
-        })}
-      </section>
+                  <div className="mt-4 flex flex-wrap gap-3 text-sm text-muted-foreground">
+                    {alert.customerName ? <span>{alert.customerName}</span> : null}
+                    {alert.accountNumber ? <span>{alert.accountNumber}</span> : null}
+                    {alert.meterNumber ? <span>Meter {alert.meterNumber}</span> : null}
+                  </div>
+                </article>
+              );
+            })
+          ) : (
+            <div className="rounded-[1.5rem] border border-[#dbe9e5] bg-background px-4 py-10 text-center text-sm text-muted-foreground">
+              {hasActiveFilters
+                ? "No exception alerts match the current search or severity filter."
+                : "No exception alerts are currently active."}
+            </div>
+          )}
+        </div>
+      </RecordListSection>
     </>
   );
 }

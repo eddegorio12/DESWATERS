@@ -108,7 +108,7 @@ export function RouteOperationsManager({
           </p>
         </div>
 
-        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+        <div className="mt-6 grid gap-5 xl:grid-cols-2">
           <form
             className="space-y-4 rounded-[1.4rem] border border-[#dbe9e5] bg-[#fbfdfc] p-4"
             onSubmit={(event) => {
@@ -288,7 +288,7 @@ export function RouteOperationsManager({
           </p>
         </div>
 
-        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+        <div className="mt-6 grid gap-5 xl:grid-cols-2">
           <form
             className="space-y-4 rounded-[1.4rem] border border-[#dbe9e5] bg-[#fbfdfc] p-4"
             onSubmit={(event) => {

@@ -19,9 +19,9 @@ export function DashboardChrome({
   }
 
   return (
-    <div className="mx-auto grid min-h-dvh w-full max-w-[1600px] gap-6 px-4 py-4 lg:grid-cols-[320px_minmax(0,1fr)] lg:px-6">
+    <div className="mx-auto grid min-h-dvh w-full max-w-[1600px] gap-4 px-3 py-3 sm:px-4 sm:py-4 lg:grid-cols-[320px_minmax(0,1fr)] lg:gap-6 lg:px-6">
       {sidebar}
-      <div className="min-w-0 px-1 py-1 lg:py-2">{children}</div>
+      <div className="min-w-0 py-1 lg:px-1 lg:py-2">{children}</div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { RecordListSection } from "@/features/admin/components/record-list-section";
+import { ResponsiveDataTable } from "@/features/admin/components/responsive-data-table";
 import { GenerateBillButton } from "@/features/billing/components/generate-bill-button";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 
@@ -82,77 +83,91 @@ export function ApprovedReadingBillQueue({
         )}
       </div>
 
-      <div className="overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border text-left">
-            <thead className="bg-secondary/55">
-              <tr className="text-sm text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Meter</th>
-                <th className="px-4 py-3 font-medium">Customer</th>
-                <th className="px-4 py-3 font-medium">Previous</th>
-                <th className="px-4 py-3 font-medium">Current</th>
-                <th className="px-4 py-3 font-medium">Consumption</th>
-                <th className="px-4 py-3 text-right font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border bg-background">
-              {readings.length ? (
-                readings.map((reading) => (
-                  <tr key={reading.id} className="align-top text-sm">
-                    <td className="px-4 py-4">
-                      <div className="font-mono text-xs text-muted-foreground">
-                        {reading.meter.meterNumber}
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {reading.readingDate.toLocaleString()}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      {reading.meter.customer ? (
-                        <div>
-                          <div className="font-medium text-foreground">
-                            {reading.meter.customer.name}
-                          </div>
-                          <div className="mt-1 text-xs text-muted-foreground">
-                            {reading.meter.customer.accountNumber}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">No customer linked</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-4 text-muted-foreground">
-                      {reading.previousReading}
-                    </td>
-                    <td className="px-4 py-4 text-muted-foreground">{reading.currentReading}</td>
-                    <td className="px-4 py-4 font-medium text-foreground">
-                      {reading.consumption}
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      {canGenerateBills ? (
-                        <GenerateBillButton readingId={reading.id} />
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Read-only</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
+      <ResponsiveDataTable
+        columns={["Meter", "Customer", "Previous", "Current", "Consumption", "Actions"]}
+        colSpan={6}
+        hasRows={readings.length > 0}
+        emptyMessage={
+          hasActiveFilters
+            ? "No approved readings match the current search."
+            : "No approved readings are waiting for bill generation."
+        }
+        mobileCards={readings.map((reading) => (
+          <article key={reading.id} className="rounded-[1.35rem] border border-[#dbe9e5] bg-white p-4">
+            <p className="font-mono text-xs text-muted-foreground">{reading.meter.meterNumber}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{reading.readingDate.toLocaleString()}</p>
+            <div className="mt-4">
+              {reading.meter.customer ? (
+                <div>
+                  <div className="font-medium text-foreground">{reading.meter.customer.name}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {reading.meter.customer.accountNumber}
+                  </div>
+                </div>
               ) : (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-10 text-center text-sm text-muted-foreground"
-                  >
-                    {hasActiveFilters
-                      ? "No approved readings match the current search."
-                      : "No approved readings are waiting for bill generation."}
-                  </td>
-                </tr>
+                <span className="text-sm text-muted-foreground">No customer linked</span>
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </div>
+            <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Previous</dt>
+                <dd className="mt-1 text-muted-foreground">{reading.previousReading}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Current</dt>
+                <dd className="mt-1 text-muted-foreground">{reading.currentReading}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Consumption</dt>
+                <dd className="mt-1 font-medium text-foreground">{reading.consumption}</dd>
+              </div>
+            </dl>
+            <div className="mt-4">
+              {canGenerateBills ? (
+                <GenerateBillButton readingId={reading.id} className="w-full justify-center" />
+              ) : (
+                <span className="text-xs text-muted-foreground">Read-only</span>
+              )}
+            </div>
+          </article>
+        ))}
+        rows={readings.map((reading) => (
+          <tr key={reading.id} className="align-top text-sm">
+            <td className="px-4 py-4">
+              <div className="font-mono text-xs text-muted-foreground">
+                {reading.meter.meterNumber}
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {reading.readingDate.toLocaleString()}
+              </div>
+            </td>
+            <td className="px-4 py-4">
+              {reading.meter.customer ? (
+                <div>
+                  <div className="font-medium text-foreground">
+                    {reading.meter.customer.name}
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {reading.meter.customer.accountNumber}
+                  </div>
+                </div>
+              ) : (
+                <span className="text-muted-foreground">No customer linked</span>
+              )}
+            </td>
+            <td className="px-4 py-4 text-muted-foreground">{reading.previousReading}</td>
+            <td className="px-4 py-4 text-muted-foreground">{reading.currentReading}</td>
+            <td className="px-4 py-4 font-medium text-foreground">{reading.consumption}</td>
+            <td className="px-4 py-4 text-right">
+              {canGenerateBills ? (
+                <GenerateBillButton readingId={reading.id} />
+              ) : (
+                <span className="text-xs text-muted-foreground">Read-only</span>
+              )}
+            </td>
+          </tr>
+        ))}
+      />
     </RecordListSection>
   );
 }

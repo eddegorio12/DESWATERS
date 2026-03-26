@@ -1,6 +1,19 @@
 import type { ReadingStatus } from "@prisma/client";
 
+import { StatusPill } from "@/features/admin/components/status-pill";
 import { DeleteReadingButton } from "@/features/readings/components/delete-reading-button";
+
+function getReadingStatusPriority(status: ReadingStatus) {
+  if (status === "PENDING_REVIEW") {
+    return "pending" as const;
+  }
+
+  if (status === "APPROVED") {
+    return "success" as const;
+  }
+
+  return "readonly" as const;
+}
 
 type ReadingListProps = {
   readings: {
@@ -104,9 +117,9 @@ export function ReadingList({
                       </td>
                       <td className="px-4 py-4 text-muted-foreground">{reading.reader.name}</td>
                       <td className="px-4 py-4">
-                        <span className="inline-flex rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
+                        <StatusPill priority={getReadingStatusPriority(reading.status)}>
                           {reading.status.replace("_", " ")}
-                        </span>
+                        </StatusPill>
                       </td>
                       <td className="px-4 py-4 text-right">
                         {canDeleteReading ? (
@@ -124,7 +137,7 @@ export function ReadingList({
                     colSpan={8}
                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                   >
-                    No readings have been recorded yet.
+                    No readings are recorded yet. Encode the first meter reading above to start approval and billing handoff.
                   </td>
                 </tr>
               )}

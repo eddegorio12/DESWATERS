@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { generateBill } from "@/features/billing/actions";
+import { cn } from "@/lib/utils";
 
 type GenerateBillButtonProps = {
   readingId: string;
+  className?: string;
 };
 
-export function GenerateBillButton({ readingId }: GenerateBillButtonProps) {
+export function GenerateBillButton({ readingId, className }: GenerateBillButtonProps) {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -36,7 +38,7 @@ export function GenerateBillButton({ readingId }: GenerateBillButtonProps) {
       <Button
         type="button"
         size="sm"
-        className="rounded-xl px-3"
+        className={cn("rounded-xl px-3", className)}
         disabled={isPending}
         onClick={handleGenerateBill}
       >

@@ -29,6 +29,12 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH11 has now been tested and validated.
 - EH12 has now been tested and validated for the implemented route-operations and route-aware billing slice.
 - The next recommended product pass is usability and operator-efficiency refinement on the existing admin surface before broader new-domain expansion.
+- The strongest current contribution path is to finish EH13 on remaining record-heavy and narrow-screen-sensitive admin surfaces before starting new top-level workflow domains.
+- EH13.3a has now been completed as a narrow-screen audit baseline for the current admin shell, dashboard, queues, and table-heavy modules.
+- EH13.3b has now been validated.
+- EH13.4 is now implemented as the shared visual status-priority pass for pending, overdue, read-only, ready, completed, and attention-required states.
+- EH13.5 is now implemented as the final consistency sweep for shared filter wording, live operator copy cleanup, and stronger next-step empty states across the remaining admin boards.
+- EH13 has now been fully validated and closed.
 
 ## Product Principles
 - **Modularity is mandatory:** Features must be separated into focused modules.
@@ -284,7 +290,7 @@ Current status:
 - `/admin/routes` now provides the first EH12 workspace for route setup, route ownership assignment, meter mapping, and route/zone overdue plus collection-efficiency visibility.
 - Route-aware reading entry is now active for meter readers assigned to specific routes.
 - Billing print and distribution tracking now auto-scopes bills by grouping, defaults batch labels from the selected route/zone scope, and can default the assigned distributor from route ownership.
-- Broader management trend dashboards remain pending for later EH12 slices.
+- Broader management trend dashboards remain pending for later EH12 slices and should follow the active EH13 usability pass rather than displacing it.
 
 ### EH13: Workflow Usability & Operator Efficiency
 Goal: Make the implemented DWDS admin surface easier and faster to use for trained staff before expanding into more major workflow domains.
@@ -301,9 +307,36 @@ Rationale:
 - Faster scanning and clearer priorities will improve real daily use more than adding another top-level module right now.
 
 Current status:
-- EH13 is now in progress.
+- EH13 is now complete.
 - The memory-bank now records a formal usability assessment and treats operator-efficiency refinement as the active product lane.
 - The first implemented EH13 slice now covers shorter dashboard/sidebar wording, reusable search-and-filter controls on core record lists, stronger empty states, and clearer next-step guidance on high-frequency operator forms.
+- EH13.2a now extends those shared list/filter/status patterns to `/admin/meters`, including server-side search plus registry filters for active, unassigned, unrouted, defective, and replaced units.
+- The collections and exceptions pass is now validated, and the follow-up priority pass is now validated.
+- EH13.3a now records the explicit narrow-screen audit baseline in `memory-bank/eh13.3a-narrow-screen-audit.md`, covering the shell, dashboard hero depth, queue action wrapping, and table-heavy module behavior below desktop width.
+- Narrow-screen and tablet resilience have now been validated through the implemented EH13.3b responsive fallback pass.
+- Visual priority treatment for pending, overdue, read-only, success, and attention-required states is now implemented across the active admin workflow surfaces.
+
+## Current Contribution Priority
+1. Resume EH12 with broader management analytics.
+2. Add dedicated admin-management audit logging.
+3. Revisit deferred auditability and security refinements such as optional `SUPER_ADMIN` 2FA and automated backup/export support only if they remain priorities.
+4. Revisit deferred EH9 field-service expansion only if operations explicitly reprioritize it.
+
+### EH13 Recommended Task Breakdown
+1. `EH13.2a` Upgrade the meters module to the shared list/filter/empty-state interaction pattern. Completed.
+2. `EH13.2b` Tighten route-operations scanability with the same search, status, and ownership vocabulary. This is now validated.
+3. `EH13.2c` Bring collections and exceptions into the same interaction model for filters, counts, reset actions, and urgency cues. This is now validated.
+4. `EH13.2d` Rework follow-up priority treatment so urgent receivables actions read clearly before supporting detail. This is now validated.
+5. `EH13.3a` Audit tablet and narrow-laptop behavior on dashboard, sidebar, queue, and table-heavy surfaces. Completed and validated.
+6. `EH13.3b` Add responsive fallback patterns that preserve primary actions when tables collapse. Implemented and validated.
+7. `EH13.4` Standardize visual treatment for pending, overdue, read-only, ready, completed, and attention-required states. Implemented and validated.
+8. `EH13.5` Run a final usability sweep for consistency of copy, filters, empty states, and next-step cues. Implemented and validated.
+
+### Post-EH13 Priority Order
+1. Broader EH12 management analytics.
+2. Dedicated admin-management audit logging.
+3. Optional later EH11 security and backup refinements.
+4. Optional later EH9 field-service expansion.
 
 ## Rule of Thumb for Developers
 Always read [@architecture.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\@architecture.md) before changing schema or architecture. Every major addition must map either to the implemented MVP surface or to a named enhancement phase in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md).

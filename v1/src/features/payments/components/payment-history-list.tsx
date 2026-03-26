@@ -3,6 +3,7 @@ import type { BillStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { RecordListSection } from "@/features/admin/components/record-list-section";
+import { ResponsiveDataTable } from "@/features/admin/components/responsive-data-table";
 import { StatusPill } from "@/features/admin/components/status-pill";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 import { cn } from "@/lib/utils";
@@ -41,20 +42,20 @@ function formatMethod(method: PaymentMethod) {
   return method.replace("_", " ");
 }
 
-function getBillStatusTone(status: BillStatus) {
+function getBillStatusPriority(status: BillStatus) {
   if (status === "PAID") {
     return "success" as const;
   }
 
   if (status === "PARTIALLY_PAID") {
-    return "accent" as const;
+    return "pending" as const;
   }
 
   if (status === "OVERDUE") {
-    return "danger" as const;
+    return "overdue" as const;
   }
 
-  return "neutral" as const;
+  return "readonly" as const;
 }
 
 export function PaymentHistoryList({
@@ -92,103 +93,132 @@ export function PaymentHistoryList({
       resetHref="/admin/payments"
       hasActiveFilters={hasActiveFilters}
     >
-      <div className="overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border text-left">
-            <thead className="bg-secondary/55">
-              <tr className="text-sm text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Receipt</th>
-                <th className="px-4 py-3 font-medium">Customer</th>
-                <th className="px-4 py-3 font-medium">Bill</th>
-                <th className="px-4 py-3 font-medium">Method</th>
-                <th className="px-4 py-3 font-medium">Settlement</th>
-                <th className="px-4 py-3 font-medium">Bill status</th>
-                <th className="px-4 py-3 text-right font-medium">Print</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border bg-background">
-              {payments.length ? (
-                payments.map((payment) => (
-                  <tr key={payment.id} className="align-top text-sm">
-                    <td className="px-4 py-4">
-                      <div className="font-medium text-foreground">{payment.receiptNumber}</div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {payment.paymentDate.toLocaleString()}
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        Cashier: {payment.recordedBy.name}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="font-medium text-foreground">
-                        {payment.bill.customer.name}
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {payment.bill.customer.accountNumber}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="font-medium text-foreground">
-                        {payment.bill.billingPeriod}
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        Bill total: {formatCurrency(payment.bill.totalCharges)}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-muted-foreground">
-                      <div>{formatMethod(payment.method)}</div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {payment.referenceId || payment.status}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="font-medium text-foreground">
-                        {formatCurrency(payment.amount)}
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        Before: {formatCurrency(payment.balanceBefore)}
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        After: {formatCurrency(payment.balanceAfter)}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <StatusPill tone={getBillStatusTone(payment.bill.status)}>
-                        {payment.bill.status.replace("_", " ")}
-                      </StatusPill>
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      <Link
-                        href={`/admin/payments/${payment.id}/receipt`}
-                        className={cn(
-                          buttonVariants({
-                            variant: "outline",
-                            size: "sm",
-                            className: "rounded-xl px-3",
-                          })
-                        )}
-                      >
-                        View / print
-                      </Link>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-10 text-center text-sm text-muted-foreground"
-                  >
-                    {hasActiveFilters
-                      ? "No payments match the current search or bill-status filter."
-                      : "No payments have been recorded yet."}
-                  </td>
-                </tr>
+      <ResponsiveDataTable
+        columns={["Receipt", "Customer", "Bill", "Method", "Settlement", "Bill status", "Print"]}
+        colSpan={7}
+        hasRows={payments.length > 0}
+        emptyMessage={
+          hasActiveFilters
+            ? "No payments match the current search or bill-status filter."
+            : "No payments have been recorded yet."
+        }
+        mobileCards={payments.map((payment) => (
+          <article key={payment.id} className="rounded-[1.35rem] border border-[#dbe9e5] bg-white p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="font-medium text-foreground">{payment.receiptNumber}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{payment.paymentDate.toLocaleString()}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Cashier: {payment.recordedBy.name}</p>
+              </div>
+              <StatusPill priority={getBillStatusPriority(payment.bill.status)}>
+                {payment.bill.status.replace("_", " ")}
+              </StatusPill>
+            </div>
+            <dl className="mt-4 grid gap-3 text-sm">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Customer</dt>
+                <dd className="mt-1">
+                  <div className="font-medium text-foreground">{payment.bill.customer.name}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">{payment.bill.customer.accountNumber}</div>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Bill</dt>
+                <dd className="mt-1 text-muted-foreground">
+                  <div>{payment.bill.billingPeriod}</div>
+                  <div className="mt-1 text-xs">Bill total: {formatCurrency(payment.bill.totalCharges)}</div>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Settlement</dt>
+                <dd className="mt-1 text-muted-foreground">
+                  <div className="font-medium text-foreground">{formatCurrency(payment.amount)}</div>
+                  <div className="mt-1 text-xs">Before: {formatCurrency(payment.balanceBefore)}</div>
+                  <div className="mt-1 text-xs">After: {formatCurrency(payment.balanceAfter)}</div>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Method</dt>
+                <dd className="mt-1 text-muted-foreground">
+                  <div>{formatMethod(payment.method)}</div>
+                  <div className="mt-1 text-xs">{payment.referenceId || payment.status}</div>
+                </dd>
+              </div>
+            </dl>
+            <Link
+              href={`/admin/payments/${payment.id}/receipt`}
+              className={cn(
+                buttonVariants({
+                  variant: "outline",
+                  size: "sm",
+                  className: "mt-4 w-full justify-center rounded-xl px-3",
+                })
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            >
+              View / print
+            </Link>
+          </article>
+        ))}
+        rows={payments.map((payment) => (
+          <tr key={payment.id} className="align-top text-sm">
+            <td className="px-4 py-4">
+              <div className="font-medium text-foreground">{payment.receiptNumber}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {payment.paymentDate.toLocaleString()}
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Cashier: {payment.recordedBy.name}
+              </div>
+            </td>
+            <td className="px-4 py-4">
+              <div className="font-medium text-foreground">{payment.bill.customer.name}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {payment.bill.customer.accountNumber}
+              </div>
+            </td>
+            <td className="px-4 py-4">
+              <div className="font-medium text-foreground">{payment.bill.billingPeriod}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Bill total: {formatCurrency(payment.bill.totalCharges)}
+              </div>
+            </td>
+            <td className="px-4 py-4 text-muted-foreground">
+              <div>{formatMethod(payment.method)}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                {payment.referenceId || payment.status}
+              </div>
+            </td>
+            <td className="px-4 py-4">
+              <div className="font-medium text-foreground">{formatCurrency(payment.amount)}</div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Before: {formatCurrency(payment.balanceBefore)}
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                After: {formatCurrency(payment.balanceAfter)}
+              </div>
+            </td>
+            <td className="px-4 py-4">
+              <StatusPill priority={getBillStatusPriority(payment.bill.status)}>
+                {payment.bill.status.replace("_", " ")}
+              </StatusPill>
+            </td>
+            <td className="px-4 py-4 text-right">
+              <Link
+                href={`/admin/payments/${payment.id}/receipt`}
+                className={cn(
+                  buttonVariants({
+                    variant: "outline",
+                    size: "sm",
+                    className: "rounded-xl px-3",
+                  })
+                )}
+              >
+                View / print
+              </Link>
+            </td>
+          </tr>
+        ))}
+      />
     </RecordListSection>
   );
 }

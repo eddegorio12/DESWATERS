@@ -392,18 +392,37 @@ Current progress:
 - The first EH13 slice is now implemented on `/admin/dashboard`, `/admin/customers`, `/admin/readings`, `/admin/billing`, and `/admin/payments`.
 - A shared record-list section now provides search inputs, optional filters, reset actions, result counts, empty-state handling, and next-step prompts without changing server-authoritative business logic.
 - The customer registry, pending readings queue, approved-reading billing queue, and payment history now use that shared pattern with server-side `searchParams` handling.
+- `/admin/meters` now also uses the shared pattern with server-side search plus registry filters for active, unassigned, unrouted, defective, and replaced units.
 - Dashboard hero and sidebar wording are now shorter and more scan-focused, and key high-frequency forms now surface clearer required-versus-optional or next-step guidance.
-- Narrow-screen fallback auditing and rollout of the shared list pattern to more record-heavy modules remain pending inside EH13.
+- The collections and exceptions pass is now validated, and the follow-up priority pass is now also validated.
+- `EH13.3a` is now complete as a narrow-screen audit recorded in `memory-bank/eh13.3a-narrow-screen-audit.md`.
+- That audit identifies five immediate responsive targets for `EH13.3b`: compact mobile navigation, shared dense-table card fallbacks, tighter dashboard/page hero shells, normalized follow-up action rows, and route-operations density relief on narrower viewports.
+- `EH13.3b` is now validated.
+- `EH13.4` is now implemented through a shared semantic status-priority layer for pending, overdue, read-only, ready, success, and attention-required states across the active EH13 surfaces plus adjacent admin workflow boards.
+- `EH13.5` is now implemented as the final consistency sweep for explicit filter-action wording, roadmap-copy cleanup on live admin pages, and stronger next-step empty states across adjacent admin boards.
+- EH13 has now been fully validated and closed as a complete usability lane before post-EH13 roadmap work begins.
+- EH12 management analytics, dedicated admin-management audit logging, and later deferred EH9/EH11 refinements should remain sequenced behind this active EH13 completion pass unless the user explicitly reprioritizes.
+
+Recommended task sequence:
+1. `EH13.2a` Meters list-surface upgrade. Completed.
+2. `EH13.2b` Routes workspace scanability pass. Validated.
+3. `EH13.2c` Collections and exceptions consistency pass. Validated.
+4. `EH13.2d` Follow-up workspace priority pass. Validated.
+5. `EH13.3a` Narrow-screen audit across dashboard, navigation, queues, and table-heavy modules. Completed and validated.
+6. `EH13.3b` Responsive fallback patterns for dense tables and action-heavy surfaces. Implemented and validated.
+7. `EH13.4` Shared visual priority system for pending, overdue, read-only, ready, success, and attention-required states. Implemented.
+8. `EH13.5` Final usability sweep for copy, filter vocabulary, empty states, and next-step cues. Implemented.
 
 ## Current Next Recommendation
 
-Continue EH13. Improve operator efficiency on the existing product surface before reopening broader expansion work.
+EH13 is now closed. Resume the roadmap with broader EH12 management analytics, then dedicated admin-management audit logging.
 
 Target outcomes:
 1. Extend the shared list pattern to more record-heavy modules and keep the filter vocabulary consistent.
-2. Audit tablet and narrow-laptop behavior on dashboard cards, tables, and queue surfaces.
+2. Implement the audited tablet and narrow-laptop fallbacks for dashboard cards, tables, and queue surfaces only after the audit checkpoint is accepted.
 3. Preserve the implemented EH8 through EH12 workflows while making them faster and easier to operate.
-4. Keep deployment hardening and Supabase/Vercel setup on the release path, but treat workflow usability as the active product-facing improvement lane.
+4. Standardize visual priority treatment for pending, overdue, read-only, success, and attention-required states.
+5. Keep deployment hardening and Supabase/Vercel setup on the release path, but treat workflow usability as the active product-facing improvement lane.
 
 Current auth note:
 - Local Auth.js migration is now complete and working with a seeded `SUPER_ADMIN`.
@@ -418,6 +437,12 @@ Current rollout status:
 - Vercel is already building from the `v1` root directory.
 - Supabase pooled and direct connection strings have been validated far enough for Prisma to reach the managed database and enumerate the committed migrations.
 - Final deployment hardening is not yet closed until migration deployment finishes successfully and the hosted app is confirmed against those environment variables.
+
+Post-EH13 sequencing:
+1. Resume EH12 with broader management analytics.
+2. Add dedicated admin-management audit logging.
+3. Revisit later EH11 refinements such as optional `SUPER_ADMIN` 2FA and automated backup/export support only if still needed.
+4. Revisit later EH9 field-service expansion only if operations explicitly prioritizes it.
 
 ## Backlog Intake Rule
 Any new future work should be added here as a named enhancement phase with:

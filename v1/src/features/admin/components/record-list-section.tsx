@@ -1,5 +1,8 @@
-import type { ReactNode } from "react";
+"use client";
+
+import type { FormEvent, ReactNode } from "react";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { ListFilter, Search, X } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button-variants";
@@ -38,6 +41,28 @@ type RecordListSectionProps = {
 const controlClassName =
   "h-11 w-full rounded-2xl border border-input bg-white px-4 text-sm text-foreground shadow-xs outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20";
 
+function getFormHref(pathname: string, formData: FormData) {
+  const params = new URLSearchParams();
+
+  for (const [key, value] of formData.entries()) {
+    if (typeof value !== "string") {
+      continue;
+    }
+
+    const normalizedValue = value.trim();
+
+    if (!normalizedValue) {
+      continue;
+    }
+
+    params.set(key, normalizedValue);
+  }
+
+  const query = params.toString();
+
+  return query ? `${pathname}?${query}` : pathname;
+}
+
 export function RecordListSection({
   eyebrow,
   title,
@@ -57,6 +82,16 @@ export function RecordListSection({
   hiddenFields = [],
   children,
 }: RecordListSectionProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const href = getFormHref(pathname, new FormData(event.currentTarget));
+    router.replace(href, { scroll: false });
+  }
+
   return (
     <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
       <div className="flex flex-col gap-4">
@@ -65,7 +100,9 @@ export function RecordListSection({
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
               {eyebrow}
             </p>
-            <h2 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h2>
+            <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+              {title}
+            </h2>
             {description ? (
               <p className="max-w-3xl text-sm leading-6 text-muted-foreground">{description}</p>
             ) : null}
@@ -73,7 +110,11 @@ export function RecordListSection({
           <p className="text-sm text-muted-foreground">{resultsText}</p>
         </div>
 
-        <form className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto]" role="search">
+        <form
+          className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto]"
+          role="search"
+          onSubmit={handleSubmit}
+        >
           {hiddenFields.map((field) => (
             <input
               key={`${field.name}-${field.value}`}
@@ -115,25 +156,26 @@ export function RecordListSection({
             ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 xl:justify-end">
+          <div className="grid gap-3 sm:grid-cols-2 xl:flex xl:flex-wrap xl:justify-end">
             <button
               type="submit"
-              className={cn(buttonVariants({ className: "h-11 rounded-2xl px-5" }))}
+              className={cn(buttonVariants({ className: "h-11 w-full rounded-2xl px-5 xl:w-auto" }))}
             >
-              Apply
+              Apply filters
             </button>
             {hasActiveFilters ? (
               <Link
                 href={resetHref}
+                scroll={false}
                 className={cn(
                   buttonVariants({
                     variant: "outline",
-                    className: "h-11 rounded-2xl px-5",
+                    className: "h-11 w-full rounded-2xl px-5 xl:w-auto",
                   })
                 )}
               >
                 <X className="size-4" />
-                Reset
+                Reset filters
               </Link>
             ) : null}
           </div>

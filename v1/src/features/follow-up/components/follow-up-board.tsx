@@ -1,9 +1,12 @@
 "use client";
+
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { RecordListSection } from "@/features/admin/components/record-list-section";
+import { StatusPill } from "@/features/admin/components/status-pill";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 import {
   disconnectCustomerService,
@@ -23,66 +26,120 @@ type ReceivableFollowUpStatus =
   | "DISCONNECTED"
   | "RESOLVED";
 
+type FollowUpQueueFocus =
+  | "ALL"
+  | "NEEDS_REMINDER"
+  | "NEEDS_FINAL_NOTICE"
+  | "READY_FOR_DISCONNECTION"
+  | "DISCONNECTED_HOLD"
+  | "MONITORING";
+
 type FollowUpBoardProps = {
-  customers: {
+  queue: {
+    id: string;
+    customerId: string;
+    customerName: string;
+    accountNumber: string;
+    customerStatus: CustomerStatus;
+    customerStatusNote: string | null;
+    billingPeriod: string;
+    meterNumber: string;
+    dueDate: string;
+    paidAmount: number;
+    outstandingBalance: number;
+    status: BillStatus;
+    followUpStatus: ReceivableFollowUpStatus;
+    followUpNote: string | null;
+    daysPastDue: number;
+    queueFocus: Exclude<FollowUpQueueFocus, "ALL">;
+  }[];
+  totalCount: number;
+  query: string;
+  focus: FollowUpQueueFocus;
+  serviceActions: {
     id: string;
     accountNumber: string;
     name: string;
     status: CustomerStatus;
-    statusNote: string | null;
     totalOutstanding: number;
     overdueBalance: number;
     canDisconnect: boolean;
     canReinstate: boolean;
-    bills: {
-      id: string;
-      billingPeriod: string;
-      meterNumber: string;
-      dueDate: string;
-      paidAmount: number;
-      outstandingBalance: number;
-      status: BillStatus;
-      followUpStatus: ReceivableFollowUpStatus;
-      followUpNote: string | null;
-      daysPastDue: number;
-    }[];
+    statusNote: string | null;
+    highestDaysPastDue: number;
+    escalatedBillCount: number;
   }[];
 };
 
-function getServiceStatusClasses(status: CustomerStatus) {
+function getServiceStatusTone(status: CustomerStatus) {
   if (status === "DISCONNECTED") {
-    return "bg-destructive/10 text-destructive";
+    return "attention" as const;
   }
 
   if (status === "INACTIVE") {
-    return "bg-amber-100 text-amber-800";
+    return "readonly" as const;
   }
 
-  return "bg-emerald-100 text-emerald-700";
+  return "success" as const;
 }
 
-function getFollowUpStatusClasses(status: ReceivableFollowUpStatus) {
+function getFollowUpStatusTone(status: ReceivableFollowUpStatus) {
   if (status === "DISCONNECTED") {
-    return "bg-destructive/10 text-destructive";
+    return "attention" as const;
   }
 
   if (status === "DISCONNECTION_REVIEW") {
-    return "bg-amber-100 text-amber-800";
+    return "overdue" as const;
   }
 
   if (status === "FINAL_NOTICE_SENT") {
-    return "bg-orange-100 text-orange-800";
+    return "attention" as const;
   }
 
   if (status === "REMINDER_SENT") {
-    return "bg-primary/10 text-primary";
+    return "pending" as const;
   }
 
   if (status === "RESOLVED") {
-    return "bg-emerald-100 text-emerald-700";
+    return "success" as const;
   }
 
-  return "bg-secondary text-secondary-foreground";
+  return "readonly" as const;
+}
+
+function getQueueFocusMeta(focus: Exclude<FollowUpQueueFocus, "ALL">) {
+  switch (focus) {
+    case "READY_FOR_DISCONNECTION":
+      return {
+        label: "Ready for disconnection",
+        tone: "overdue" as const,
+        summary: "Final notice or review is already on record.",
+      };
+    case "NEEDS_FINAL_NOTICE":
+      return {
+        label: "Needs final notice",
+        tone: "attention" as const,
+        summary: "Reminder was recorded and the next escalation is due.",
+      };
+    case "NEEDS_REMINDER":
+      return {
+        label: "Needs reminder",
+        tone: "pending" as const,
+        summary: "Overdue account has not entered follow-up yet.",
+      };
+    case "DISCONNECTED_HOLD":
+      return {
+        label: "Disconnected hold",
+        tone: "attention" as const,
+        summary: "Service is off and the account needs clearance or reinstatement review.",
+      };
+    default:
+      return {
+        label: "Monitoring",
+        tone: "readonly" as const,
+        summary: "Keep visible, but no immediate escalation step is due.",
+      };
+  }
 }
 
 function getNextFollowUpAction(status: ReceivableFollowUpStatus) {
@@ -151,11 +208,38 @@ function getPrintableNoticeTemplate(
   return null;
 }
 
-export function FollowUpBoard({ customers }: FollowUpBoardProps) {
+function getDueDetail(status: BillStatus, daysPastDue: number) {
+  if (status === "OVERDUE") {
+    return `${daysPastDue} day${daysPastDue === 1 ? "" : "s"} overdue`;
+  }
+
+  return "Current receivable";
+}
+
+export function FollowUpBoard({
+  queue,
+  totalCount,
+  query,
+  focus,
+  serviceActions,
+}: FollowUpBoardProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const hasActiveFilters = Boolean(query || focus !== "ALL");
+  const resultsText = hasActiveFilters
+    ? `Showing ${queue.length} of ${totalCount} follow-up item${totalCount === 1 ? "" : "s"}`
+    : `${queue.length} follow-up item${queue.length === 1 ? "" : "s"} currently in scope`;
+  const focusCounts = {
+    NEEDS_REMINDER: queue.filter((bill) => bill.queueFocus === "NEEDS_REMINDER").length,
+    NEEDS_FINAL_NOTICE: queue.filter((bill) => bill.queueFocus === "NEEDS_FINAL_NOTICE").length,
+    READY_FOR_DISCONNECTION: queue.filter(
+      (bill) => bill.queueFocus === "READY_FOR_DISCONNECTION"
+    ).length,
+    DISCONNECTED_HOLD: queue.filter((bill) => bill.queueFocus === "DISCONNECTED_HOLD").length,
+  };
 
   const runAction = (key: string, action: () => Promise<void>) => {
     setError(null);
@@ -178,261 +262,420 @@ export function FollowUpBoard({ customers }: FollowUpBoardProps) {
   };
 
   return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Receivables Workflow
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Overdue follow-up and service enforcement
-          </h2>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {customers.length} customer{customers.length === 1 ? "" : "s"} currently in scope
-        </p>
-      </div>
-
+    <>
       {error ? (
-        <p className="mt-5 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <p className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
           {error}
         </p>
       ) : null}
 
-      <div className="mt-6 space-y-5">
-        {customers.length ? (
-          customers.map((customer) => (
-            <article
-              key={customer.id}
-              className="rounded-[1.6rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#ffffff,#f6fbf9)] p-5 shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]"
-            >
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={cn(
-                        "inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em]",
-                        getServiceStatusClasses(customer.status)
-                      )}
-                    >
-                      {customer.status.replace("_", " ")}
-                    </span>
-                    <span className="inline-flex rounded-full bg-secondary px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-secondary-foreground">
-                      {customer.accountNumber}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold tracking-tight text-foreground">
-                      {customer.name}
-                    </h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Outstanding: {formatCurrency(customer.totalOutstanding)} | Overdue:{" "}
-                      {formatCurrency(customer.overdueBalance)}
-                    </p>
-                    {customer.statusNote ? (
-                      <p className="mt-2 text-sm text-muted-foreground">{customer.statusNote}</p>
-                    ) : null}
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-3">
-                  {customer.canDisconnect ? (
-                    <button
-                      type="button"
-                      className={cn(
-                        buttonVariants({
-                          className: "h-10 rounded-xl px-4",
-                        })
-                      )}
-                      disabled={isPending}
-                      onClick={() =>
-                        runAction(`disconnect-${customer.id}`, () =>
-                          disconnectCustomerService(customer.id)
-                        )
-                      }
-                    >
-                      {pendingKey === `disconnect-${customer.id}`
-                        ? "Recording disconnection..."
-                        : "Mark disconnected"}
-                    </button>
-                  ) : null}
-                  {customer.canReinstate ? (
-                    <button
-                      type="button"
-                      className={cn(
-                        buttonVariants({
-                          variant: "outline",
-                          className: "h-10 rounded-xl px-4",
-                        })
-                      )}
-                      disabled={isPending}
-                      onClick={() =>
-                        runAction(`reinstate-${customer.id}`, () =>
-                          reinstateCustomerService(customer.id)
-                        )
-                      }
-                    >
-                      {pendingKey === `reinstate-${customer.id}`
-                        ? "Reinstating..."
-                        : "Reinstate service"}
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="mt-5 overflow-hidden rounded-[1.4rem] border border-[#dbe9e5]">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-border text-left">
-                    <thead className="bg-secondary/55">
-                      <tr className="text-sm text-muted-foreground">
-                        <th className="px-4 py-3 font-medium">Bill</th>
-                        <th className="px-4 py-3 font-medium">Meter</th>
-                        <th className="px-4 py-3 font-medium">Due</th>
-                        <th className="px-4 py-3 font-medium">Paid</th>
-                        <th className="px-4 py-3 font-medium">Balance</th>
-                        <th className="px-4 py-3 font-medium">Workflow</th>
-                        <th className="px-4 py-3 text-right font-medium">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border bg-background">
-                      {customer.bills.map((bill) => {
-                        const nextAction = getNextFollowUpAction(bill.followUpStatus);
-                        const printableNotice = getPrintableNoticeTemplate(
-                          bill.followUpStatus,
-                          bill.status
-                        );
-                        const allowNextAction =
-                          bill.status === "OVERDUE" &&
-                          customer.status !== "DISCONNECTED" &&
-                          nextAction !== null;
-                        const allowReset =
-                          bill.followUpStatus !== "CURRENT" &&
-                          bill.followUpStatus !== "DISCONNECTED" &&
-                          bill.followUpStatus !== "RESOLVED" &&
-                          customer.status !== "DISCONNECTED";
-
-                        return (
-                          <tr key={bill.id} className="align-top text-sm">
-                            <td className="px-4 py-4">
-                              <div className="font-medium text-foreground">{bill.billingPeriod}</div>
-                              <div className="mt-1 font-mono text-xs text-muted-foreground">
-                                {bill.id}
-                              </div>
-                            </td>
-                            <td className="px-4 py-4 font-mono text-xs text-muted-foreground">
-                              {bill.meterNumber}
-                            </td>
-                            <td className="px-4 py-4">
-                              <div className="text-foreground">{bill.dueDate}</div>
-                              <div className="mt-1 text-xs text-muted-foreground">
-                                {bill.status === "OVERDUE"
-                                  ? `${bill.daysPastDue} day${bill.daysPastDue === 1 ? "" : "s"} overdue`
-                                  : "Current receivable"}
-                              </div>
-                            </td>
-                            <td className="px-4 py-4 text-muted-foreground">
-                              {formatCurrency(bill.paidAmount)}
-                            </td>
-                            <td className="px-4 py-4 font-medium text-foreground">
-                              {formatCurrency(bill.outstandingBalance)}
-                            </td>
-                            <td className="px-4 py-4">
-                              <span
-                                className={cn(
-                                  "inline-flex rounded-full px-3 py-1 text-xs font-medium",
-                                  getFollowUpStatusClasses(bill.followUpStatus)
-                                )}
-                              >
-                                {bill.followUpStatus.replaceAll("_", " ")}
-                              </span>
-                              {bill.followUpNote ? (
-                                <p className="mt-2 max-w-xs text-xs leading-5 text-muted-foreground">
-                                  {bill.followUpNote}
-                                </p>
-                              ) : null}
-                            </td>
-                            <td className="px-4 py-4">
-                              <div className="flex justify-end gap-2">
-                                {allowReset ? (
-                                  <button
-                                    type="button"
-                                    className={cn(
-                                      buttonVariants({
-                                        variant: "outline",
-                                        size: "sm",
-                                        className: "rounded-xl px-3",
-                                      })
-                                    )}
-                                    disabled={isPending}
-                                    onClick={() =>
-                                      runAction(`reset-${bill.id}`, () =>
-                                        updateReceivableFollowUp(bill.id, "CURRENT")
-                                      )
-                                    }
-                                  >
-                                    {pendingKey === `reset-${bill.id}` ? "Resetting..." : "Reset"}
-                                  </button>
-                                ) : null}
-                                {allowNextAction && nextAction ? (
-                                  <button
-                                    type="button"
-                                    className={cn(
-                                      buttonVariants({
-                                        size: "sm",
-                                        className: "rounded-xl px-3",
-                                      })
-                                    )}
-                                    disabled={isPending}
-                                    onClick={() =>
-                                      runAction(`${nextAction.value}-${bill.id}`, () =>
-                                        updateReceivableFollowUp(bill.id, nextAction.value)
-                                      )
-                                    }
-                                  >
-                                    {pendingKey === `${nextAction.value}-${bill.id}`
-                                      ? "Updating..."
-                                      : nextAction.label}
-                                  </button>
-                                ) : null}
-                                <Link
-                                  href={`/admin/billing/${bill.id}`}
-                                  className={cn(
-                                    buttonVariants({
-                                      variant: "outline",
-                                      size: "sm",
-                                      className: "rounded-xl px-3",
-                                    })
-                                  )}
-                                >
-                                  Statement
-                                </Link>
-                                {printableNotice ? (
-                                  <GenerateNoticeButton
-                                    billId={bill.id}
-                                    template={printableNotice.template}
-                                    label={printableNotice.label}
-                                    variant="outline"
-                                    size="sm"
-                                    className="rounded-xl px-3"
-                                  />
-                                ) : null}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </article>
-          ))
-        ) : (
-          <div className="rounded-[1.6rem] border border-[#dbe9e5] bg-white px-5 py-10 text-center text-sm text-muted-foreground">
-            No overdue or open receivable accounts currently require EH5 follow-up actions.
+      <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary/72">
+              Action Ladder
+            </p>
+            <h2 className="mt-2 font-heading text-2xl text-foreground sm:text-3xl">
+              Escalate overdue balances by urgency, then handle service status separately.
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-muted-foreground sm:leading-7">
+              Review bills by urgency first, then use the service-action panel for
+              disconnection or reinstatement once the account reaches the right stage.
+            </p>
           </div>
-        )}
-      </div>
-    </section>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <article className="rounded-[1.4rem] border border-border/80 bg-secondary/35 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Ready for disconnection
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-foreground">
+                {focusCounts.READY_FOR_DISCONNECTION}
+              </p>
+            </article>
+            <article className="rounded-[1.4rem] border border-border/80 bg-secondary/35 px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Disconnected hold
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-foreground">
+                {focusCounts.DISCONNECTED_HOLD}
+              </p>
+            </article>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-4">
+          <article className="rounded-[1.5rem] border border-[#dbe9e5] bg-white p-5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Needs reminder
+              </p>
+              <StatusPill priority="pending">{focusCounts.NEEDS_REMINDER}</StatusPill>
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Overdue bills still at the first follow-up stage.
+            </p>
+          </article>
+          <article className="rounded-[1.5rem] border border-[#dbe9e5] bg-white p-5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Needs final notice
+              </p>
+              <StatusPill priority="attention">{focusCounts.NEEDS_FINAL_NOTICE}</StatusPill>
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Reminder already logged, so escalation is the next bill-level move.
+            </p>
+          </article>
+          <article className="rounded-[1.5rem] border border-[#dbe9e5] bg-white p-5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Ready for disconnection
+              </p>
+              <StatusPill priority="overdue">{focusCounts.READY_FOR_DISCONNECTION}</StatusPill>
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Final notice or disconnection review is already on record.
+            </p>
+          </article>
+          <article className="rounded-[1.5rem] border border-[#dbe9e5] bg-white p-5">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Service action panel
+              </p>
+              <StatusPill priority="ready">{serviceActions.length}</StatusPill>
+            </div>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Customers already eligible for disconnection or reinstatement review.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-2">
+        {serviceActions.filter((customer) => customer.canDisconnect).length ? (
+          <div className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  Service Enforcement
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+                  Customers ready for disconnection
+                </h2>
+              </div>
+              <StatusPill priority="overdue">
+                {
+                  serviceActions.filter((customer) => customer.canDisconnect).length
+                }{" "}
+                ready
+              </StatusPill>
+            </div>
+
+            <div className="mt-5 grid gap-4">
+              {serviceActions
+                .filter((customer) => customer.canDisconnect)
+                .map((customer) => (
+                  <article
+                    key={customer.id}
+                    className="rounded-[1.5rem] border border-[#dbe9e5] bg-background p-5"
+                  >
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <StatusPill priority={getServiceStatusTone(customer.status)}>
+                            {customer.status.replace("_", " ")}
+                          </StatusPill>
+                          <StatusPill priority="ready">{customer.accountNumber}</StatusPill>
+                        </div>
+                        <h3 className="mt-3 text-lg font-semibold text-foreground">
+                          {customer.name}
+                        </h3>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          {customer.escalatedBillCount} escalated bill
+                          {customer.escalatedBillCount === 1 ? "" : "s"} and{" "}
+                          {customer.highestDaysPastDue} day
+                          {customer.highestDaysPastDue === 1 ? "" : "s"} past due at the highest
+                          overdue point.
+                        </p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Overdue {formatCurrency(customer.overdueBalance)} | Outstanding{" "}
+                          {formatCurrency(customer.totalOutstanding)}
+                        </p>
+                        {customer.statusNote ? (
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            {customer.statusNote}
+                          </p>
+                        ) : null}
+                      </div>
+                      <button
+                        type="button"
+                        className={cn(
+                          buttonVariants({ className: "h-10 w-full rounded-xl px-4 sm:w-auto" })
+                        )}
+                        disabled={isPending}
+                        onClick={() =>
+                          runAction(`disconnect-${customer.id}`, () =>
+                            disconnectCustomerService(customer.id)
+                          )
+                        }
+                      >
+                        {pendingKey === `disconnect-${customer.id}`
+                          ? "Recording disconnection..."
+                          : "Mark disconnected"}
+                      </button>
+                    </div>
+                  </article>
+                ))}
+            </div>
+          </div>
+        ) : null}
+
+        {serviceActions.filter((customer) => customer.canReinstate).length ? (
+          <div className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                  Reinstatement Review
+                </p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
+                  Customers cleared for reconnection
+                </h2>
+              </div>
+              <StatusPill priority="success">
+                {
+                  serviceActions.filter((customer) => customer.canReinstate).length
+                }{" "}
+                ready
+              </StatusPill>
+            </div>
+
+            <div className="mt-5 grid gap-4">
+              {serviceActions
+                .filter((customer) => customer.canReinstate)
+                .map((customer) => (
+                  <article
+                    key={customer.id}
+                    className="rounded-[1.5rem] border border-[#dbe9e5] bg-background p-5"
+                  >
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <StatusPill priority={getServiceStatusTone(customer.status)}>
+                            {customer.status.replace("_", " ")}
+                          </StatusPill>
+                          <StatusPill priority="ready">{customer.accountNumber}</StatusPill>
+                        </div>
+                        <h3 className="mt-3 text-lg font-semibold text-foreground">
+                          {customer.name}
+                        </h3>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          No overdue balances remain, so reinstatement can proceed.
+                        </p>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          Outstanding {formatCurrency(customer.totalOutstanding)}
+                        </p>
+                        {customer.statusNote ? (
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            {customer.statusNote}
+                          </p>
+                        ) : null}
+                      </div>
+                      <button
+                        type="button"
+                        className={cn(
+                          buttonVariants({
+                            variant: "outline",
+                            className: "h-10 w-full rounded-xl px-4 sm:w-auto",
+                          })
+                        )}
+                        disabled={isPending}
+                        onClick={() =>
+                          runAction(`reinstate-${customer.id}`, () =>
+                            reinstateCustomerService(customer.id)
+                          )
+                        }
+                      >
+                        {pendingKey === `reinstate-${customer.id}`
+                          ? "Reinstating..."
+                          : "Reinstate service"}
+                      </button>
+                    </div>
+                  </article>
+                ))}
+            </div>
+          </div>
+        ) : null}
+      </section>
+
+      <RecordListSection
+        eyebrow="Follow-up Queue"
+        title="Bill-level receivables actions"
+        description="Search by customer, account, bill period, or meter, then narrow by escalation focus so the highest-pressure overdue items rise ahead of supporting monitoring work."
+        resultsText={resultsText}
+        searchName="query"
+        searchValue={query}
+        searchPlaceholder="Search customer, account, bill, meter, or stage"
+        filterName="focus"
+        filterValue={focus}
+        filterLabel="Follow-up focus"
+        filterOptions={[
+          { label: "All follow-up items", value: "ALL" },
+          { label: "Ready for disconnection", value: "READY_FOR_DISCONNECTION" },
+          { label: "Needs final notice", value: "NEEDS_FINAL_NOTICE" },
+          { label: "Needs reminder", value: "NEEDS_REMINDER" },
+          { label: "Disconnected hold", value: "DISCONNECTED_HOLD" },
+          { label: "Monitoring", value: "MONITORING" },
+        ]}
+        helperText="Filter by escalation focus first. The queue is ordered so action-ready overdue balances appear before general monitoring items."
+        nextStep="Next: update the bill-level stage here, then use the service-action panel once the customer is eligible for disconnection or reinstatement."
+        resetHref="/admin/follow-up"
+        hasActiveFilters={hasActiveFilters}
+      >
+        <div className="grid gap-4">
+          {queue.length ? (
+            queue.map((bill) => {
+              const nextAction = getNextFollowUpAction(bill.followUpStatus);
+              const printableNotice = getPrintableNoticeTemplate(
+                bill.followUpStatus,
+                bill.status
+              );
+              const allowNextAction =
+                bill.status === "OVERDUE" &&
+                bill.customerStatus !== "DISCONNECTED" &&
+                nextAction !== null;
+              const allowReset =
+                bill.followUpStatus !== "CURRENT" &&
+                bill.followUpStatus !== "DISCONNECTED" &&
+                bill.followUpStatus !== "RESOLVED" &&
+                bill.customerStatus !== "DISCONNECTED";
+              const focusMeta = getQueueFocusMeta(bill.queueFocus);
+
+              return (
+                <article
+                  key={bill.id}
+                  className="rounded-[1.5rem] border border-[#dbe9e5] bg-white/92 p-5 shadow-[0_18px_40px_-38px_rgba(16,63,67,0.3)]"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <StatusPill priority={focusMeta.tone}>{focusMeta.label}</StatusPill>
+                      <StatusPill priority={getFollowUpStatusTone(bill.followUpStatus)}>
+                        {bill.followUpStatus.replaceAll("_", " ")}
+                      </StatusPill>
+                      <StatusPill priority={getServiceStatusTone(bill.customerStatus)}>
+                        {bill.customerStatus.replace("_", " ")}
+                      </StatusPill>
+                    </div>
+                    <div className="text-right text-sm text-muted-foreground">
+                      <div>{bill.billingPeriod}</div>
+                      <div className="mt-1 font-mono text-xs">{bill.id}</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                    <div className="space-y-3">
+                      <div>
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {bill.customerName}
+                        </h3>
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {bill.accountNumber} | Meter {bill.meterNumber}
+                        </p>
+                      </div>
+                      <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
+                        {focusMeta.summary}
+                      </p>
+                      <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                        <span>Due {bill.dueDate}</span>
+                        <span>{getDueDetail(bill.status, bill.daysPastDue)}</span>
+                        <span>Paid {formatCurrency(bill.paidAmount)}</span>
+                        <span>Balance {formatCurrency(bill.outstandingBalance)}</span>
+                      </div>
+                      {bill.followUpNote ? (
+                        <p className="text-sm text-muted-foreground">{bill.followUpNote}</p>
+                      ) : null}
+                      {bill.customerStatusNote ? (
+                        <p className="text-sm text-muted-foreground">{bill.customerStatusNote}</p>
+                      ) : null}
+                    </div>
+
+                    <div className="grid w-full gap-2 sm:grid-cols-2 xl:max-w-md">
+                      {allowNextAction && nextAction ? (
+                        <button
+                          type="button"
+                          className={cn(
+                            buttonVariants({
+                              size: "sm",
+                              className: "w-full rounded-xl px-3 justify-center",
+                            })
+                          )}
+                          disabled={isPending}
+                          onClick={() =>
+                            runAction(`${nextAction.value}-${bill.id}`, () =>
+                              updateReceivableFollowUp(bill.id, nextAction.value)
+                            )
+                          }
+                        >
+                          {pendingKey === `${nextAction.value}-${bill.id}`
+                            ? "Updating..."
+                            : nextAction.label}
+                        </button>
+                      ) : null}
+                      <Link
+                        href={`/admin/billing/${bill.id}`}
+                        className={cn(
+                          buttonVariants({
+                            variant: "outline",
+                            size: "sm",
+                            className: "w-full rounded-xl px-3 justify-center",
+                          })
+                        )}
+                      >
+                        Statement
+                      </Link>
+                      {printableNotice ? (
+                        <GenerateNoticeButton
+                          billId={bill.id}
+                          template={printableNotice.template}
+                          label={printableNotice.label}
+                          variant="outline"
+                          size="sm"
+                          className="w-full justify-center rounded-xl px-3"
+                        />
+                      ) : null}
+                      {allowReset ? (
+                        <button
+                          type="button"
+                          className={cn(
+                            buttonVariants({
+                              variant: "outline",
+                              size: "sm",
+                              className: "w-full rounded-xl px-3 justify-center",
+                            })
+                          )}
+                          disabled={isPending}
+                          onClick={() =>
+                            runAction(`reset-${bill.id}`, () =>
+                              updateReceivableFollowUp(bill.id, "CURRENT")
+                            )
+                          }
+                        >
+                          {pendingKey === `reset-${bill.id}` ? "Resetting..." : "Reset"}
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </article>
+              );
+            })
+          ) : (
+            <div className="rounded-[1.5rem] border border-[#dbe9e5] bg-background px-4 py-10 text-center text-sm text-muted-foreground">
+              {hasActiveFilters
+                ? "No follow-up items match the current search or escalation focus."
+                : "No overdue or open receivable accounts currently require follow-up actions."}
+            </div>
+          )}
+        </div>
+      </RecordListSection>
+    </>
   );
 }

@@ -1,6 +1,11 @@
 import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import {
+  getSearchParamText,
+  matchesSearch,
+  type SearchParamValue,
+} from "@/features/admin/lib/list-filters";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { MeterAssignmentForm } from "@/features/meters/components/meter-assignment-form";
 import { MeterForm } from "@/features/meters/components/meter-form";
@@ -8,7 +13,11 @@ import { MeterHolderTransferForm } from "@/features/meters/components/meter-hold
 import { MeterList } from "@/features/meters/components/meter-list";
 import { prisma } from "@/lib/prisma";
 
-export default async function AdminMetersPage() {
+type MeterPageProps = {
+  searchParams: Promise<Record<string, SearchParamValue>>;
+};
+
+export default async function AdminMetersPage({ searchParams }: MeterPageProps) {
   const access = await getModuleAccess("meters");
 
   if (access.status !== "authorized") {
@@ -83,6 +92,47 @@ export default async function AdminMetersPage() {
       },
     }),
   ]);
+  const filters = await searchParams;
+  const query = getSearchParamText(filters.query);
+  const registry = getSearchParamText(filters.registry) as
+    | "ALL"
+    | "ACTIVE"
+    | "UNASSIGNED"
+    | "UNROUTED"
+    | "DEFECTIVE"
+    | "REPLACED";
+  const filteredMeters = meters.filter((meter) => {
+    const matchesRegistry =
+      !registry || registry === "ALL"
+        ? true
+        : registry === "UNASSIGNED"
+          ? !meter.customer
+          : registry === "UNROUTED"
+            ? !meter.serviceRoute
+            : meter.status === registry;
+
+    return (
+      matchesRegistry &&
+      matchesSearch(
+        [
+          meter.meterNumber,
+          meter.customer?.name,
+          meter.customer?.accountNumber,
+          meter.serviceRoute?.code,
+          meter.serviceRoute?.name,
+          meter.serviceZone?.name,
+          ...meter.holderTransfers.flatMap((transfer) => [
+            transfer.fromCustomer?.name,
+            transfer.fromCustomer?.accountNumber,
+            transfer.toCustomer.name,
+            transfer.toCustomer.accountNumber,
+            transfer.reason,
+          ]),
+        ],
+        query
+      )
+    );
+  });
 
   const assignedMeterCount = meters.filter((meter) => meter.customer).length;
   const activeMeterCount = meters.filter((meter) => meter.status === "ACTIVE").length;
@@ -146,12 +196,17 @@ export default async function AdminMetersPage() {
       ]}
     >
       <section className="grid gap-6 xl:grid-cols-3">
-          <MeterForm />
-          <MeterAssignmentForm customers={customers} unassignedMeters={unassignedMeters} />
-          <MeterHolderTransferForm customers={customers} assignedMeters={assignedMeters} />
+        <MeterForm />
+        <MeterAssignmentForm customers={customers} unassignedMeters={unassignedMeters} />
+        <MeterHolderTransferForm customers={customers} assignedMeters={assignedMeters} />
       </section>
 
-      <MeterList meters={meters} />
+      <MeterList
+        meters={filteredMeters}
+        totalCount={meters.length}
+        query={query}
+        registry={registry || "ALL"}
+      />
     </AdminPageShell>
   );
 }

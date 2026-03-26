@@ -423,7 +423,7 @@ export function BillingGovernancePanel({
     return (
       <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          EH8 Billing Governance
+          Billing Governance
         </p>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
           No billing cycle has been created yet
@@ -441,7 +441,7 @@ export function BillingGovernancePanel({
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="space-y-2">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            EH8 Billing Governance
+            Billing Governance
           </p>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
             {selectedCycle.billingPeriodLabel} cycle controls
@@ -1123,7 +1123,7 @@ export function BillingGovernancePanel({
                 ))
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  No EH8 audit events have been recorded yet.
+                  No billing governance events have been recorded for this cycle yet.
                 </p>
               )}
             </div>

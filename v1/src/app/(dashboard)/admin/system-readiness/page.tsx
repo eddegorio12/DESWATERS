@@ -53,7 +53,7 @@ export default async function AdminSystemReadinessPage() {
     <AdminPageShell
       eyebrow="System Readiness"
       title="Keep recovery readiness and admin security visible from inside operations."
-      description="EH11 adds backup snapshot logging, restore procedure guidance, environment readiness checks, and recent security signal visibility for internal staff access."
+      description="Keep backup snapshot logging, restore procedure guidance, environment readiness checks, and recent security signal visibility visible for internal staff access."
       actions={<AdminPageActions links={[{ href: "/admin/staff-access", label: "Staff access" }]} />}
       stats={[
         {

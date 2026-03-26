@@ -31,7 +31,9 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - EH10 is now complete through the printable consumer-notice workflow.
 - EH11 is now complete through tariff governance, admin security hardening, and the backup-readiness workspace.
 - EH12 is now validated for the implemented route-operations and route-aware billing slice.
-- EH13 is now the planned next lane, focused on reducing operator friction on the existing admin surface.
+- EH13 is now fully validated and closed.
+- The preferred next contribution is now broader EH12 analytics, followed by dedicated admin-management audit logging.
+- The concrete EH13 order is: meters first, then routes, then collections/exceptions, then follow-up, then responsive hardening, then shared status-priority treatment, then the final consistency sweep.
 
 ## 3. Enhancement Backlog Handling
 - Treat the enhancement roadmap in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md) as the canonical backlog instead of inventing new unnamed phases.
@@ -45,6 +47,11 @@ When the requested work is UI/UX-oriented:
 - Treat the current priority as workflow usability, not a visual redesign for its own sake.
 - Prefer improvements that reduce scan time, simplify decisions, clarify next actions, and strengthen consistency across existing modules.
 - Keep UX changes modular and reusable; do not collapse feature boundaries with page-specific one-off patterns unless there is a strong reason.
+- Prefer finishing EH13 on remaining record-heavy modules before proposing new top-level dashboards or workflow domains.
+
+When the requested work is roadmap or planning oriented:
+- Recommend EH13 completion before deeper EH12 analytics expansion, dedicated admin audit logging, or later deferred EH9/EH11 refinements unless the user explicitly reprioritizes.
+- Use the recorded EH13 task IDs (`EH13.2a` through `EH13.5`) when breaking down or sequencing the current usability lane.
 
 ## 4. Architectural Coding Standards
 - **Modularity over monoliths:** Break features into focused files and domain directories immediately.
