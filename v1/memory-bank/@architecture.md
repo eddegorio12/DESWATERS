@@ -28,7 +28,7 @@
 ### Framework & App Structure
 - **Framework:** Next.js 16 App Router + TypeScript
 - **Styling:** Tailwind CSS + `shadcn/ui`
-- **Auth:** Clerk for authentication and session handling
+- **Auth:** Auth.js credentials for authentication and session handling
 - **ORM:** Prisma v7
 - **Current intended DB runtime:** PostgreSQL
 
@@ -44,27 +44,34 @@
 - `src/app/(marketing)/`
   - Public marketing surface for `/`, `/platform`, `/workflows`, and `/rollout`
 - `src/app/(auth)/`
-  - Clerk-powered sign-in and sign-up routes
+  - Internal admin sign-in route with no public sign-up route
+- `src/app/(auth)/change-password/`
+  - Forced password-rotation route for temporary-password accounts
+- `src/app/(dashboard)/dashboard/`
+  - Auth landing route that redirects authenticated staff into `/admin/dashboard`
 - `src/app/(dashboard)/admin/`
   - Protected staff operations area for dashboard, staff access approvals, customers, meters, tariffs, readings, billing, payments, and collections
 
 ### Cross-Cutting Modules
 - `src/proxy.ts`
-  - Clerk route protection for `/admin/*` in Next.js 16
+  - Auth.js-backed route protection for `/dashboard` and `/admin/*` in Next.js 16
+  - Proxy now also redirects temporary-password accounts to `/change-password`
+- `src/auth.ts`
+  - Central Auth.js credentials configuration, JWT session callbacks, and bcrypt-backed credential verification
 - `src/lib/prisma.ts`
   - Central Prisma singleton used by server components and server actions with environment-driven PostgreSQL connections
 - `prisma.config.ts`
   - Central Prisma v7 datasource binding for `DATABASE_URL` runtime access and optional `DIRECT_URL` migration access
 - `src/features/auth/lib/authorization.ts`
-  - Central role matrix for protected module access, staff approval state checks, and sensitive server-side capability checks
-- `src/features/auth/actions/review-staff-access.ts`
-  - Admin and manager approval actions for pending Clerk-linked staff accounts
+  - Central role matrix for protected module access and sensitive server-side capability checks
+- `src/features/auth/actions/auth-actions.ts`
+  - Auth sign-in/sign-out, self-service password change, and SUPER_ADMIN account-management actions
 - `src/components/ui/`
   - Shared `shadcn/ui` primitives only
 
 ### Feature Modules
 - `src/features/auth/`
-  - Auth-shell components, Clerk styling helpers, and first-login sync action
+  - Auth-shell components, sign-in form, password-management UI, and admin-account management actions
 - `src/features/customers/`
   - Customer creation validation, action logic, and listing UI
 - `src/features/meters/`
@@ -93,10 +100,13 @@
 ## Implemented Workflow Boundaries
 
 ### Authentication
-- Clerk proves identity.
-- Local staff records are synchronized on first login.
-- Unknown Clerk identities now create pending local staff requests instead of automatically receiving active dashboard access.
+- Auth.js proves identity against internal Prisma-backed admin accounts.
+- There is no public registration path for DWDS admin access.
+- Admin access is created internally and enforced through role-aware server checks.
 - Local role data is enforced through centralized route and capability checks before protected data loads or mutations execute.
+- A seeded `SUPER_ADMIN` path now exists through `prisma/seed.mjs`, and local sign-in verification has succeeded against the migrated database.
+- Password changes are handled internally through server actions: signed-in users can change their own password, and SUPER_ADMIN can set a temporary replacement password for any admin account.
+- Temporary-password enforcement is implemented at both the proxy layer and the server-authorization layer so protected data is blocked until rotation is complete.
 
 ### Meter Reading Workflow
 - Readings are encoded as `PENDING_REVIEW`.
@@ -140,10 +150,10 @@
 ### EH2: Authorization & Staff Controls
 - Explicit authorization checks now exist in protected routes and server actions through `src/features/auth/lib/authorization.ts`.
 - The current implemented module boundaries are:
-  - `ADMIN` and `MANAGER`: full admin-surface access
-  - `CUSTOMER_SERVICE`: customers and meters
+  - `SUPER_ADMIN` and `ADMIN`: full admin-surface access
+  - `TECHNICIAN`: customers and meters
   - `METER_READER`: readings entry/history, with deletion restricted to their own pending readings
-  - `BILLING_STAFF`: tariffs read-only, readings approval, billing, and collections
+  - `BILLING`: tariffs visibility, readings approval, billing, and collections
   - `CASHIER`: payments, collections, and printable bill view
 - If permissions outgrow the current role enum, introduce a permission layer without collapsing feature modularity.
 
@@ -223,11 +233,11 @@ model TariffTier {
 
 model User {
   id        String   @id @default(uuid())
-  clerkId   String   @unique
   email     String   @unique
   name      String
-  role      Role     @default(CUSTOMER_SERVICE)
-  active    Boolean  @default(true)
+  passwordHash String
+  role      Role     @default(VIEWER)
+  isActive  Boolean  @default(true)
   readings  Reading[]
   recordedPayments Payment[] @relation("RecordedPayments")
   receivableFollowUpUpdates Bill[] @relation("ReceivableFollowUpUpdatedBy")
@@ -237,12 +247,13 @@ model User {
 }
 
 enum Role {
+  SUPER_ADMIN
   ADMIN
-  BILLING_STAFF
   CASHIER
+  BILLING
   METER_READER
-  CUSTOMER_SERVICE
-  MANAGER
+  TECHNICIAN
+  VIEWER
 }
 
 model Customer {

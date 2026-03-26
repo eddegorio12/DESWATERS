@@ -20,9 +20,12 @@ Document the stack that is actually implemented today, the target production sta
 - **Zod**
 
 ### Authentication
-- **Clerk** for identity and session management
+- **Auth.js Credentials** for internal admin identity and session management
+- **bcrypt** for password hashing
 - Local staff role data stored in Prisma `User.role`
 - Fine-grained authorization is implemented in app logic through the shared authorization helper
+- Password updates are handled through app-native server actions instead of email reset infrastructure
+- Temporary-password enforcement is implemented through Auth.js JWT/session flags plus route protection
 
 ### Database Runtime in Repo Today
 - **Prisma v7**
@@ -37,7 +40,7 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 - **Next.js + TypeScript**
 - **Prisma**
 - **PostgreSQL**
-- **Clerk**
+- **Auth.js Credentials**
 - **Tailwind CSS + shadcn/ui**
 
 ### Planned Supporting Stack
@@ -58,9 +61,10 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 - The baseline PostgreSQL migration is now committed in `prisma/migrations/20260323_eh1_postgresql_baseline/`
 
 ### EH2: Authorization & Staff Controls
-- Keep **Clerk** for auth
+- Keep internal **Auth.js Credentials** auth
 - Authorization is now implemented in app logic through the existing Prisma `Role` enum and the shared helper in `src/features/auth/lib/authorization.ts`
-- Clerk authentication is now paired with an app-native staff approval state before first-time users can enter protected DWDS routes
+- Internal admin authentication now uses Prisma-backed accounts with bcrypt password hashes and role-based route enforcement
+- The first local `SUPER_ADMIN` seed and sign-in path have now been validated
 - A future permission layer should only be introduced if the current role model becomes too coarse
 
 ### EH3: Reporting & Receivables Intelligence
@@ -99,9 +103,9 @@ This replaces the earlier SQLite adapter workaround, and live PostgreSQL validat
 - No microservices
 - No separate frontend/backend repos
 - No native mobile app in the current phase
-- No custom auth build while Clerk is sufficient
+- No public signup or OAuth surface; keep auth limited to internal admin email/password
 
 ## Practical Summary
-- **Implemented now:** Next.js, TypeScript, Prisma v7, Clerk, Tailwind CSS, shadcn/ui, React Hook Form, Zod, PostgreSQL-first runtime path, app-native printable receipts, notification logging, Resend-ready email, Semaphore-ready SMS, repo-local UI design search launcher, repo-served DWDS PNG brand assets, App Router brand icons
+- **Implemented now:** Next.js, TypeScript, Prisma v7, Auth.js Credentials, Tailwind CSS, shadcn/ui, React Hook Form, Zod, PostgreSQL-first runtime path, app-native printable receipts, notification logging, Resend-ready email, Semaphore-ready SMS, repo-local UI design search launcher, repo-served DWDS PNG brand assets, App Router brand icons
 - **Currently validating:** no active enhancement phase
 - **Deferred until explicitly scoped:** Xendit, storage-backed uploads, notifications, advanced reporting libraries, PDF-specific receipt tooling, customer credit handling

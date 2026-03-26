@@ -22,13 +22,13 @@ The consumer portal is planned, but it is not part of the current deployed scope
 - TypeScript
 - Prisma 7
 - PostgreSQL
-- Clerk authentication
+- Auth.js credentials authentication
 - Tailwind CSS 4
 
 ## Product Scope
 
 Implemented now:
-- staff sign-in and approval-gated admin access
+- internal admin-only email/password sign-in
 - customer, meter, tariff, reading, billing, payment, and collections workflows
 - overdue follow-up tracking with notification logging
 - public-facing marketing site
@@ -73,12 +73,10 @@ Required:
 
 ```env
 DATABASE_URL=
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=
-CLERK_SECRET_KEY=
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/admin/dashboard
-NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/admin/dashboard
+AUTH_SECRET=
+SEED_ADMIN_NAME=
+SEED_ADMIN_EMAIL=
+SEED_ADMIN_PASSWORD=
 ```
 
 Optional notifications:
@@ -110,9 +108,13 @@ npm run build
 
 ### First Admin Bootstrap
 
-New Clerk sign-ups do not become active staff automatically. Unknown accounts are created as pending staff requests and must be approved by an existing admin or manager.
+There is no public signup flow. Seed the first `SUPER_ADMIN` account with environment variables, then create the remaining admin accounts from `/admin/staff-access`.
 
-Before production launch, make sure the production database already contains one approved `ADMIN` or `MANAGER` user. Without that, nobody can approve staff access from the UI.
+Seed locally:
+
+```bash
+npm run prisma:seed
+```
 
 ## Repository Notes
 

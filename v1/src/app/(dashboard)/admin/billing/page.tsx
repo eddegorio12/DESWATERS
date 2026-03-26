@@ -1,12 +1,11 @@
 import Link from "next/link";
 
-import { UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
 import { BillStatus, ReadingStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import {
   canPerformCapability,
   getModuleAccess,
@@ -22,12 +21,6 @@ export default async function AdminBillingPage() {
 
   if (access.status !== "authorized") {
     return <ModuleAccessStateView module="billing" access={access} />;
-  }
-
-  const { userId } = await auth();
-
-  if (!userId) {
-    return null;
   }
 
   await syncReceivableStatuses();
@@ -157,7 +150,7 @@ export default async function AdminBillingPage() {
             >
               Back to dashboard
             </Link>
-            <UserButton />
+            <AdminSessionButton />
         </>
       }
       stats={[

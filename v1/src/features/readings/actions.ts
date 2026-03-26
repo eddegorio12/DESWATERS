@@ -111,7 +111,7 @@ export async function deleteReading(readingId: string) {
     throw new Error("Only pending-review readings can be deleted.");
   }
 
-  const canDeleteAny = localUser.role === "ADMIN" || localUser.role === "MANAGER";
+  const canDeleteAny = localUser.role === "SUPER_ADMIN" || localUser.role === "ADMIN";
 
   if (!canDeleteAny && reading.readerId !== localUser.id) {
     throw new Error("You can only delete your own pending readings.");

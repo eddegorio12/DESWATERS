@@ -1,6 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
-import { Role, StaffApprovalStatus } from "@prisma/client";
+import { Role } from "@prisma/client";
 
+import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
 export type AdminModule =
@@ -17,7 +17,7 @@ export type AdminModule =
   | "followUp";
 
 export type StaffCapability =
-  | "staff:approve"
+  | "admins:manage"
   | "customers:create"
   | "meters:register"
   | "meters:assign"
@@ -34,58 +34,59 @@ export type StaffCapability =
 
 const moduleAccess: Record<AdminModule, readonly Role[]> = {
   dashboard: [
+    Role.SUPER_ADMIN,
     Role.ADMIN,
-    Role.MANAGER,
-    Role.CUSTOMER_SERVICE,
+    Role.TECHNICIAN,
     Role.METER_READER,
-    Role.BILLING_STAFF,
+    Role.BILLING,
     Role.CASHIER,
+    Role.VIEWER,
   ],
-  staffAccess: [Role.ADMIN, Role.MANAGER],
-  customers: [Role.ADMIN, Role.MANAGER, Role.CUSTOMER_SERVICE],
-  meters: [Role.ADMIN, Role.MANAGER, Role.CUSTOMER_SERVICE],
-  tariffs: [Role.ADMIN, Role.MANAGER, Role.BILLING_STAFF],
-  readings: [Role.ADMIN, Role.MANAGER, Role.METER_READER, Role.BILLING_STAFF],
-  billing: [Role.ADMIN, Role.MANAGER, Role.BILLING_STAFF],
-  billPrint: [Role.ADMIN, Role.MANAGER, Role.BILLING_STAFF, Role.CASHIER],
-  payments: [Role.ADMIN, Role.MANAGER, Role.CASHIER],
-  collections: [Role.ADMIN, Role.MANAGER, Role.BILLING_STAFF, Role.CASHIER],
-  followUp: [Role.ADMIN, Role.MANAGER, Role.BILLING_STAFF],
+  staffAccess: [Role.SUPER_ADMIN],
+  customers: [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
+  meters: [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
+  tariffs: [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
+  readings: [Role.SUPER_ADMIN, Role.ADMIN, Role.METER_READER, Role.BILLING],
+  billing: [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
+  billPrint: [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING, Role.CASHIER],
+  payments: [Role.SUPER_ADMIN, Role.ADMIN, Role.CASHIER],
+  collections: [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING, Role.CASHIER, Role.VIEWER],
+  followUp: [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
 };
 
 const capabilityAccess: Record<StaffCapability, readonly Role[]> = {
-  "staff:approve": [Role.ADMIN, Role.MANAGER],
-  "customers:create": [Role.ADMIN, Role.MANAGER, Role.CUSTOMER_SERVICE],
-  "meters:register": [Role.ADMIN, Role.MANAGER, Role.CUSTOMER_SERVICE],
-  "meters:assign": [Role.ADMIN, Role.MANAGER, Role.CUSTOMER_SERVICE],
-  "tariffs:create": [Role.ADMIN, Role.MANAGER],
-  "readings:create": [Role.ADMIN, Role.MANAGER, Role.METER_READER],
-  "readings:approve": [Role.ADMIN, Role.MANAGER, Role.BILLING_STAFF],
-  "readings:delete:any": [Role.ADMIN, Role.MANAGER],
-  "readings:delete:own": [Role.ADMIN, Role.MANAGER, Role.METER_READER],
-  "billing:generate": [Role.ADMIN, Role.MANAGER, Role.BILLING_STAFF],
-  "payments:record": [Role.ADMIN, Role.MANAGER, Role.CASHIER],
-  "followup:update": [Role.ADMIN, Role.MANAGER, Role.BILLING_STAFF],
-  "service:disconnect": [Role.ADMIN, Role.MANAGER],
-  "service:reinstate": [Role.ADMIN, Role.MANAGER],
+  "admins:manage": [Role.SUPER_ADMIN],
+  "customers:create": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
+  "meters:register": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
+  "meters:assign": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
+  "tariffs:create": [Role.SUPER_ADMIN, Role.ADMIN],
+  "readings:create": [Role.SUPER_ADMIN, Role.ADMIN, Role.METER_READER],
+  "readings:approve": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
+  "readings:delete:any": [Role.SUPER_ADMIN, Role.ADMIN],
+  "readings:delete:own": [Role.SUPER_ADMIN, Role.ADMIN, Role.METER_READER],
+  "billing:generate": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
+  "payments:record": [Role.SUPER_ADMIN, Role.ADMIN, Role.CASHIER],
+  "followup:update": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
+  "service:disconnect": [Role.SUPER_ADMIN, Role.ADMIN],
+  "service:reinstate": [Role.SUPER_ADMIN, Role.ADMIN],
 };
 
 const moduleLabels: Record<AdminModule, string> = {
   dashboard: "dashboard",
-  staffAccess: "staff access approvals",
+  staffAccess: "admin management",
   customers: "customer operations",
   meters: "meter operations",
   tariffs: "tariff controls",
   readings: "reading operations",
   billing: "billing controls",
-  billPrint: "bill templates",
+  billPrint: "bill printing",
   payments: "cashier posting",
   collections: "collections reporting",
   followUp: "receivables follow-up",
 };
 
 const capabilityLabels: Record<StaffCapability, string> = {
-  "staff:approve": "approve staff access",
+  "admins:manage": "manage admin accounts",
   "customers:create": "create customer records",
   "meters:register": "register meters",
   "meters:assign": "assign meters",
@@ -102,65 +103,68 @@ const capabilityLabels: Record<StaffCapability, string> = {
 };
 
 export const roleDisplayName: Record<Role, string> = {
+  SUPER_ADMIN: "Super Admin",
   ADMIN: "Admin",
-  MANAGER: "Manager",
-  CUSTOMER_SERVICE: "Customer Service",
-  METER_READER: "Meter Reader",
-  BILLING_STAFF: "Billing Staff",
   CASHIER: "Cashier",
+  BILLING: "Billing",
+  METER_READER: "Meter Reader",
+  TECHNICIAN: "Technician",
+  VIEWER: "Viewer",
 };
 
 export const roleSummaries: Record<Role, string> = {
-  ADMIN: "Full access across all DWDS operations modules and sensitive staff actions.",
-  MANAGER: "Operational oversight across all modules with approval and settlement authority.",
-  CUSTOMER_SERVICE:
-    "Customer and meter maintenance only, without billing, collections, or cashier mutations.",
+  SUPER_ADMIN: "Full access across every DWDS module, including admin account management.",
+  ADMIN: "Operational control across customer, billing, metering, cashier, and follow-up work.",
+  CASHIER: "Cashier posting and collections monitoring without customer or billing mutations.",
+  BILLING:
+    "Tariff visibility, reading approval, bill generation, collections visibility, and receivables follow-up updates.",
   METER_READER:
     "Reading entry access plus deletion of their own pending submissions before review.",
-  BILLING_STAFF:
-    "Tariff visibility, reading approval, billing generation, collections visibility, and receivables follow-up updates.",
-  CASHIER:
-    "Cashier posting and collections monitoring without customer setup or billing mutations.",
+  TECHNICIAN:
+    "Customer and meter maintenance access without cashier, billing, or tariff authority.",
+  VIEWER: "Read-only access to the dashboard and reporting surfaces.",
 };
 
-type CurrentStaffUser = {
+export type CurrentStaffUser = {
   id: string;
-  clerkId: string;
   email: string;
   name: string;
+  mustChangePassword: boolean;
   role: Role;
-  active: boolean;
-  approvalStatus: StaffApprovalStatus;
+  isActive: boolean;
+  lastLoginAt: Date | null;
 };
 
 export type ModuleAccessState =
   | { status: "signed_out" }
-  | { status: "missing_profile" }
-  | { status: "pending"; user: CurrentStaffUser }
-  | { status: "rejected"; user: CurrentStaffUser }
+  | { status: "password_change_required"; user: CurrentStaffUser }
   | { status: "inactive"; user: CurrentStaffUser }
   | { status: "forbidden"; user: CurrentStaffUser }
   | { status: "authorized"; user: CurrentStaffUser };
 
-async function getCurrentStaffUser() {
-  const { userId, isAuthenticated } = await auth();
+export async function getCurrentStaffUser() {
+  const session = await auth();
 
-  if (!isAuthenticated || !userId) {
+  if (!session?.user?.id) {
     return { isAuthenticated: false as const, user: null };
   }
 
   const user = await prisma.user.findUnique({
-    where: { clerkId: userId },
+    where: { id: session.user.id },
     select: {
       id: true,
-      clerkId: true,
       email: true,
       name: true,
+      mustChangePassword: true,
       role: true,
-      active: true,
-      approvalStatus: true,
+      isActive: true,
+      lastLoginAt: true,
     },
   });
+
+  if (!user) {
+    return { isAuthenticated: false as const, user: null };
+  }
 
   return {
     isAuthenticated: true as const,
@@ -185,24 +189,16 @@ export function getAccessibleAdminModules(role: Role) {
 export async function getModuleAccess(module: AdminModule): Promise<ModuleAccessState> {
   const current = await getCurrentStaffUser();
 
-  if (!current.isAuthenticated) {
+  if (!current.isAuthenticated || !current.user) {
     return { status: "signed_out" };
   }
 
-  if (!current.user) {
-    return { status: "missing_profile" };
-  }
-
-  if (current.user.approvalStatus === StaffApprovalStatus.PENDING) {
-    return { status: "pending", user: current.user };
-  }
-
-  if (current.user.approvalStatus === StaffApprovalStatus.REJECTED) {
-    return { status: "rejected", user: current.user };
-  }
-
-  if (!current.user.active) {
+  if (!current.user.isActive) {
     return { status: "inactive", user: current.user };
+  }
+
+  if (current.user.mustChangePassword) {
+    return { status: "password_change_required", user: current.user };
   }
 
   if (!canAccessAdminModule(current.user.role, module)) {
@@ -215,26 +211,16 @@ export async function getModuleAccess(module: AdminModule): Promise<ModuleAccess
 export async function requireStaffCapability(capability: StaffCapability) {
   const current = await getCurrentStaffUser();
 
-  if (!current.isAuthenticated) {
+  if (!current.isAuthenticated || !current.user) {
     throw new Error("You must be signed in to continue.");
   }
 
-  if (!current.user) {
-    throw new Error(
-      "Your local staff profile is unavailable. Re-open the dashboard and let account sync complete."
-    );
+  if (!current.user.isActive) {
+    throw new Error("Your DWDS admin account is inactive. Ask a SUPER_ADMIN to reactivate it.");
   }
 
-  if (current.user.approvalStatus === StaffApprovalStatus.PENDING) {
-    throw new Error("Your staff access request is still pending admin or manager approval.");
-  }
-
-  if (current.user.approvalStatus === StaffApprovalStatus.REJECTED) {
-    throw new Error("Your staff access request was rejected. Contact an administrator.");
-  }
-
-  if (!current.user.active) {
-    throw new Error("Your approved DWDS staff profile is inactive. Ask an administrator to reactivate it.");
+  if (current.user.mustChangePassword) {
+    throw new Error("You must change your temporary password before accessing this action.");
   }
 
   if (!canPerformCapability(current.user.role, capability)) {

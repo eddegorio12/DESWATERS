@@ -4,6 +4,9 @@
 - The DWDS MVP is implemented and the memory-bank now treats that MVP as the baseline rather than an active checklist.
 - There are **no open MVP blockers** recorded in the memory-bank.
 - Future work is now tracked as named enhancement phases `EH1` through `EH7`.
+- Clerk has now been removed from the live repo and replaced with internal Auth.js credentials authentication.
+- Internal admin password management is now available through a signed-in change-password form and a SUPER_ADMIN set-temporary-password flow.
+- Temporary-password accounts are now blocked from `/dashboard` and `/admin/*` until they complete a required password change.
 - EH3 and EH4 have now been validated.
 - EH5 has now been validated, including the email-first follow-up notification path.
 - EH6 has now been validated after public-surface testing.
@@ -17,9 +20,13 @@
 ### Foundation & Auth
 - Next.js App Router, TypeScript, Tailwind CSS, and `shadcn/ui` were initialized successfully.
 - Prisma was integrated and the current repo runtime was unblocked through a local SQLite setup.
-- Clerk authentication was added with protected admin routing.
-- First-login sync was later hardened to reconcile existing local users by `clerkId` first and `email` second.
-- Staff access now requires explicit admin or manager approval for first-time Clerk accounts before the dashboard opens.
+- Internal Auth.js credentials authentication now protects `/dashboard` and `/admin/*`.
+- Admin accounts now authenticate directly against the Prisma `User` table with bcrypt password hashes.
+- SUPER_ADMIN now manages admin access internally instead of relying on external identity provisioning.
+- A local seeded `SUPER_ADMIN` account has now been verified to sign in successfully after the migration.
+- Signed-in admins can now change their own password from the dashboard.
+- SUPER_ADMIN can now set a replacement temporary password for any admin account from the admin-management page.
+- Newly created admins and password-reset admins are now forced through `/change-password` before they can access protected modules.
 
 ### Core Records
 - Customer creation and listing were implemented.
@@ -50,8 +57,9 @@
 
 ### Authorization Constraint
 - Role-based authorization is now enforced in protected admin routes and server actions.
-- Staff access now follows an implemented route and mutation matrix for admin, manager, customer service, meter reader, billing staff, and cashier roles.
-- Unknown Clerk accounts are no longer auto-approved into DWDS staff access. They now create pending requests that must be approved from an admin review queue.
+- Staff access now follows an implemented route and mutation matrix for super admin, admin, technician, meter reader, billing, cashier, and viewer roles.
+- There is no public registration path for DWDS admin access. Admin accounts are created internally by SUPER_ADMIN users.
+- The `/admin/staff-access` surface is now the internal admin-management page for account creation, role updates, and activation state changes.
 
 ### Reporting Constraint
 - Reporting now includes **historical collections filters plus receivables visibility** in the admin reporting workspace.
@@ -78,8 +86,8 @@
 - The current product is ready to be positioned as a staff/admin utility operations system plus public marketing site.
 - The consumer portal remains deferred and should not be implied in deployment or repo copy.
 - The next operational step is production deployment setup, with Vercel currently treated as the preferred hosting target.
-- Production readiness still depends on real PostgreSQL, Clerk production configuration, first-admin bootstrap in the target environment, and a custom owned domain for Clerk Production.
-- Until a custom domain exists, the Vercel `vercel.app` deployment should be treated as a test or staging surface rather than the final public production release.
+- Production readiness still depends on real PostgreSQL, secure Auth.js environment configuration, and first-admin bootstrap in the target environment.
+- Until production auth variables and the first seeded admin are in place, the Vercel deployment should be treated as a staging surface rather than the final public production release.
 - Supabase is now the practical managed Postgres target for the next deployment pass, but the database password should be rotated because it was exposed during connection troubleshooting.
 
 ## Enhancement Phase Status
@@ -113,4 +121,4 @@
 - Notes: Search-assisted `ui-ux-pro-max` execution now works through `scripts/run-ui-ux-pro-max.ps1` and `npm run design:search -- ...`, with sibling Python imports hardened inside the skill entrypoints.
 
 ## Current Next-Step Recommendation
-The next recommended step is to **finish Vercel deployment setup** for the current staff/admin DWDS product surface by closing the remaining infrastructure tasks: successful Supabase migration deployment, custom domain attachment, Clerk Production setup, and first-admin bootstrap.
+The next recommended step is to **finish Vercel deployment setup** for the current staff/admin DWDS product surface by closing the remaining infrastructure tasks: successful Supabase migration deployment, production Auth.js environment setup, and first-admin bootstrap.

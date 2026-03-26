@@ -1,12 +1,11 @@
 import Link from "next/link";
 
-import { UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
 import { BillStatus, PaymentStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { FollowUpBoard } from "@/features/follow-up/components/follow-up-board";
 import {
@@ -23,12 +22,6 @@ export default async function AdminFollowUpPage() {
 
   if (access.status !== "authorized") {
     return <ModuleAccessStateView module="followUp" access={access} />;
-  }
-
-  const { userId } = await auth();
-
-  if (!userId) {
-    return null;
   }
 
   await syncReceivableStatuses();
@@ -243,7 +236,7 @@ export default async function AdminFollowUpPage() {
           >
             Back to dashboard
           </Link>
-          <UserButton />
+          <AdminSessionButton />
         </>
       }
       stats={[

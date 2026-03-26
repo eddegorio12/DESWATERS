@@ -19,7 +19,10 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - The live admin surface covers authentication, customers, meters, tariffs, readings, billing, payments, printable bills, collections reporting, and the marketing site.
 - The live admin surface now also includes receivables follow-up, disconnection tracking, and reinstatement workflow support.
 - EH5 follow-up actions now also support provider-backed customer notifications with auditable delivery logging.
-- First-time Clerk accounts now require explicit admin or manager approval before protected DWDS dashboard access is granted.
+- Admin access is now internal-only: SUPER_ADMIN creates accounts, and inactive accounts are blocked at sign-in.
+- The Auth.js migration is complete, and the seeded `SUPER_ADMIN` login has been verified locally.
+- Internal password management now exists in the live repo through self-service password change and SUPER_ADMIN temporary-password reset.
+- Temporary-password accounts must now complete a forced password change before entering the protected DWDS workspace.
 - EH6 public-surface expansion is validated and closed.
 - EH7 tooling recovery is complete, and the repo now includes a stable launcher for searchable `ui-ux-pro-max` execution.
 - The public repository surface is now presentation-ready enough for sharing, with real redacted screenshots and cleaner root-level documentation.
@@ -40,7 +43,7 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - **Domain-driven grouping:** Prefer `src/features/<domain>/...` over dumping logic into generic roots.
 - **Lean route files:** Keep route segments compositional. Push business logic into server actions, feature libs, and data-access helpers.
 - **Server-first business logic:** Keep client components small. Sensitive logic belongs on the server.
-- **Auth and authorization are separate concerns:** Clerk protects identity/session flow, while role-based authorization must be enforced in app logic when that enhancement track is implemented.
+- **Auth and authorization are separate concerns:** Auth.js protects identity/session flow, while role-based authorization must be enforced in app logic.
 
 ## 5. Design & UI/UX Guidelines
 - Use the installed `ui-ux-pro-max` skill when the task is design-heavy.

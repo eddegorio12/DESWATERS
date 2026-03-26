@@ -26,13 +26,13 @@ export function AuthShell({ title, description, children }: AuthShellProps) {
             <div className="rounded-2xl border border-border bg-background p-5">
               <p className="text-sm font-medium text-foreground">Protected admin routes</p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                `/admin/*` now requires an authenticated Clerk session.
+                `/dashboard` and `/admin/*` now require an authenticated internal admin session.
               </p>
             </div>
             <div className="rounded-2xl border border-border bg-background p-5">
-              <p className="text-sm font-medium text-foreground">Local role record</p>
+              <p className="text-sm font-medium text-foreground">Admin-only access</p>
               <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                First login links a pre-approved staff record or submits a pending access request for review.
+                Email and password login only. New admins are created by a SUPER_ADMIN inside DWDS.
               </p>
             </div>
           </div>

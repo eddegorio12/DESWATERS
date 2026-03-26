@@ -101,7 +101,7 @@ export default function HomePage() {
           />
           <div className="grid gap-4 sm:grid-cols-2">
             {[
-              "Clerk-protected staff access for role-based operations",
+              "Internal admin auth for role-based operations",
               "Progressive tier tariff support with minimum usage logic",
               "Printable bill statements linked to approved readings",
               "Daily collections summaries based on completed payments",

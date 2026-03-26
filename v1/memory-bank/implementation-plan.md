@@ -12,8 +12,9 @@ Developers should not reopen completed MVP steps unless they are fixing regressi
 - Next.js App Router project initialized with TypeScript and Tailwind CSS
 - `shadcn/ui` base primitives configured under `src/components/ui`
 - Prisma integrated with the current local SQLite-backed development setup
-- Clerk authentication added with protected `/admin/*` routes
-- First-login local user sync implemented and later hardened to reconcile by `clerkId` first and `email` second
+- Internal Auth.js credentials authentication now protects `/dashboard` and `/admin/*`
+- Admin accounts now authenticate directly against Prisma with bcrypt password hashes
+- Clerk has now been fully removed from the live auth flow and dependency surface
 
 ### Core Utility Records
 - Customer management implemented
@@ -38,10 +39,13 @@ Developers should not reopen completed MVP steps unless they are fixing regressi
 Use this as the minimum smoke test after major refactors:
 
 1. Public routes `/`, `/platform`, `/workflows`, and `/rollout` load correctly.
-2. `/admin/dashboard` loads after sign-in and completes first-login sync without duplicate-user failure for existing staff emails.
+2. `/admin/dashboard` loads after sign-in with a valid internal admin account.
 3. Core admin routes for customers, meters, tariffs, readings, billing, payments, and collections all render without broken navigation.
 4. A customer can still move from meter assignment to reading, bill generation, payment recording, and printable bill view.
 5. Daily collections still match the sum of completed payments in the active operating-day window.
+6. The seeded `SUPER_ADMIN` can sign in at `/sign-in` and reach the protected dashboard successfully.
+7. Signed-in admins can update their own password, and SUPER_ADMIN can set a replacement temporary password for staff accounts.
+8. Temporary-password accounts are redirected to `/change-password` and cannot open `/dashboard` or `/admin/*` until they complete that change.
 
 ## Enhancement Roadmap
 
@@ -86,16 +90,19 @@ Current progress:
 - Protected admin routes now enforce role access before loading module data.
 - Server actions now reject authenticated-but-unauthorized staff for customer, meter, tariff, reading, billing, and payment mutations.
 - The readings and tariffs surfaces now degrade into role-appropriate read-only states where mutation authority is intentionally absent.
-- First-time Clerk sign-ins no longer self-provision active staff access by default.
-- Unknown Clerk accounts now land in a pending approval state until an admin or manager reviews them from `/admin/staff-access`.
-- Approved staff access, rejected requests, and deactivated staff access are now separate operational states in the auth layer.
+- There is no public signup path for DWDS admin access.
+- `/admin/staff-access` is now the SUPER_ADMIN-only admin management surface.
+- Active versus inactive admin access is now enforced directly in the auth layer.
+- The local migration, seeded super-admin path, and sign-in verification have now been completed successfully.
+- Password management is now minimally covered through self-service password change and SUPER_ADMIN temporary-password reset actions.
+- Temporary-password enforcement is now active through Auth.js session flags, route protection, and server-side authorization checks.
 
 Implemented role access expectations:
-- `ADMIN`: full access across all protected admin modules and sensitive mutations.
-- `MANAGER`: full operational access across all protected admin modules and sensitive mutations.
-- `CUSTOMER_SERVICE`: customer and meter modules only.
+- `SUPER_ADMIN`: full access across all protected admin modules plus admin management.
+- `ADMIN`: full operational access across all protected admin modules and sensitive mutations.
+- `TECHNICIAN`: customer and meter modules only.
 - `METER_READER`: dashboard plus reading-entry workspace, including deletion of their own pending readings only.
-- `BILLING_STAFF`: tariffs read-only, reading approval, billing, and collections visibility.
+- `BILLING`: tariff visibility, reading approval, billing, and collections visibility.
 - `CASHIER`: payments, printable bill view, and collections visibility.
 
 ### EH3: Reporting & Receivables Intelligence
@@ -206,13 +213,16 @@ The next recommended task is **Vercel deployment setup** for the implemented DWD
 Target outcomes:
 1. Confirm the Vercel project root directory remains `v1`, which is already configured.
 2. Finish the Supabase-managed PostgreSQL connection by completing successful migration deployment and wiring the hosted app to the managed database environment variables.
-3. Attach a custom owned domain before switching Clerk from Development to Production, because Clerk Production cannot use the default `*.vercel.app` provider domain.
-4. Set Clerk production environment variables and redirect URLs.
-5. Define the first-admin bootstrap path before exposing the admin sign-in flow publicly.
-6. Validate the hosted staff sign-in and dashboard flow against the final deployment infrastructure.
+3. Set secure Auth.js production environment variables, especially `AUTH_SECRET`.
+4. Define the first-admin bootstrap path before exposing the admin sign-in flow publicly.
+5. Validate the hosted staff sign-in and dashboard flow against the final deployment infrastructure.
+
+Current auth note:
+- Local Auth.js migration is now complete and working with a seeded `SUPER_ADMIN`.
+- The next auth-related work should focus on production environment setup and any future forced-password-rotation UX, not on restoring external identity providers.
 
 Current dependency note:
-- Until the custom domain exists, keep the Vercel deployment on Clerk Development/test keys and treat that surface as staging rather than the final production release.
+- Until the production auth variables and first-admin seed are in place, treat the Vercel deployment as staging rather than the final production release.
 - For managed Postgres deployment, keep `DATABASE_URL` on the provider pooler/runtime path and `DIRECT_URL` on the provider direct migration path.
 
 Current rollout status:

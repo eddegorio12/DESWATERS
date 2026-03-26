@@ -2,11 +2,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
-
 import { buttonVariants } from "@/components/ui/button-variants";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 import { PrintReceiptButton } from "@/features/payments/components/print-receipt-button";
@@ -52,12 +50,6 @@ export default async function AdminPaymentReceiptPage({
 
   if (access.status !== "authorized") {
     return <ModuleAccessStateView module="payments" access={access} />;
-  }
-
-  const { userId } = await auth();
-
-  if (!userId) {
-    return null;
   }
 
   const { paymentId } = await params;
@@ -158,7 +150,7 @@ export default async function AdminPaymentReceiptPage({
               >
                 Related bill
               </Link>
-              <UserButton />
+              <AdminSessionButton />
             </div>
           </div>
         </header>

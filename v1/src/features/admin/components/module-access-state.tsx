@@ -1,9 +1,8 @@
 import Link from "next/link";
 
-import { UserButton } from "@clerk/nextjs";
-
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
+import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import {
   getForbiddenModuleMessage,
   roleDisplayName,
@@ -22,24 +21,18 @@ export function ModuleAccessStateView({ module, access }: ModuleAccessStateProps
   const title =
     access.status === "forbidden"
       ? "This module is outside your staff role."
-      : access.status === "pending"
-        ? "Your staff access request is waiting for approval."
-        : access.status === "rejected"
-          ? "Your staff access request was not approved."
-      : "Staff access is not ready for this module yet.";
+      : access.status === "password_change_required"
+        ? "Change your temporary password before opening DWDS modules."
+      : "Admin access is not ready for this module.";
 
   const description =
     access.status === "signed_out"
-      ? "Sign in with Clerk to continue into the protected DWDS admin surface."
-      : access.status === "missing_profile"
-        ? "Your Clerk session is active, but the local DWDS staff record still needs to sync on the dashboard before role-based access can be enforced."
-        : access.status === "pending"
-          ? "An admin or manager still needs to authorize this staff account before any protected DWDS module can open."
-          : access.status === "rejected"
-            ? "This Clerk account does not currently have approved DWDS staff access. Ask an admin or manager if that decision should be reviewed."
-        : access.status === "inactive"
-          ? "Your local DWDS staff profile is marked inactive. Ask an administrator to reactivate your access before opening this module."
-          : getForbiddenModuleMessage(access.user.role, module);
+      ? "Sign in with your DWDS admin email and password to continue into the protected admin surface."
+      : access.status === "password_change_required"
+        ? "Your account still uses a temporary password. Update it first, then return to the protected admin workspace."
+      : access.status === "inactive"
+        ? "Your DWDS admin account is inactive. Ask a SUPER_ADMIN to reactivate it before opening this module."
+        : getForbiddenModuleMessage(access.user.role, module);
 
   return (
     <AdminPageShell
@@ -49,7 +42,7 @@ export function ModuleAccessStateView({ module, access }: ModuleAccessStateProps
       actions={
         <>
           <Link
-            href="/admin/dashboard"
+            href={access.status === "password_change_required" ? "/change-password" : "/admin/dashboard"}
             className={cn(
               buttonVariants({
                 variant: "outline",
@@ -60,30 +53,23 @@ export function ModuleAccessStateView({ module, access }: ModuleAccessStateProps
           >
             Back to dashboard
           </Link>
-          <UserButton />
+          {access.status === "signed_out" ? null : <AdminSessionButton />}
         </>
       }
       stats={
-        access.status === "forbidden"
-          || access.status === "pending"
-          || access.status === "rejected"
+        access.status === "forbidden" || access.status === "password_change_required"
           ? [
               {
-                label: access.status === "forbidden" ? "Current role" : "Access state",
+                label: access.status === "password_change_required" ? "Access state" : "Current role",
                 value:
-                  access.status === "forbidden"
-                    ? roleDisplayName[access.user.role]
-                    : access.status === "pending"
-                      ? "Pending approval"
-                      : "Rejected",
+                  access.status === "password_change_required"
+                    ? "Password change required"
+                    : roleDisplayName[access.user.role],
                 detail:
-                  access.status === "forbidden"
-                    ? roleSummaries[access.user.role]
-                    : "Protected DWDS routes remain blocked until an admin or manager changes this staff request.",
-                accent:
-                  access.status === "forbidden"
-                    ? ("amber" as const)
-                    : ("rose" as const),
+                  access.status === "password_change_required"
+                    ? "Protected routes stay blocked until the temporary password is replaced."
+                    : roleSummaries[access.user.role],
+                accent: access.status === "password_change_required" ? "rose" : "amber",
               },
             ]
           : []

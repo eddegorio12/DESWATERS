@@ -1,11 +1,9 @@
 import Link from "next/link";
 
-import { UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
-
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { CustomerForm } from "@/features/customers/components/customer-form";
 import { CustomerList } from "@/features/customers/components/customer-list";
@@ -17,12 +15,6 @@ export default async function AdminCustomersPage() {
 
   if (access.status !== "authorized") {
     return <ModuleAccessStateView module="customers" access={access} />;
-  }
-
-  const { userId } = await auth();
-
-  if (!userId) {
-    return null;
   }
 
   const customers = await prisma.customer.findMany({
@@ -81,7 +73,7 @@ export default async function AdminCustomersPage() {
             >
               Back to dashboard
             </Link>
-            <UserButton />
+            <AdminSessionButton />
         </>
       }
       stats={[

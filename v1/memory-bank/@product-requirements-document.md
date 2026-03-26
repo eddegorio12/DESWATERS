@@ -10,6 +10,9 @@ Build a modular, robust web-based utility operations system that starts with a s
 - The **MVP admin web app is implemented**.
 - The current live surface covers authentication, customer records, meter management, tariff setup, reading intake and approval, billing, payment encoding, printable consumer bills, daily collections reporting, and a public marketing site.
 - The repo now runs on a validated **PostgreSQL-first data path**.
+- The repo now uses internal Auth.js credentials authentication instead of Clerk.
+- Internal password management now exists for signed-in admins and SUPER_ADMIN-managed temporary-password resets.
+- Temporary-password accounts are now forced to rotate that password before they can access the protected dashboard.
 - EH3 reporting expansion is validated and closed.
 - EH4 cashiering expansion is validated and closed.
 - EH5 overdue, disconnection, and email-first follow-up notification support are validated and closed.
@@ -25,7 +28,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 - **Expand without rewrites:** Future customer channels, notifications, and advanced workflows should layer onto the same core data model.
 
 ## Implemented MVP Scope
-1. **Authentication:** Clerk-based sign-in and protected admin routes.
+1. **Authentication:** internal admin email/password sign-in and protected admin routes.
 2. **Core records:** Customer, meter, and tariff management.
 3. **Meter operations:** Reading encoding plus approval workflow.
 4. **Billing:** Progressive-tier bill generation and printable consumer bill statements.
@@ -62,7 +65,10 @@ Expected outcomes:
 Current status:
 - Role-based authorization is now enforced in protected admin routes and server actions.
 - Mixed-access modules now expose read-only views where appropriate instead of relying on UI display alone.
-- First-time Clerk accounts now require explicit admin or manager approval before protected DWDS dashboard access is granted.
+- Admin access is internal-only and created by SUPER_ADMIN accounts.
+- The migrated seeded `SUPER_ADMIN` account has now been validated successfully through the live sign-in route.
+- The repo now includes a minimal password-management path without introducing email-reset infrastructure.
+- That password-management path now includes forced temporary-password rotation before protected-route access.
 
 ### EH3: Reporting & Receivables Intelligence
 Goal: Expand reporting beyond today's collections into a usable finance and follow-up workspace.

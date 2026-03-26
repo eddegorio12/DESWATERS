@@ -13,13 +13,12 @@ import {
   WalletCards,
 } from "lucide-react";
 
-import { UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
 import { BillStatus, PaymentStatus, ReadingStatus, type Role } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
-import { syncCurrentUser } from "@/features/auth/actions/sync-current-user";
+import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
+import { ChangePasswordPanel } from "@/features/auth/components/change-password-panel";
 import {
   canPerformCapability,
   getAccessibleAdminModules,
@@ -28,7 +27,6 @@ import {
   roleSummaries,
   type AdminModule,
 } from "@/features/auth/lib/authorization";
-import { FirstLoginSync } from "@/features/auth/components/first-login-sync";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { BrandLockup } from "@/features/marketing/components/brand-lockup";
@@ -47,9 +45,9 @@ const moduleCards: {
   {
     module: "staffAccess",
     href: "/admin/staff-access",
-    title: "Staff access",
-    description: "Approve, reject, and reactivate Clerk-linked staff accounts before dashboard access is granted.",
-    action: "Review staff access",
+    title: "Admin management",
+    description: "Create admins, update roles, and reactivate or deactivate internal accounts.",
+    action: "Manage admins",
     icon: ShieldAlert,
   },
   {
@@ -120,7 +118,7 @@ const moduleCards: {
 
 function getRoleCapabilities(role: Role) {
   return [
-    canPerformCapability(role, "staff:approve") ? "Staff approval" : null,
+    canPerformCapability(role, "admins:manage") ? "Admin management" : null,
     canPerformCapability(role, "customers:create") ? "Customer and meter setup" : null,
     canPerformCapability(role, "readings:create") ? "Reading entry" : null,
     canPerformCapability(role, "readings:approve") ? "Reading approval" : null,
@@ -134,63 +132,8 @@ function getRoleCapabilities(role: Role) {
 export default async function AdminDashboardPage() {
   const access = await getModuleAccess("dashboard");
 
-  if (
-    access.status === "signed_out" ||
-    access.status === "inactive" ||
-    access.status === "pending" ||
-    access.status === "rejected"
-  ) {
+  if (access.status !== "authorized") {
     return <ModuleAccessStateView module="dashboard" access={access} />;
-  }
-
-  const { userId } = await auth();
-
-  if (!userId) {
-    return null;
-  }
-
-  if (access.status === "missing_profile") {
-    return (
-      <main className="min-h-screen bg-transparent px-5 py-6 sm:px-6 sm:py-8">
-        <FirstLoginSync needsSync syncUser={syncCurrentUser} />
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-          <section className="overflow-hidden rounded-[2rem] border border-[#d4e7e3] bg-[linear-gradient(135deg,#0f3f43,#19545a_52%,#2f7b82)] text-white shadow-[0_32px_90px_-48px_rgba(16,63,67,0.9)]">
-            <div className="flex flex-col gap-6 px-6 py-6 lg:flex-row lg:items-start lg:justify-between lg:px-8 lg:py-8">
-              <div className="max-w-3xl space-y-4">
-                <BrandLockup inverse size="lg" className="w-fit" />
-                <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-white/78">
-                  Staff Provisioning
-                </span>
-                <h1 className="font-heading text-4xl leading-tight tracking-tight sm:text-5xl">
-                  Finish the first-login sync before opening DWDS modules.
-                </h1>
-                <p className="max-w-2xl text-sm leading-7 text-white/76 sm:text-base">
-                  Your Clerk session is active, but the local DWDS staff profile still needs
-                  to be linked or requested. Stay on this page until the dashboard refresh
-                  completes.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Link
-                  href="/"
-                  className={cn(
-                    buttonVariants({
-                      variant: "outline",
-                      className:
-                        "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                    })
-                  )}
-                >
-                  Public site
-                </Link>
-                <UserButton />
-              </div>
-            </div>
-          </section>
-        </div>
-      </main>
-    );
   }
 
   const localUser = access.user;
@@ -312,7 +255,6 @@ export default async function AdminDashboardPage() {
 
   return (
     <main className="min-h-screen bg-transparent px-5 py-6 sm:px-6 sm:py-8">
-      <FirstLoginSync needsSync={false} syncUser={syncCurrentUser} />
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <section className="overflow-hidden rounded-[2rem] border border-[#d4e7e3] bg-[linear-gradient(135deg,#0f3f43,#19545a_52%,#2f7b82)] text-white shadow-[0_32px_90px_-48px_rgba(16,63,67,0.9)]">
           <div className="grid gap-6 px-6 py-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:py-8">
@@ -377,7 +319,7 @@ export default async function AdminDashboardPage() {
                 </p>
                 <p className="mt-3 text-xl font-semibold tracking-tight">{localUser.name}</p>
                 <p className="mt-2 text-sm text-white/72">
-                  {roleDisplayName[localUser.role]} with active Clerk session
+                  {roleDisplayName[localUser.role]} with active internal admin access
                 </p>
               </article>
 
@@ -409,7 +351,7 @@ export default async function AdminDashboardPage() {
                       : "No operational capabilities are currently assigned."}
                   </p>
                 </div>
-                <UserButton />
+                <AdminSessionButton />
               </div>
             </div>
           </div>
@@ -524,6 +466,8 @@ export default async function AdminDashboardPage() {
             </div>
           </article>
         </section>
+
+        <ChangePasswordPanel />
       </div>
     </main>
   );

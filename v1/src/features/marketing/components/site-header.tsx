@@ -1,15 +1,15 @@
 import Link from "next/link";
-import { auth } from "@clerk/nextjs/server";
 
+import { auth } from "@/auth";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { BrandLockup } from "@/features/marketing/components/brand-lockup";
 import { navigationItems } from "@/features/marketing/lib/site-content";
 import { cn } from "@/lib/utils";
 
 export async function SiteHeader() {
-  const { userId } = await auth();
-  const dashboardHref = userId ? "/admin/dashboard" : "/sign-in";
-  const dashboardLabel = userId ? "Open dashboard" : "Staff sign in";
+  const session = await auth();
+  const dashboardHref = session?.user?.id ? "/dashboard" : "/sign-in";
+  const dashboardLabel = session?.user?.id ? "Open dashboard" : "Staff sign in";
 
   return (
     <header className="mx-auto w-full max-w-7xl px-5 pb-2 pt-5 sm:px-8">

@@ -39,40 +39,31 @@ model TariffTier {
 // System Users (Staff)
 model User {
   id        String   @id @default(uuid())
-  clerkId   String   @unique
   email     String   @unique
   name      String
-  role      Role     @default(CUSTOMER_SERVICE)
-  active    Boolean  @default(true)
-  approvalStatus StaffApprovalStatus @default(APPROVED)
-  approvalNote String?
-  approvalUpdatedAt DateTime?
-  approvalUpdatedById String?
-  approvalUpdatedBy User? @relation("StaffApprovalUpdatedBy", fields: [approvalUpdatedById], references: [id])
-  
+  passwordHash String
+  mustChangePassword Boolean @default(false)
+  role      Role     @default(VIEWER)
+  isActive  Boolean  @default(true)
+  lastLoginAt DateTime?
+
   readings  Reading[] // Meter readings performed by this user (if METER_READER)
   recordedPayments Payment[] @relation("RecordedPayments")
   receivableFollowUpUpdates Bill[] @relation("ReceivableFollowUpUpdatedBy")
   customerStatusUpdates Customer[] @relation("CustomerStatusUpdatedBy")
   triggeredNotifications NotificationLog[] @relation("TriggeredNotifications")
-  staffApprovalUpdates User[] @relation("StaffApprovalUpdatedBy")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-enum StaffApprovalStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
 enum Role {
+  SUPER_ADMIN
   ADMIN
-  BILLING_STAFF
   CASHIER
+  BILLING
   METER_READER
-  CUSTOMER_SERVICE
-  MANAGER
+  TECHNICIAN
+  VIEWER
 }
 
 // Customers (Residential)

@@ -1,11 +1,9 @@
 import Link from "next/link";
-
-import { UserButton } from "@clerk/nextjs";
-import { auth } from "@clerk/nextjs/server";
-import { StaffApprovalStatus } from "@prisma/client";
+import { Role } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
+import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
 import { StaffAccessBoard } from "@/features/auth/components/staff-access-board";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
@@ -19,76 +17,24 @@ export default async function AdminStaffAccessPage() {
     return <ModuleAccessStateView module="staffAccess" access={access} />;
   }
 
-  const { userId } = await auth();
-
-  if (!userId) {
-    return null;
-  }
-
-  const [pendingUsers, approvedUsers, rejectedUsers] = await Promise.all([
-    prisma.user.findMany({
-      where: {
-        approvalStatus: StaffApprovalStatus.PENDING,
-      },
-      orderBy: {
-        createdAt: "asc",
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        active: true,
-        approvalStatus: true,
-        approvalNote: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    }),
-    prisma.user.findMany({
-      where: {
-        approvalStatus: StaffApprovalStatus.APPROVED,
-      },
-      orderBy: [{ active: "desc" }, { name: "asc" }],
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        active: true,
-        approvalStatus: true,
-        approvalNote: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    }),
-    prisma.user.findMany({
-      where: {
-        approvalStatus: StaffApprovalStatus.REJECTED,
-      },
-      orderBy: {
-        updatedAt: "desc",
-      },
-      take: 10,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        active: true,
-        approvalStatus: true,
-        approvalNote: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    }),
-  ]);
+  const admins = await prisma.user.findMany({
+    orderBy: [{ isActive: "desc" }, { role: "asc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      isActive: true,
+      lastLoginAt: true,
+      createdAt: true,
+    },
+  });
 
   return (
     <AdminPageShell
-      eyebrow="Staff Access"
-      title="Authorize Clerk accounts before they enter the DWDS dashboard."
-      description="New sign-ins now remain blocked until an admin or manager explicitly approves the local staff account. Approved accounts can also be deactivated or reactivated here."
+      eyebrow="Admin Management"
+      title="Manage internal admin accounts."
+      description="SUPER_ADMIN accounts can create admins, change roles, and deactivate or reactivate access here. There is no public signup flow."
       actions={
         <>
           <Link
@@ -103,41 +49,37 @@ export default async function AdminStaffAccessPage() {
           >
             Back to dashboard
           </Link>
-          <UserButton />
+          <AdminSessionButton />
         </>
       }
       stats={[
         {
-          label: "Pending",
-          value: pendingUsers.length.toString(),
-          detail: "New staff requests waiting for review",
-          accent: "amber",
-        },
-        {
-          label: "Approved",
-          value: approvedUsers.filter((user) => user.active).length.toString(),
-          detail: "Approved accounts with active dashboard access",
+          label: "Total Admins",
+          value: admins.length.toString(),
+          detail: "Admin accounts in the DWDS database",
           accent: "teal",
         },
         {
+          label: "Active",
+          value: admins.filter((user) => user.isActive).length.toString(),
+          detail: "Accounts that can currently sign in",
+          accent: "sky",
+        },
+        {
           label: "Inactive",
-          value: approvedUsers.filter((user) => !user.active).length.toString(),
-          detail: "Approved staff accounts that are currently deactivated",
+          value: admins.filter((user) => !user.isActive).length.toString(),
+          detail: "Accounts blocked from sign-in",
           accent: "rose",
         },
         {
-          label: "Rejected",
-          value: rejectedUsers.length.toString(),
-          detail: "Most recent rejected staff requests",
+          label: "Super Admins",
+          value: admins.filter((user) => user.role === Role.SUPER_ADMIN).length.toString(),
+          detail: "Accounts with admin-management authority",
           accent: "violet",
         },
       ]}
     >
-      <StaffAccessBoard
-        pendingUsers={pendingUsers}
-        approvedUsers={approvedUsers}
-        rejectedUsers={rejectedUsers}
-      />
+      <StaffAccessBoard admins={admins} />
     </AdminPageShell>
   );
 }
