@@ -1,69 +1,89 @@
-# DESWATERS
+<div align="center">
+  <h1>💧 DESWATERS</h1>
+  <p><strong>Degorio Water Distribution Services</strong></p>
+  <p>A modern, enterprise-grade utility operations platform for water distribution management.</p>
 
-DESWATERS is the repository for the `DEGORIO WATER DISTRIBUTION SERVICES` web platform.
+  <p>
+    <img src="https://img.shields.io/badge/Next.js-14-black" alt="Next.js" />
+    <img src="https://img.shields.io/badge/TypeScript-5.0-blue" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/Prisma-ORM-2D3748" alt="Prisma" />
+    <img src="https://img.shields.io/badge/Database-PostgreSQL-336791" alt="PostgreSQL" />
+  </p>
+</div>
 
-The current implemented application lives in [`v1/`](./v1).
+<br />
 
-This release is the staff-facing utility operations system plus a public marketing site.
+Welcome to **DESWATERS**, the core software infrastructure for **Degorio Water Distribution Services (DWDS)**. Designed as a robust, staff-facing operational node, it governs the end-to-end lifecycle of utility operations—from meter reading to billing, payments, and overdue follow-ups.
 
-## Current Release Scope
+---
 
-Implemented now:
-- staff sign-in and approval-gated admin access
-- customer, meter, tariff, reading, billing, payment, and collections workflows
-- overdue follow-up tracking with notification logging
-- public-facing marketing pages
+## 🌟 Key Features
 
-Not implemented yet:
-- consumer self-service portal
-- online customer payments
-- public customer-facing account access
+The current release provides a comprehensive **staff-facing utility operations system** alongside a **public marketing surface**.
 
-## Features
+### 🔐 Secure Identity & Access
+- **Role-Gated Authorization:** Granular access permissions enforced through Auth.js credentials.
+- **Admin Safeguards:** Supervisor-level approvals with session lockouts and rigorous authentication standards.
 
-- Role-gated staff access with Clerk authentication and approval flow
-- Customer registry, meter assignment, and tariff configuration
-- Reading intake, approval, and bill generation workflow
-- Cashier payment posting with printable billing and receipt output
-- Receivables reporting plus overdue follow-up and service enforcement states
-- Public product pages that present the current DWDS operational surface
+### 🏢 Core Operations
+- **Customer & Meter Registry:** Lifecycle management, assignments, and property tracking.
+- **Tariff Governance:** Transparent, versioned tariff controls tailored for scale.
+- **Billing & Settlement:** Intake, approval workflows, meter reading conversion, and automated bill generation.
+- **Cashiering:** Manual posting support with printable statements and official receipt outputs (A5-ready).
 
-## Deployment
+### 📈 Analytics & Workflows
+- **Receivables & Follow-Up:** Comprehensive overdue tracking, service enforcement states, and printable disruption notices.
+- **Operational Exceptions:** Proactive anomaly detection for skipped readings and unusual consumptions.
+- **Route Distribution:** Route-grouped reporting to streamline physical bill delivery and tracking.
 
-- Hosting target: Vercel
-- App root directory: `v1`
-- Database: PostgreSQL
-- Auth: Clerk
+> **Note:** The future product roadmap involves expansions toward a dedicated *Consumer Web Portal* to allow self-serve billing checks, online payments, and direct account administration.
 
-For deployment and app-level environment setup, see [`v1/README.md`](./v1/README.md).
+---
 
-## Screenshots
+## 📸 Platform Previews
 
-Current repository screenshots are real product captures with sensitive fields redacted for public sharing.
+Real product captures, with sensitive constituent fields explicitly redacted for privacy and security.
 
 ### Operations Dashboard
-
-![DWDS dashboard screenshot](./v1/public/github/dashboard.png)
+> *A high-level command center highlighting active routing, billing queues, and system performance.*
+<img src="./v1/public/github/dashboard.png" alt="Operations Dashboard" width="800" />
 
 ### Billing Review
-
-![DWDS billing screenshot](./v1/public/github/billing.png)
+> *Streamlined assessment interfaces for pending bills, approvals, and settlements.*
+<img src="./v1/public/github/billing.png" alt="Billing Review" width="800" />
 
 ### Receivables Follow-Up
+> *Comprehensive ledger of outstanding statements, aging statuses, and disruption checkpoints.*
+<img src="./v1/public/github/follow-up.png" alt="Receivables Follow-Up" width="800" />
 
-![DWDS follow-up screenshot](./v1/public/github/follow-up.png)
+---
 
-## Project Location
+## 🛠️ Technology Stack
 
-The active Next.js application is inside [`v1/`](./v1).
+Our tech stack is strictly typed and designed for enterprise velocity.
 
-Important files:
-- app documentation: [`v1/README.md`](./v1/README.md)
-- screenshot workflow: [`v1/docs/github-screenshots.md`](./v1/docs/github-screenshots.md)
-- app source: [`v1/src/`](./v1/src)
-- Prisma schema: [`v1/prisma/schema.prisma`](./v1/prisma/schema.prisma)
-- deployment workflow: [`v1/.github/workflows/ci.yml`](./v1/.github/workflows/ci.yml)
+- **Frontend/Framework:** [Next.js (App Router)](https://nextjs.org) + [Tailwind CSS](https://tailwindcss.com) & [shadcn/ui](https://ui.shadcn.com) for clean, accessible primitives.
+- **Database:** [PostgreSQL](https://postgresql.org) managed via [Prisma ORM](https://prisma.io).
+- **Authentication:** In-house credentials module powered by [Auth.js](https://authjs.dev) + `bcrypt` passwords.
+- **Deployment:** Vercel.
 
-## License
+---
 
-This repository is proprietary. See [`LICENSE`](./LICENSE).
+## 📂 Project Structure
+
+The active platform architecture is housed entirely within the `v1/` directory.
+
+| Component / File | Description |
+| :--- | :--- |
+| **[`v1/`](./v1)** | Global root for the active web application. |
+| **[`v1/README.md`](./v1/README.md)** | Developer onboarding, environment variables, and deployment instructions. |
+| **[`v1/src/`](./v1/src)** | Application codebase (app routes, UI components, backend operations). |
+| **[`v1/prisma/schema.prisma`](./v1/prisma/schema.prisma)** | Source of truth for database schema and PostgreSQL driver configuration. |
+| **[`v1/docs/`](./v1/docs)** | Internal engineering documentation (e.g., screenshot redaction workflows). |
+| **[`v1/.github/workflows/`](./v1/.github/workflows/)** | Automated CI/CD execution logic. |
+
+---
+
+## 📜 License
+
+This repository and its codebase are strictly **Proprietary**. See the [LICENSE](./LICENSE) file for usage and restriction details.
