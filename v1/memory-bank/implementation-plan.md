@@ -244,7 +244,7 @@ Current progress:
 
 ### EH9: Operational Exceptions & Field Service Workflow
 **Priority:** High
-**Status:** Planned
+**Status:** Complete
 **Depends on:** EH8 recommended for stable billing state; EH2 required for role boundaries
 
 Scope:
@@ -264,6 +264,12 @@ Recommended implementation order:
 3. Build protected exception-monitoring and field-service routes.
 4. Add optional photo upload path only when storage is explicitly enabled.
 5. Validate alert accuracy against seeded abnormal cases and recent billing/payment flows.
+
+Current progress:
+- `/admin/exceptions` now exists as the first EH9 operational slice, with protected access for admin, billing, cashier, and technician roles plus server-side alert severity modeling.
+- The initial rule set now scans live records for missing readings, abnormal consumption spikes or drops, possible leak patterns, duplicate-payment posting patterns, near-disconnection receivables, and service-status mismatches.
+- EH9 has now been user-validated for this implemented exception-monitoring slice.
+- Complaint ticketing, technician assignment, work-order lifecycle tracking, repair history, leak-report records, and optional photo upload support remain deferred until explicitly approved as a future expansion pass.
 
 ### EH10: Consumer Communication & Notice Management
 **Priority:** Medium
@@ -333,13 +339,13 @@ Recommended implementation order:
 
 ## Current Next Recommendation
 
-EH8 is closed. Do not begin EH9 until the user explicitly requests that next phase.
+EH9 is closed. Do not begin EH10 until the user explicitly requests that next phase.
 
 Target outcomes:
 1. Keep the production stack simple: one Next.js app, one Supabase Postgres database, one Auth.js internal admin flow.
 2. Finish deployment wiring first: hosted PostgreSQL migration deployment, `AUTH_SECRET`, and first-admin bootstrap path.
-3. Preserve the implemented EH8 workflow as the new billing-governance baseline.
-4. Do not begin EH9 until the user explicitly requests that next phase.
+3. Preserve the implemented EH8 workflow and validated EH9 exceptions workspace as the current operational baseline.
+4. Do not begin EH10 until the user explicitly requests that next phase.
 
 Current auth note:
 - Local Auth.js migration is now complete and working with a seeded `SUPER_ADMIN`.

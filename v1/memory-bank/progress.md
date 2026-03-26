@@ -16,6 +16,8 @@
 - DWDS deployment planning now uses Supabase Postgres as the practical managed database target, with pooled runtime connections and direct migration connections validated from the repo.
 - EH8 billing governance has now been tested and validated.
 - Monthly billing now uses explicit billing-cycle controls, month-end checklist state, audited regeneration reasons, print-batch tracking, batch print views, and per-bill physical distribution statuses.
+- EH9 has now started with a protected operational exceptions workspace for server-side anomaly detection across readings, receivables, payments, and service-status mismatches.
+- EH9 has now been tested and validated.
 
 ## Implemented Milestones
 
@@ -134,8 +136,8 @@
 - Notes: Billing cycles, bill finalization locks, SUPER_ADMIN-only reopen control, audited batch regeneration, print-batch workflow tracking, batch print rendering, physical distribution states, and single-bill reprint logging are implemented and validated.
 
 ### EH9: Operational Exceptions & Field Service Workflow
-- Status: `planned`
-- Notes: This phase is intended to add anomaly detection, complaint intake, technician assignment, work-order tracking, repair history, leak reporting, and optional field-proof upload support.
+- Status: `complete`
+- Notes: `/admin/exceptions` is now implemented and user-validated for the initial EH9 slice, with server-side severity modeling for missing readings, abnormal consumption, possible leaks, duplicate-payment patterns, disconnection-risk accounts, and service-status mismatches. Complaint intake, technician assignment, work-order tracking, repair history, leak reporting, and optional field-proof upload support remain future expansion within later EH9 revisions only if explicitly approved.
 
 ### EH10: Consumer Communication & Notice Management
 - Status: `planned`
@@ -150,4 +152,4 @@
 - Notes: This phase will add route-aware reading and bill-distribution operations plus management dashboards for collections, delinquency, consumption, and service-trend visibility.
 
 ## Current Next-Step Recommendation
-EH8 is now closed. Do not begin EH9 until the user explicitly requests it.
+EH9 is now closed. Do not begin EH10 until the user explicitly requests that next phase.

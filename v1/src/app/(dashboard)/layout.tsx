@@ -36,6 +36,12 @@ const dashboardNavMeta = {
     description: "Service accounts, contacts, and statuses.",
     icon: "customers",
   },
+  exceptions: {
+    href: "/admin/exceptions",
+    label: "Exceptions",
+    description: "Operational alerts for readings, receivables, and data mismatches.",
+    icon: "exceptions",
+  },
   meters: {
     href: "/admin/meters",
     label: "Meters",

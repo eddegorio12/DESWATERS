@@ -8,6 +8,7 @@ export type AdminModule =
   | "staffAccess"
   | "customers"
   | "meters"
+  | "exceptions"
   | "tariffs"
   | "readings"
   | "billing"
@@ -51,6 +52,7 @@ const moduleAccess: Record<AdminModule, readonly Role[]> = {
   staffAccess: [Role.SUPER_ADMIN],
   customers: [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
   meters: [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
+  exceptions: [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING, Role.CASHIER, Role.TECHNICIAN],
   tariffs: [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
   readings: [Role.SUPER_ADMIN, Role.ADMIN, Role.METER_READER, Role.BILLING],
   billing: [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
@@ -88,6 +90,7 @@ const moduleLabels: Record<AdminModule, string> = {
   staffAccess: "admin management",
   customers: "customer operations",
   meters: "meter operations",
+  exceptions: "operational exception monitoring",
   tariffs: "tariff controls",
   readings: "reading operations",
   billing: "billing controls",

@@ -22,6 +22,8 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH6 now also includes the active DWDS logo system across core public/admin entry surfaces plus branded browser/app icons.
 - EH7 tooling recovery is now complete, and the searchable local design-assistant workflow is usable again from the repo.
 - EH8 billing governance is now implemented, tested, and validated.
+- EH9 has now started with an operational exceptions workspace for server-side anomaly detection across readings, receivables, payments, and service-status mismatches.
+- EH9 has now been tested and validated for the implemented exceptions-monitoring slice.
 
 ## Product Principles
 - **Modularity is mandatory:** Features must be separated into focused modules.
@@ -164,7 +166,7 @@ Current status:
 - SUPER_ADMIN-only reopen control, audited batch regeneration reasons, print-batch creation, and printed/distributed/returned/failed-delivery tracking are implemented.
 - The billing workspace now includes a month-end checklist and cycle audit trail, and printable bill views can log single-bill reprints.
 - Batch print output now renders as consumer-bill-first A5-ready pages without the dashboard operations-console shell.
-- EH8 is validated and closed. EH9 should not begin until the user explicitly requests it.
+- EH8 is validated and closed.
 
 ### EH9: Operational Exceptions & Field Service Workflow
 Goal: Detect billing and metering anomalies early while connecting office records to field technician work.
@@ -188,6 +190,11 @@ Expected outcomes:
 Rationale:
 - Help administrators catch data issues and service risks before they escalate.
 - Create continuity between customer complaints, technician action, and historical asset/service records.
+
+Current status:
+- EH9 is now validated through the new `/admin/exceptions` workspace.
+- The current implementation covers missing readings, abnormal consumption, possible leaks, duplicate-payment patterns, near-disconnection accounts, and service-status mismatches using live operational records.
+- Complaint intake, technician assignment, work-order status tracking, repair history, leak-report tracking, meter replacement history, and field-proof upload remain deferred for later EH9 slices only if explicitly approved.
 
 ### EH10: Consumer Communication & Notice Management
 Goal: Standardize customer-facing notices once billing and receivables workflows are stable.

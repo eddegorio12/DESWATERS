@@ -88,6 +88,8 @@
   - Historical collections filtering, receivables analytics, and reporting components
 - `src/features/follow-up/`
   - Overdue workflow actions, service-status enforcement, and the dedicated follow-up workspace
+- `src/features/exceptions/`
+  - EH9 exception rules, severity modeling, and the dedicated operational-exceptions workspace
 - `src/features/notifications/`
   - Notification templates, provider integrations, phone normalization, and delivery logging for customer notices
 - `src/features/marketing/`
@@ -211,6 +213,12 @@
 - `Bill` now carries draft-versus-finalized lifecycle state plus physical print/distribution fields so monthly closeout and home delivery remain auditable from the same transactional record set.
 - The billing workspace at `/admin/billing` is now the operational control point for checklist updates, cycle close/finalize/reopen actions, audited regeneration, print-batch creation, batch print access, and distribution updates.
 - Capability enforcement now distinguishes standard bill generation from finalization, reopen, regeneration, print-batch, and distribution authority.
+
+### EH9: Operational Exceptions & Field Service Workflow
+- EH9 has now started with a protected `/admin/exceptions` route that derives alert state directly from existing customer, meter, reading, bill, and payment records instead of introducing new persistence immediately.
+- Initial exception modeling lives under `src/features/exceptions/` and currently covers missing reading gaps, abnormal consumption changes, possible leak spikes, duplicate-payment patterns, disconnection-risk receivables, and service-status mismatches.
+- This implemented exception-monitoring slice has now been user-validated and should be treated as the current EH9 baseline.
+- Complaint tickets, technician assignments, work orders, repair history, leak-report records, and optional field-proof uploads should layer onto this workspace later only if explicitly approved, without collapsing the current domain-driven module structure.
 
 ## Database Schema: Current Repository Snapshot
 The excerpt below captures the long-lived core entities. EH8 billing-governance additions now also exist in the live schema through `BillingCycle`, `BillPrintBatch`, `BillingCycleEvent`, and the related lifecycle/distribution fields attached to `Bill`.

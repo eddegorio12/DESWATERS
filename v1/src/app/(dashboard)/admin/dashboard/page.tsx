@@ -9,6 +9,7 @@ import {
   Gauge,
   ShieldAlert,
   ReceiptText,
+  TriangleAlert,
   Users,
   WalletCards,
 } from "lucide-react";
@@ -65,6 +66,14 @@ const moduleCards: {
     description: "Register meters, assign them to customers, and verify service linkage.",
     action: "Open meters",
     icon: Gauge,
+  },
+  {
+    module: "exceptions",
+    href: "/admin/exceptions",
+    title: "Exceptions workspace",
+    description: "Catch missing readings, abnormal usage, payment duplicates, and status mismatches early.",
+    action: "Open exceptions",
+    icon: TriangleAlert,
   },
   {
     module: "tariffs",
@@ -242,6 +251,13 @@ export default async function AdminDashboardPage() {
       summary: "Approved usage records that can move into receivables.",
       count: `${approvedReadingCount} approved`,
       href: "/admin/billing",
+    },
+    {
+      module: "exceptions" as const,
+      title: "Operational exceptions",
+      summary: "Monitor anomalies that need office review before they become billing or service issues.",
+      count: "Alerts workspace",
+      href: "/admin/exceptions",
     },
     {
       module: "followUp" as const,
