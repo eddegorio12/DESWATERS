@@ -22,6 +22,7 @@
 - EH10 has now been tested and validated.
 - EH11 has now been tested and validated.
 - EH12 has now been tested and validated for the implemented route-operations and route-aware billing slice.
+- EH13 has now started with the first workflow-usability slice across the current admin surface.
 
 ## Implemented Milestones
 
@@ -57,6 +58,9 @@
 - A dedicated printable notice route now exists for standardized customer communications linked to live billing and follow-up records.
 - A dedicated system-readiness route now exists for backup snapshot logging, restore guidance, environment-readiness checks, and recent sign-in security visibility.
 - A dedicated route-operations route now exists for service-zone setup, service-route setup, meter coverage mapping, route-owner assignment, and route-level overdue plus collection-efficiency visibility.
+- A memory-bank-backed usability assessment now identifies dashboard density, table-heavy list screens, and weak next-step guidance as the main current UX friction points.
+- A reusable record-list interaction pattern now exists for search, filtering, empty states, and next-step guidance, and its first rollout is active on customers, pending readings, billing queue, and payment history.
+- The dashboard and sidebar wording have now been tightened to reduce scan time on the core daily-use workspace.
 
 ## Important Historical Constraints
 
@@ -101,6 +105,11 @@
 - Meter-reader route ownership now narrows the live reading-entry meter list for `METER_READER` accounts to their assigned routes only.
 - Billing print and distribution tracking now auto-scopes bill selection by grouping, defaults batch labels from the active route or zone scope, and can auto-fill the assigned distributor from route ownership.
 - Broader EH12 management analytics such as billed-versus-collected trends, disconnection-to-reconnection trends, and complaint-area visibility remain pending for later EH12 slices.
+
+### Usability Constraint
+- The current DWDS product is structurally coherent but still dense on several day-to-day operator screens.
+- Dashboard, list, and queue surfaces should now be optimized for scan speed, prioritization, and next-step clarity before broader new-domain expansion.
+- Future UX work should stay inside the current modular feature structure and should prefer shared patterns over one-off page rewrites.
 
 ### Cashiering Constraint
 - Cashier posting now supports auditable partial settlements plus printable official receipts.
@@ -176,5 +185,9 @@
 - Status: `complete`
 - Notes: The first EH12 slice now adds `ServiceZone`, `ServiceRoute`, and `StaffRouteAssignment` data structures, a protected `/admin/routes` workspace, meter-route mapping, meter-reader and bill-distribution ownership assignment, route-aware reading entry, route-aware print-batch metadata, grouping-driven print/distribution bill selection, smart batch labeling, and initial route/zone overdue plus collection-efficiency visibility. This implemented slice has now been tested and validated. Broader management trend dashboards remain pending for later EH12 refinements.
 
+### EH13: Workflow Usability & Operator Efficiency
+- Status: `in_progress`
+- Notes: The first EH13 slice is now implemented for dashboard wording simplification, reusable searchable/filterable list surfaces, clearer empty states, shared status-pill treatment on the new list pattern, and stronger next-step guidance on customer, reading, and payment workflows. Narrow-screen resilience and broader list-pattern rollout remain pending inside EH13.
+
 ## Current Next-Step Recommendation
-EH12 is now validated for its first operational slice. The next recommended step is to extend the new route data into deeper management dashboards, especially billed-versus-collected trends, top-loss areas, and disconnection-to-reconnection reporting.
+Continue EH13. Extend the new usability pattern to additional operational pages and audit narrow-screen behavior before reopening broader expansion work such as deeper management analytics.

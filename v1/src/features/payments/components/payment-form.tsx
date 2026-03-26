@@ -156,8 +156,8 @@ export function PaymentForm({ bills }: PaymentFormProps) {
           Record a settlement and issue an official receipt
         </h2>
         <p className="text-sm leading-6 text-muted-foreground">
-          Select an open bill, accept a full or partial payment, and keep each cashier
-          posting tied to a printable official receipt.
+          Select an open bill, post a full or partial settlement, and issue a receipt from
+          the same workflow.
         </p>
       </div>
 
@@ -241,6 +241,9 @@ export function PaymentForm({ bills }: PaymentFormProps) {
             until customer credit handling is explicitly approved.
           </p>
           <p className="mt-2 text-sm text-destructive">{form.formState.errors.amount?.message}</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Next step after save: open the new receipt or jump back to the related bill.
+          </p>
         </div>
 
         {selectedBill ? (

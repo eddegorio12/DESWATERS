@@ -4,13 +4,22 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
 import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
+import {
+  getSearchParamText,
+  matchesSearch,
+  type SearchParamValue,
+} from "@/features/admin/lib/list-filters";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { CustomerForm } from "@/features/customers/components/customer-form";
 import { CustomerList } from "@/features/customers/components/customer-list";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
-export default async function AdminCustomersPage() {
+type CustomerPageProps = {
+  searchParams: Promise<Record<string, SearchParamValue>>;
+};
+
+export default async function AdminCustomersPage({ searchParams }: CustomerPageProps) {
   const access = await getModuleAccess("customers");
 
   if (access.status !== "authorized") {
@@ -45,6 +54,27 @@ export default async function AdminCustomersPage() {
         },
       },
     },
+  });
+
+  const filters = await searchParams;
+  const query = getSearchParamText(filters.query);
+  const status = getSearchParamText(filters.status) as "ALL" | "ACTIVE" | "INACTIVE" | "DISCONNECTED";
+  const filteredCustomers = customers.filter((customer) => {
+    const matchesStatus = !status || status === "ALL" ? true : customer.status === status;
+
+    return (
+      matchesStatus &&
+      matchesSearch(
+        [
+          customer.accountNumber,
+          customer.name,
+          customer.address,
+          customer.contactNumber,
+          customer.email,
+        ],
+        query
+      )
+    );
   });
 
   const linkedMeterCount = customers.reduce((sum, customer) => sum + customer.meters.length, 0);
@@ -105,10 +135,15 @@ export default async function AdminCustomersPage() {
         },
       ]}
     >
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
-          <CustomerForm />
-          <CustomerList customers={customers} />
-        </section>
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
+        <CustomerForm />
+        <CustomerList
+          customers={filteredCustomers}
+          totalCount={customers.length}
+          query={query}
+          status={status || "ALL"}
+        />
+      </section>
     </AdminPageShell>
   );
 }

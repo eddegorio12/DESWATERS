@@ -57,8 +57,8 @@ export function CustomerForm() {
           Create a residential account
         </h2>
         <p className="text-sm leading-6 text-muted-foreground">
-          Enter the base customer record here. Meter assignment now happens in the meter
-          module.
+          Required: customer name and service address. Contact number and email stay
+          optional. Next step after save: assign a meter from the meter module.
         </p>
       </div>
 
@@ -121,7 +121,7 @@ export function CustomerForm() {
             {...form.register("email")}
           />
           <p className="mt-2 text-sm text-muted-foreground">
-            Optional, but required if overdue notices should also go out by email.
+            Optional. Add it now if overdue notices should also go out by email.
           </p>
           <p className="mt-2 text-sm text-destructive">{form.formState.errors.email?.message}</p>
         </div>

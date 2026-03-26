@@ -1,3 +1,4 @@
+import { RecordListSection } from "@/features/admin/components/record-list-section";
 import { GenerateBillButton } from "@/features/billing/components/generate-bill-button";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 
@@ -24,50 +25,64 @@ type ApprovedReadingBillQueueProps = {
     };
   }[];
   canGenerateBills: boolean;
+  totalCount: number;
+  query: string;
 };
 
 export function ApprovedReadingBillQueue({
   activeTariff,
   readings,
   canGenerateBills,
+  totalCount,
+  query,
 }: ApprovedReadingBillQueueProps) {
+  const hasActiveFilters = Boolean(query);
+  const resultsText = hasActiveFilters
+    ? `Showing ${readings.length} of ${totalCount} approved reading${totalCount === 1 ? "" : "s"}`
+    : `${readings.length} approved reading${readings.length === 1 ? "" : "s"} ready for billing`;
+
   return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Billing Queue
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Approved readings ready for billing
-          </h2>
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-            {canGenerateBills
-              ? "Generate bills manually from approved readings. Bills use the active tariff and create unpaid accounts receivable records."
-              : "Review the approved reading queue here. Bill generation remains limited to billing staff, managers, and admins."}
-          </p>
-        </div>
-        <div className="rounded-[1.4rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#f8fbfa,#eff7f5)] px-4 py-3 text-sm">
-          {activeTariff ? (
-            <div className="space-y-1">
-              <p className="font-medium text-foreground">
-                {activeTariff.name} v{activeTariff.version}
-              </p>
-              <p className="text-muted-foreground">
-                Base {formatCurrency(activeTariff.minimumCharge)} for up to{" "}
-                {activeTariff.minimumUsage} cu.m
-              </p>
-              <p className="text-muted-foreground">
-                Effective {activeTariff.effectiveFrom.toLocaleDateString()}
-              </p>
-            </div>
-          ) : (
-            <p className="text-muted-foreground">No active tariff found.</p>
-          )}
-        </div>
+    <RecordListSection
+      eyebrow="Billing Queue"
+      title="Approved readings ready for billing"
+      description={
+        canGenerateBills
+          ? "Narrow the queue, confirm the meter and customer, then generate bills against the active tariff."
+          : "Review the approved reading queue here. Bill generation remains limited to billing staff, managers, and admins."
+      }
+      resultsText={resultsText}
+      searchName="queueQuery"
+      searchValue={query}
+      searchPlaceholder="Search meter, customer, or account"
+      helperText="Use the queue to move only reviewed readings into receivables."
+      nextStep={
+        canGenerateBills
+          ? "Next: generate the bill to move the account into open receivables."
+          : undefined
+      }
+      resetHref="/admin/billing"
+      hasActiveFilters={hasActiveFilters}
+    >
+      <div className="rounded-[1.4rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#f8fbfa,#eff7f5)] px-4 py-3 text-sm">
+        {activeTariff ? (
+          <div className="space-y-1">
+            <p className="font-medium text-foreground">
+              {activeTariff.name} v{activeTariff.version}
+            </p>
+            <p className="text-muted-foreground">
+              Base {formatCurrency(activeTariff.minimumCharge)} for up to{" "}
+              {activeTariff.minimumUsage} cu.m
+            </p>
+            <p className="text-muted-foreground">
+              Effective {activeTariff.effectiveFrom.toLocaleDateString()}
+            </p>
+          </div>
+        ) : (
+          <p className="text-muted-foreground">No active tariff found.</p>
+        )}
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
+      <div className="overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border text-left">
             <thead className="bg-secondary/55">
@@ -128,7 +143,9 @@ export function ApprovedReadingBillQueue({
                     colSpan={6}
                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                   >
-                    No approved readings are waiting for bill generation.
+                    {hasActiveFilters
+                      ? "No approved readings match the current search."
+                      : "No approved readings are waiting for bill generation."}
                   </td>
                 </tr>
               )}
@@ -136,6 +153,6 @@ export function ApprovedReadingBillQueue({
           </table>
         </div>
       </div>
-    </section>
+    </RecordListSection>
   );
 }

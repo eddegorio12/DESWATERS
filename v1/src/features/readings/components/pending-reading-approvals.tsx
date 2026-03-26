@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { RecordListSection } from "@/features/admin/components/record-list-section";
 import { ApproveReadingButton } from "@/features/readings/components/approve-reading-button";
 import { DeleteReadingButton } from "@/features/readings/components/delete-reading-button";
 import { approveReadings } from "@/features/readings/actions";
@@ -34,6 +35,8 @@ type PendingReadingApprovalsProps = {
   canDeleteAny: boolean;
   canDeleteOwn: boolean;
   currentUserId: string;
+  totalCount: number;
+  query: string;
 };
 
 export function PendingReadingApprovals({
@@ -42,6 +45,8 @@ export function PendingReadingApprovals({
   canDeleteAny,
   canDeleteOwn,
   currentUserId,
+  totalCount,
+  query,
 }: PendingReadingApprovalsProps) {
   const router = useRouter();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -52,6 +57,10 @@ export function PendingReadingApprovals({
     () => canApprove && readings.length > 0 && selectedIds.length === readings.length,
     [canApprove, readings.length, selectedIds.length]
   );
+  const hasActiveFilters = Boolean(query);
+  const resultsText = hasActiveFilters
+    ? `Showing ${readings.length} of ${totalCount} pending reading${totalCount === 1 ? "" : "s"}`
+    : `${readings.length} reading${readings.length === 1 ? "" : "s"} waiting for review`;
 
   function handleToggleAll(checked: boolean) {
     setSelectedIds(checked ? readings.map((reading) => reading.id) : []);
@@ -81,44 +90,45 @@ export function PendingReadingApprovals({
   }
 
   return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Review Queue
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Pending reading approvals
-          </h2>
-          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">
-            {canApprove
-              ? "Billing staff, managers, and admins can approve individual readings or approve multiple pending-review submissions in one action."
-              : "This queue is visible for follow-up, but approval authority is limited to billing staff, managers, and admins."}
-          </p>
+    <RecordListSection
+      eyebrow="Review Queue"
+      title="Pending reading approvals"
+      description={
+        canApprove
+          ? "Review field submissions by meter, customer, or reader before they move into billing."
+          : "This queue stays visible for follow-up, but approval remains limited to billing staff, managers, and admins."
+      }
+      resultsText={resultsText}
+      searchName="pendingQuery"
+      searchValue={query}
+      searchPlaceholder="Search meter, customer, account, or reader"
+      helperText="Bulk approval is fastest when the queue has already been narrowed to the route, reader, or customer you need."
+      nextStep={canApprove ? "Next: approve clean readings to make them bill-ready." : undefined}
+      resetHref="/admin/readings"
+      hasActiveFilters={hasActiveFilters}
+    >
+      {canApprove ? (
+        <div className="flex flex-wrap items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="h-10 rounded-xl px-4"
+            disabled={isPending || selectedIds.length === 0}
+            onClick={handleBulkApprove}
+          >
+            {isPending ? "Approving selected..." : `Approve selected (${selectedIds.length})`}
+          </Button>
         </div>
-        {canApprove ? (
-          <div className="flex flex-wrap items-center gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="h-10 rounded-xl px-4"
-              disabled={isPending || selectedIds.length === 0}
-              onClick={handleBulkApprove}
-            >
-              {isPending ? "Approving selected..." : `Approve selected (${selectedIds.length})`}
-            </Button>
-          </div>
-        ) : null}
-      </div>
+      ) : null}
 
       {serverError ? (
-        <p className="mt-5 rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+        <p className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
           {serverError}
         </p>
       ) : null}
 
-      <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
+      <div className="overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border text-left">
             <thead className="bg-secondary/55">
@@ -216,7 +226,9 @@ export function PendingReadingApprovals({
                     colSpan={8}
                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                   >
-                    No readings are waiting for review right now.
+                    {hasActiveFilters
+                      ? "No pending readings match the current search."
+                      : "No readings are waiting for review right now."}
                   </td>
                 </tr>
               )}
@@ -224,6 +236,6 @@ export function PendingReadingApprovals({
           </table>
         </div>
       </div>
-    </section>
+    </RecordListSection>
   );
 }

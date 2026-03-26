@@ -4,6 +4,11 @@ import { MeterStatus, RouteResponsibility } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
+import {
+  getSearchParamText,
+  matchesSearch,
+  type SearchParamValue,
+} from "@/features/admin/lib/list-filters";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
 import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import {
@@ -16,7 +21,11 @@ import { ReadingList } from "@/features/readings/components/reading-list";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
-export default async function AdminReadingsPage() {
+type ReadingsPageProps = {
+  searchParams: Promise<Record<string, SearchParamValue>>;
+};
+
+export default async function AdminReadingsPage({ searchParams }: ReadingsPageProps) {
   const access = await getModuleAccess("readings");
 
   if (access.status !== "authorized") {
@@ -200,6 +209,19 @@ export default async function AdminReadingsPage() {
   const canApproveReading = canPerformCapability(access.user.role, "readings:approve");
   const canDeleteAnyReading = canPerformCapability(access.user.role, "readings:delete:any");
   const canDeleteOwnReading = canPerformCapability(access.user.role, "readings:delete:own");
+  const filters = await searchParams;
+  const pendingQuery = getSearchParamText(filters.pendingQuery);
+  const filteredPendingReadings = pendingReadings.filter((reading) =>
+    matchesSearch(
+      [
+        reading.meter.meterNumber,
+        reading.meter.customer?.name,
+        reading.meter.customer?.accountNumber,
+        reading.reader.name,
+      ],
+      pendingQuery
+    )
+  );
 
   return (
     <AdminPageShell
@@ -291,11 +313,13 @@ export default async function AdminReadingsPage() {
         )}
 
         <PendingReadingApprovals
-          readings={pendingReadings}
+          readings={filteredPendingReadings}
           canApprove={canApproveReading}
           canDeleteAny={canDeleteAnyReading}
           canDeleteOwn={canDeleteOwnReading}
           currentUserId={access.user.id}
+          totalCount={pendingReadings.length}
+          query={pendingQuery}
         />
         <ReadingList
           readings={readings}

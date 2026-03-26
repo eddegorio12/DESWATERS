@@ -1,5 +1,8 @@
 import type { Customer, CustomerStatus, MeterStatus } from "@prisma/client";
 
+import { RecordListSection } from "@/features/admin/components/record-list-section";
+import { StatusPill } from "@/features/admin/components/status-pill";
+
 type CustomerListProps = {
   customers: (Pick<
     Customer,
@@ -16,26 +19,41 @@ type CustomerListProps = {
       }[];
     }[];
   })[];
+  totalCount: number;
+  query: string;
+  status: "ALL" | CustomerStatus;
 };
 
-export function CustomerList({ customers }: CustomerListProps) {
-  return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Customer Registry
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Existing service accounts
-          </h2>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {customers.length} customer{customers.length === 1 ? "" : "s"} recorded
-        </p>
-      </div>
+export function CustomerList({ customers, totalCount, query, status }: CustomerListProps) {
+  const hasActiveFilters = Boolean(query || status !== "ALL");
+  const resultsText = hasActiveFilters
+    ? `Showing ${customers.length} of ${totalCount} account${totalCount === 1 ? "" : "s"}`
+    : `${customers.length} customer${customers.length === 1 ? "" : "s"} recorded`;
 
-      <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
+  return (
+    <RecordListSection
+      eyebrow="Customer Registry"
+      title="Existing service accounts"
+      description="Search by account number, customer name, address, contact, or email to find the next account that needs meter setup or status review."
+      resultsText={resultsText}
+      searchName="query"
+      searchValue={query}
+      searchPlaceholder="Search account, customer, address, or contact"
+      filterName="status"
+      filterValue={status}
+      filterLabel="Customer status"
+      filterOptions={[
+        { label: "All statuses", value: "ALL" },
+        { label: "Active", value: "ACTIVE" },
+        { label: "Inactive", value: "INACTIVE" },
+        { label: "Disconnected", value: "DISCONNECTED" },
+      ]}
+      helperText="Use this registry to confirm account details before assigning or transferring a meter."
+      nextStep="Next: open Meters to attach service hardware after the account is saved."
+      resetHref="/admin/customers"
+      hasActiveFilters={hasActiveFilters}
+    >
+      <div className="overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border text-left">
             <thead className="bg-secondary/55">
@@ -78,7 +96,7 @@ export function CustomerList({ customers }: CustomerListProps) {
                             >
                               {meter.meterNumber}
                               {meter.holderTransfers[0]
-                                ? ` • moved ${meter.holderTransfers[0].effectiveDate.toLocaleDateString()}`
+                                ? ` - moved ${meter.holderTransfers[0].effectiveDate.toLocaleDateString()}`
                                 : ""}
                             </span>
                           ))}
@@ -88,9 +106,17 @@ export function CustomerList({ customers }: CustomerListProps) {
                       )}
                     </td>
                     <td className="px-4 py-4">
-                      <span className="inline-flex rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground">
+                      <StatusPill
+                        tone={
+                          customer.status === "ACTIVE"
+                            ? "success"
+                            : customer.status === "DISCONNECTED"
+                              ? "danger"
+                              : "warning"
+                        }
+                      >
                         {customer.status.replace("_", " ")}
-                      </span>
+                      </StatusPill>
                     </td>
                   </tr>
                 ))
@@ -100,7 +126,9 @@ export function CustomerList({ customers }: CustomerListProps) {
                     colSpan={6}
                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                   >
-                    No customers yet. Create the first record with the form on this page.
+                    {hasActiveFilters
+                      ? "No customer accounts match the current search or status filter."
+                      : "No customers yet. Create the first record with the form on this page."}
                   </td>
                 </tr>
               )}
@@ -108,6 +136,6 @@ export function CustomerList({ customers }: CustomerListProps) {
           </table>
         </div>
       </div>
-    </section>
+    </RecordListSection>
   );
 }

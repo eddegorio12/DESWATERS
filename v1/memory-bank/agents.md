@@ -31,6 +31,7 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - EH10 is now complete through the printable consumer-notice workflow.
 - EH11 is now complete through tariff governance, admin security hardening, and the backup-readiness workspace.
 - EH12 is now validated for the implemented route-operations and route-aware billing slice.
+- EH13 is now the planned next lane, focused on reducing operator friction on the existing admin surface.
 
 ## 3. Enhancement Backlog Handling
 - Treat the enhancement roadmap in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md) as the canonical backlog instead of inventing new unnamed phases.
@@ -39,6 +40,11 @@ These rules define how any AI agent should behave when working in the DWDS codeb
   - [@architecture.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\@architecture.md) for structural or schema changes
   - [progress.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\progress.md) for completed work and constraints
 - If new future work is discovered, add it as a clearly named enhancement phase with dependencies and rationale instead of a loose bullet.
+
+When the requested work is UI/UX-oriented:
+- Treat the current priority as workflow usability, not a visual redesign for its own sake.
+- Prefer improvements that reduce scan time, simplify decisions, clarify next actions, and strengthen consistency across existing modules.
+- Keep UX changes modular and reusable; do not collapse feature boundaries with page-specific one-off patterns unless there is a strong reason.
 
 ## 4. Architectural Coding Standards
 - **Modularity over monoliths:** Break features into focused files and domain directories immediately.
@@ -51,6 +57,7 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - Use the installed `ui-ux-pro-max` skill when the task is design-heavy.
 - Preserve the existing DWDS direction: clean enterprise operations UI, light mode, high readability, restrained motion, and clear workflow hierarchy.
 - Continue using Tailwind CSS and `shadcn/ui` primitives. Feature-specific UI belongs in feature directories, not in `src/components/ui`.
+- Favor operational clarity over descriptive density. Shorter labels, clearer hierarchy, stronger status cues, and obvious next actions are preferable to long explanatory copy on primary operator screens.
 
 ## 6. Communication Protocol
 - Be direct and concise.

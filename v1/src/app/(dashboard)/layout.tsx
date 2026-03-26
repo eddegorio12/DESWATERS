@@ -21,37 +21,37 @@ const dashboardNavMeta = {
   dashboard: {
     href: "/admin/dashboard",
     label: "Dashboard",
-    description: "Daily control room and module access.",
+    description: "Daily priorities and module access.",
     icon: "dashboard",
   },
   staffAccess: {
     href: "/admin/staff-access",
     label: "Staff Access",
-    description: "Role controls and internal account management.",
+    description: "Admins, roles, and account status.",
     icon: "staffAccess",
   },
   systemReadiness: {
     href: "/admin/system-readiness",
     label: "System",
-    description: "Backup readiness, restore guidance, and security visibility.",
+    description: "Backups, restore steps, and security checks.",
     icon: "systemReadiness",
   },
   routeOperations: {
     href: "/admin/routes",
     label: "Routes",
-    description: "Zones, route ownership, and field planning analytics.",
+    description: "Zones, route ownership, and field planning.",
     icon: "routeOperations",
   },
   customers: {
     href: "/admin/customers",
     label: "Customers",
-    description: "Service accounts, contacts, and statuses.",
+    description: "Accounts, contacts, and service state.",
     icon: "customers",
   },
   exceptions: {
     href: "/admin/exceptions",
     label: "Exceptions",
-    description: "Operational alerts for readings, receivables, and data mismatches.",
+    description: "Alerts for readings, receivables, and mismatches.",
     icon: "exceptions",
   },
   meters: {
@@ -63,37 +63,37 @@ const dashboardNavMeta = {
   tariffs: {
     href: "/admin/tariffs",
     label: "Tariffs",
-    description: "Progressive billing rules and charge setup.",
+    description: "Billing rules and rate setup.",
     icon: "tariffs",
   },
   readings: {
     href: "/admin/readings",
     label: "Readings",
-    description: "Field input review and approval workflow.",
+    description: "Reading entry, review, and approval.",
     icon: "readings",
   },
   billing: {
     href: "/admin/billing",
     label: "Billing",
-    description: "Receivables generation and bill review.",
+    description: "Bill generation and receivable review.",
     icon: "billing",
   },
   payments: {
     href: "/admin/payments",
     label: "Payments",
-    description: "Cashier posting and receipt operations.",
+    description: "Cashier posting and receipts.",
     icon: "payments",
   },
   collections: {
     href: "/admin/collections",
     label: "Collections",
-    description: "Current-day totals and payment history.",
+    description: "Collections totals and payment history.",
     icon: "collections",
   },
   followUp: {
     href: "/admin/follow-up",
     label: "Follow-Up",
-    description: "Overdue workflow and service action stages.",
+    description: "Overdue workflow and service actions.",
     icon: "followUp",
   },
 } as const;
@@ -130,11 +130,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                 Workspace
               </p>
               <h1 className="mt-3 font-heading text-[1.8rem] tracking-[-0.03em] text-white">
-                DWDS operations console
+                DWDS operations
               </h1>
               <p className="mt-3 text-sm leading-6 text-white/68">
-                Navigate accounts, readings, billing, cashiering, and follow-up from one
-                protected application surface.
+                Move from account setup to collections without leaving the protected staff
+                workspace.
               </p>
             </div>
 

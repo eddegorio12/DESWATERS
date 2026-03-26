@@ -4,6 +4,11 @@ import { BillStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
+import {
+  getSearchParamText,
+  matchesSearch,
+  type SearchParamValue,
+} from "@/features/admin/lib/list-filters";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
 import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
@@ -13,7 +18,11 @@ import { PaymentHistoryList } from "@/features/payments/components/payment-histo
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
-export default async function AdminPaymentsPage() {
+type PaymentsPageProps = {
+  searchParams: Promise<Record<string, SearchParamValue>>;
+};
+
+export default async function AdminPaymentsPage({ searchParams }: PaymentsPageProps) {
   const access = await getModuleAccess("payments");
 
   if (access.status !== "authorized") {
@@ -116,6 +125,32 @@ export default async function AdminPaymentsPage() {
     (sum, bill) => sum + bill.outstandingBalance,
     0
   );
+  const filters = await searchParams;
+  const historyQuery = getSearchParamText(filters.historyQuery);
+  const historyBillStatus = getSearchParamText(filters.historyBillStatus) as
+    | "ALL"
+    | BillStatus;
+  const filteredPayments = payments.filter((payment) => {
+    const matchesBillStatus =
+      !historyBillStatus || historyBillStatus === "ALL"
+        ? true
+        : payment.bill.status === historyBillStatus;
+
+    return (
+      matchesBillStatus &&
+      matchesSearch(
+        [
+          payment.receiptNumber,
+          payment.bill.customer.name,
+          payment.bill.customer.accountNumber,
+          payment.bill.billingPeriod,
+          payment.referenceId,
+          payment.recordedBy.name,
+        ],
+        historyQuery
+      )
+    );
+  });
 
   return (
     <AdminPageShell
@@ -203,7 +238,12 @@ export default async function AdminPaymentsPage() {
 
         <section className="grid gap-6 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
           <PaymentForm bills={billOptions} />
-          <PaymentHistoryList payments={payments} />
+          <PaymentHistoryList
+            payments={filteredPayments}
+            totalCount={payments.length}
+            query={historyQuery}
+            billStatus={historyBillStatus || "ALL"}
+          />
         </section>
     </AdminPageShell>
   );

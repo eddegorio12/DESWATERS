@@ -19,6 +19,11 @@
    - This file records both the implemented system structure and the intended direction of named enhancement phases
    - Any major feature, schema, or workflow change must update this document
 
+5. **Operational usability over interface density**
+   - DWDS should optimize for fast, repeatable staff work, not only for completeness of module coverage
+   - New UI work should reduce decision friction, shorten scan time, and make urgent next actions obvious
+   - Prefer progressive disclosure, concise labels, and task-prioritized surfaces over long explanatory blocks
+
 ## Product Naming Convention
 - **Formal name:** `DEGORIO WATER DISTRIBUTION SERVICES`
 - **Short name:** `DWDS`
@@ -166,6 +171,62 @@
 - Reinstatement is blocked while overdue balances remain open.
 - Follow-up actions can now trigger provider-backed customer notifications, and every attempt is logged in-app for auditability.
 
+## Usability Assessment: Current Product State
+
+### Current Strengths
+- The public marketing surface is navigationally simple and communicates one coherent product story.
+- The protected workspace is organized by recognizable utility domains instead of one overloaded admin screen.
+- Role-aware access narrowing reduces irrelevant navigation for many staff roles.
+- The dashboard already frames the product around operational workflow rather than generic analytics.
+
+### Current Friction
+- The dashboard and module-entry surfaces are still text-heavy, which increases scan time and first-use friction.
+- List-heavy modules depend heavily on wide tables, making routine lookup and mobile use less forgiving.
+- Key operational pages still expose data well, but they do not consistently expose the fastest next action.
+- Search, filtering, prioritization, and urgency cues are not yet strong enough on high-volume record screens.
+- Some screens currently assume trained operators and will feel dense to occasional users or newly onboarded staff.
+
+### Architectural Interpretation
+- DWDS is already structurally sound, but its next UX gains should come from workflow compression rather than new top-level modules.
+- Future usability work should favor shared interaction patterns inside existing feature domains instead of one-off page rewrites.
+- The goal is not consumer-style simplification; the goal is lower operator effort for repetitive daily work.
+
+## Usability Architecture Targets
+
+### Shared UX Direction
+- Keep the existing domain-driven module structure.
+- Introduce reusable list-surface patterns for search, filters, empty states, summary counts, and row-level quick actions.
+- Introduce reusable form-surface patterns for field grouping, inline validation, save-state feedback, and post-submit next steps.
+- Standardize "priority first" page composition so urgent queues, blocking exceptions, and time-sensitive actions appear before long descriptive content.
+- Preserve server-authoritative workflows while making client surfaces more obvious and less verbose.
+
+### Prioritized UX Work
+
+#### UX1: Navigation & Dashboard Simplification
+- Reduce descriptive copy length in dashboard hero, workflow cards, and sidebar navigation where labels already carry enough meaning.
+- Promote the most common actions for each role more clearly from `/admin/dashboard`.
+- Keep dashboard cards focused on decision support: what needs attention now, what can wait, and where to go next.
+
+#### UX2: Reusable Record-List Interaction Pattern
+- Add consistent search, status filtering, and useful empty states to high-volume modules such as customers, meters, readings, billing, and payments.
+- Prefer quick operational cues such as counts, status chips, and overdue/pending emphasis above passive descriptive text.
+- Where tables remain necessary, keep them but pair them with stronger filter and action affordances rather than replacing them blindly.
+
+#### UX3: Form Workflow Tightening
+- Make create/edit forms easier to complete by grouping related fields, clarifying optional versus required input, and exposing the immediate next step after success.
+- Minimize dead-end create flows; after a successful record save, guide users toward the next operational action where appropriate.
+- Keep validation feedback inline and brief, with server failures translated into operator-readable language.
+
+#### UX4: Mobile and Narrow-Viewport Resilience
+- Treat tablet and narrow laptop widths as first-class internal-use targets.
+- Audit wide data tables and multi-column dashboard sections for stacked or summarized fallback layouts.
+- Preserve essential actions on smaller screens even when full record detail must collapse.
+
+#### UX5: Visual Priority System
+- Use stronger severity, pending, overdue, and success states consistently across exceptions, billing, readings, and follow-up.
+- Reserve dense descriptive copy for secondary help text; primary surfaces should communicate state through structure and emphasis first.
+- Build shared visual rules for "attention required", "read-only", "ready", and "completed" states across modules.
+
 ## Enhancement Architecture Targets
 
 ### EH1: Data Platform Hardening
@@ -260,6 +321,16 @@
 - Billing batch preparation now also consumes route and zone ownership context so grouping can auto-scope bill selection, derive default labels, and default route distributors from active route assignments.
 - This implemented EH12 slice has now been user-validated and should be treated as the current route-operations baseline.
 - Future EH12 slices should extend this domain with broader management trends rather than bypassing it with ad hoc reporting logic.
+
+### EH13: Workflow Usability & Operator Efficiency
+- EH13 should focus on making the existing product easier and faster to operate before adding major new workflow domains.
+- The first EH13 slice should target dashboard simplification, reusable searchable/filterable record lists, and clearer next-step guidance on high-frequency forms.
+- EH13 must stay modular: shared UI patterns should live in reusable components or feature-local primitives, not in page-specific copy-heavy rewrites.
+- Any EH13 work should improve scanability and actionability for trained staff without weakening server-side rules, auditability, or role boundaries.
+- Candidate first-pass targets are `/admin/dashboard`, customer registry, readings queue, billing queue, and payments history because they are the most likely daily-use operator surfaces.
+- The current implemented EH13 baseline now includes `src/features/admin/components/record-list-section.tsx`, `src/features/admin/components/status-pill.tsx`, and `src/features/admin/lib/list-filters.ts` as the shared primitives for searchable/filterable record surfaces.
+- The first EH13 rollout now applies those primitives to the customer registry, pending-reading approvals, approved-reading billing queue, and payment history, while dashboard and sidebar copy have been shortened for faster scanning.
+- High-frequency forms now also expose more explicit next-step cues, but broader narrow-screen fallback work remains pending for later EH13 slices.
 
 ## Database Schema: Current Repository Snapshot
 The excerpt below captures the long-lived core entities. EH8 billing-governance additions now also exist in the live schema through `BillingCycle`, `BillPrintBatch`, `BillingCycleEvent`, and the related lifecycle/distribution fields attached to `Bill`.

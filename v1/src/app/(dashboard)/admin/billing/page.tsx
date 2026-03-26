@@ -4,6 +4,11 @@ import { BillStatus, ReadingStatus, Role, RouteResponsibility } from "@prisma/cl
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
+import {
+  getSearchParamText,
+  matchesSearch,
+  type SearchParamValue,
+} from "@/features/admin/lib/list-filters";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
 import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import {
@@ -17,7 +22,11 @@ import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
 
-export default async function AdminBillingPage() {
+type BillingPageProps = {
+  searchParams: Promise<Record<string, SearchParamValue>>;
+};
+
+export default async function AdminBillingPage({ searchParams }: BillingPageProps) {
   const access = await getModuleAccess("billing");
 
   if (access.status !== "authorized") {
@@ -287,6 +296,18 @@ export default async function AdminBillingPage() {
   const canRegenerateCycle = canPerformCapability(access.user.role, "billing:regenerate");
   const canManagePrintBatches = canPerformCapability(access.user.role, "billing:print");
   const canTrackDistribution = canPerformCapability(access.user.role, "billing:distribute");
+  const filters = await searchParams;
+  const queueQuery = getSearchParamText(filters.queueQuery);
+  const filteredApprovedReadings = approvedReadings.filter((reading) =>
+    matchesSearch(
+      [
+        reading.meter.meterNumber,
+        reading.meter.customer?.name,
+        reading.meter.customer?.accountNumber,
+      ],
+      queueQuery
+    )
+  );
 
   return (
     <AdminPageShell
@@ -372,8 +393,10 @@ export default async function AdminBillingPage() {
 
         <ApprovedReadingBillQueue
           activeTariff={activeTariff}
-          readings={approvedReadings}
+          readings={filteredApprovedReadings}
           canGenerateBills={canGenerateBills}
+          totalCount={approvedReadings.length}
+          query={queueQuery}
         />
         <BillingGovernancePanel
           key={

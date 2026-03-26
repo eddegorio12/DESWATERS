@@ -330,13 +330,11 @@ export default async function AdminDashboardPage() {
 
               <div className="space-y-3">
                 <h1 className="max-w-3xl font-heading text-4xl leading-tight tracking-[-0.03em] sm:text-5xl">
-                  Utility operations, receivables, and collections in one daily control
-                  room.
+                  Run daily DWDS work from one control room.
                 </h1>
                 <p className="max-w-2xl text-sm leading-7 text-white/76 sm:text-base">
-                  Monitor the full DWDS workflow from account setup to cashier settlement,
-                  with billing review, printable statements, and reporting
-                  visibility in one protected surface.
+                  See what needs action now, then jump straight into the queue, module, or
+                  report that moves the workflow forward.
                 </p>
               </div>
 
@@ -351,7 +349,7 @@ export default async function AdminDashboardPage() {
                       })
                     )}
                   >
-                    Review reading queue
+                    Open reading queue
                   </Link>
                 ) : null}
                 {accessibleModules.has("collections") ? (
@@ -365,7 +363,7 @@ export default async function AdminDashboardPage() {
                       })
                     )}
                   >
-                    Open reporting
+                    Open collections
                   </Link>
                 ) : null}
               </div>
@@ -467,12 +465,12 @@ export default async function AdminDashboardPage() {
                     className="cursor-pointer rounded-[1.5rem] border border-border/80 bg-secondary/35 px-5 py-4 transition-colors duration-200 hover:bg-secondary/60"
                   >
                     <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="text-base font-semibold text-foreground">{item.title}</p>
-                        <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                          {item.summary}
-                        </p>
-                      </div>
+                    <div>
+                      <p className="text-base font-semibold text-foreground">{item.title}</p>
+                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                        {item.summary}
+                      </p>
+                    </div>
                       <ArrowRight className="mt-1 size-4 shrink-0 text-primary" />
                     </div>
                     <p className="mt-4 text-sm font-medium text-primary">{item.count}</p>
@@ -493,7 +491,7 @@ export default async function AdminDashboardPage() {
                   Modules
                 </p>
                 <h2 className="mt-3 font-heading text-3xl text-foreground">
-                  Jump into the exact operation you need
+                  Open the module you need
                 </h2>
               </div>
             </div>

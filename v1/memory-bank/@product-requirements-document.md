@@ -28,12 +28,14 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH10 has now been tested and validated.
 - EH11 has now been tested and validated.
 - EH12 has now been tested and validated for the implemented route-operations and route-aware billing slice.
+- The next recommended product pass is usability and operator-efficiency refinement on the existing admin surface before broader new-domain expansion.
 
 ## Product Principles
 - **Modularity is mandatory:** Features must be separated into focused modules.
 - **Operational clarity first:** Optimize for billing accuracy, cashier workflows, auditability, and low-friction daily operations.
 - **Server-enforced business rules:** Validation, settlement, billing math, and workflow state changes must remain authoritative on the server.
 - **Expand without rewrites:** Future customer channels, notifications, and advanced workflows should layer onto the same core data model.
+- **Operator efficiency matters:** The admin UI should minimize scan time, shorten repetitive workflows, and surface the next important action clearly.
 
 ## Implemented MVP Scope
 1. **Authentication:** internal admin email/password sign-in and protected admin routes.
@@ -283,6 +285,25 @@ Current status:
 - Route-aware reading entry is now active for meter readers assigned to specific routes.
 - Billing print and distribution tracking now auto-scopes bills by grouping, defaults batch labels from the selected route/zone scope, and can default the assigned distributor from route ownership.
 - Broader management trend dashboards remain pending for later EH12 slices.
+
+### EH13: Workflow Usability & Operator Efficiency
+Goal: Make the implemented DWDS admin surface easier and faster to use for trained staff before expanding into more major workflow domains.
+
+Expected outcomes:
+- simpler dashboard and navigation copy
+- clearer role-relevant actions from the main workspace
+- reusable search and filtering on record-heavy pages
+- stronger empty states, status cues, and next-step guidance
+- better narrow-screen behavior for internal tablet and laptop use
+
+Rationale:
+- The current product is structurally strong but still dense on several operator-facing screens.
+- Faster scanning and clearer priorities will improve real daily use more than adding another top-level module right now.
+
+Current status:
+- EH13 is now in progress.
+- The memory-bank now records a formal usability assessment and treats operator-efficiency refinement as the active product lane.
+- The first implemented EH13 slice now covers shorter dashboard/sidebar wording, reusable search-and-filter controls on core record lists, stronger empty states, and clearer next-step guidance on high-frequency operator forms.
 
 ## Rule of Thumb for Developers
 Always read [@architecture.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\@architecture.md) before changing schema or architecture. Every major addition must map either to the implemented MVP surface or to a named enhancement phase in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md).

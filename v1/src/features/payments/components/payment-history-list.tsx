@@ -2,6 +2,8 @@ import Link from "next/link";
 import type { BillStatus, PaymentMethod, PaymentStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import { RecordListSection } from "@/features/admin/components/record-list-section";
+import { StatusPill } from "@/features/admin/components/status-pill";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 import { cn } from "@/lib/utils";
 
@@ -30,46 +32,67 @@ type PaymentHistoryListProps = {
       };
     };
   }[];
+  totalCount: number;
+  query: string;
+  billStatus: "ALL" | BillStatus;
 };
 
 function formatMethod(method: PaymentMethod) {
   return method.replace("_", " ");
 }
 
-function getBillStatusClasses(status: BillStatus) {
+function getBillStatusTone(status: BillStatus) {
   if (status === "PAID") {
-    return "bg-emerald-100 text-emerald-700";
+    return "success" as const;
   }
 
   if (status === "PARTIALLY_PAID") {
-    return "bg-primary/10 text-primary";
+    return "accent" as const;
   }
 
   if (status === "OVERDUE") {
-    return "bg-destructive/10 text-destructive";
+    return "danger" as const;
   }
 
-  return "bg-secondary text-secondary-foreground";
+  return "neutral" as const;
 }
 
-export function PaymentHistoryList({ payments }: PaymentHistoryListProps) {
-  return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Payment History
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Recently recorded settlements
-          </h2>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {payments.length} payment{payments.length === 1 ? "" : "s"} recorded
-        </p>
-      </div>
+export function PaymentHistoryList({
+  payments,
+  totalCount,
+  query,
+  billStatus,
+}: PaymentHistoryListProps) {
+  const hasActiveFilters = Boolean(query || billStatus !== "ALL");
+  const resultsText = hasActiveFilters
+    ? `Showing ${payments.length} of ${totalCount} payment${totalCount === 1 ? "" : "s"}`
+    : `${payments.length} payment${payments.length === 1 ? "" : "s"} recorded`;
 
-      <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
+  return (
+    <RecordListSection
+      eyebrow="Payment History"
+      title="Recently recorded settlements"
+      description="Search receipts, customers, cashiers, bill periods, and references to verify the latest cashier activity quickly."
+      resultsText={resultsText}
+      searchName="historyQuery"
+      searchValue={query}
+      searchPlaceholder="Search receipt, customer, cashier, bill period, or reference"
+      filterName="historyBillStatus"
+      filterValue={billStatus}
+      filterLabel="Bill status"
+      filterOptions={[
+        { label: "All bill states", value: "ALL" },
+        { label: "Unpaid", value: "UNPAID" },
+        { label: "Partially paid", value: "PARTIALLY_PAID" },
+        { label: "Paid", value: "PAID" },
+        { label: "Overdue", value: "OVERDUE" },
+      ]}
+      helperText="Use payment history to confirm what was posted, who posted it, and which bill status changed."
+      nextStep="Need a new settlement? Use the cashier form on this page."
+      resetHref="/admin/payments"
+      hasActiveFilters={hasActiveFilters}
+    >
+      <div className="overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border text-left">
             <thead className="bg-secondary/55">
@@ -130,13 +153,9 @@ export function PaymentHistoryList({ payments }: PaymentHistoryListProps) {
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getBillStatusClasses(
-                          payment.bill.status
-                        )}`}
-                      >
+                      <StatusPill tone={getBillStatusTone(payment.bill.status)}>
                         {payment.bill.status.replace("_", " ")}
-                      </span>
+                      </StatusPill>
                     </td>
                     <td className="px-4 py-4 text-right">
                       <Link
@@ -160,7 +179,9 @@ export function PaymentHistoryList({ payments }: PaymentHistoryListProps) {
                     colSpan={7}
                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                   >
-                    No payments have been recorded yet.
+                    {hasActiveFilters
+                      ? "No payments match the current search or bill-status filter."
+                      : "No payments have been recorded yet."}
                   </td>
                 </tr>
               )}
@@ -168,6 +189,6 @@ export function PaymentHistoryList({ payments }: PaymentHistoryListProps) {
           </table>
         </div>
       </div>
-    </section>
+    </RecordListSection>
   );
 }

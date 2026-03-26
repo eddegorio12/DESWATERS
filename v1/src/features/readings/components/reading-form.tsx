@@ -98,8 +98,8 @@ export function ReadingForm({ meters }: ReadingFormProps) {
           Encode a meter reading
         </h2>
         <p className="text-sm leading-6 text-muted-foreground">
-          Select an assigned meter, confirm the last recorded value, and submit the new
-          reading for review.
+          Select an assigned meter, confirm the last recorded value, then submit the new
+          reading into the review queue.
         </p>
       </div>
 
@@ -148,7 +148,7 @@ export function ReadingForm({ meters }: ReadingFormProps) {
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {selectedMeter.routeCode ?? "Assign route from Route Operations"}
-                {selectedMeter.zoneName ? ` • ${selectedMeter.zoneName}` : ""}
+                {selectedMeter.zoneName ? ` - ${selectedMeter.zoneName}` : ""}
               </p>
             </div>
             <div>
@@ -184,6 +184,9 @@ export function ReadingForm({ meters }: ReadingFormProps) {
           />
           <p className="mt-2 text-sm text-destructive">
             {form.formState.errors.currentReading?.message}
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Next step after save: review or approve the new entry from the queue below.
           </p>
         </div>
 

@@ -362,15 +362,48 @@ Current progress:
 - EH12 has now been user-validated for this implemented route-operations slice.
 - Broader management dashboards for billed-versus-collected trends, top-loss/high-complaint areas, and disconnection-to-reconnection trends remain pending.
 
+### EH13: Workflow Usability & Operator Efficiency
+**Priority:** High
+**Status:** In Progress
+**Depends on:** EH2 complete; benefits from EH8 through EH12 being stable
+
+Scope:
+1. Simplify dashboard and navigation copy so role-relevant actions are easier to scan.
+2. Add reusable search, filtering, status-chip, and empty-state patterns to record-heavy modules.
+3. Tighten high-frequency create/edit forms with clearer required-versus-optional input and stronger next-step guidance.
+4. Improve narrow-screen and tablet resilience for dashboard sections and table-heavy operational pages.
+5. Standardize visual priority treatment for pending, overdue, read-only, success, and attention-required states.
+
+Exit criteria:
+- Daily-use operator screens are faster to scan and require less explanatory copy.
+- Core record modules expose search/filter controls consistently where volume justifies them.
+- High-frequency workflows guide staff clearly to the next operational action after a successful save.
+- Usability improvements remain modular and do not weaken role boundaries, auditability, or server-authoritative business logic.
+
+Recommended implementation order:
+1. Simplify `/admin/dashboard` and sidebar/navigation wording plus action emphasis.
+2. Add a shared list-surface interaction pattern to customers, readings, billing, and payments.
+3. Tighten record-create and queue-review forms with clearer feedback and next-step prompts.
+4. Audit narrow-screen fallback layouts for dashboard cards, tables, and key admin pages.
+
+Current progress:
+- The usability assessment is now recorded across the memory-bank.
+- Architecture guidance now treats lower operator effort and reduced interface density as the next planning target.
+- The first EH13 slice is now implemented on `/admin/dashboard`, `/admin/customers`, `/admin/readings`, `/admin/billing`, and `/admin/payments`.
+- A shared record-list section now provides search inputs, optional filters, reset actions, result counts, empty-state handling, and next-step prompts without changing server-authoritative business logic.
+- The customer registry, pending readings queue, approved-reading billing queue, and payment history now use that shared pattern with server-side `searchParams` handling.
+- Dashboard hero and sidebar wording are now shorter and more scan-focused, and key high-frequency forms now surface clearer required-versus-optional or next-step guidance.
+- Narrow-screen fallback auditing and rollout of the shared list pattern to more record-heavy modules remain pending inside EH13.
+
 ## Current Next Recommendation
 
-EH12 is now validated through its first operational slice. Continue with route-aware dashboards and richer management analytics rather than reopening earlier phases.
+Continue EH13. Improve operator efficiency on the existing product surface before reopening broader expansion work.
 
 Target outcomes:
-1. Keep the production stack simple: one Next.js app, one Supabase Postgres database, one Auth.js internal admin flow.
-2. Finish deployment wiring first: hosted PostgreSQL migration deployment, `AUTH_SECRET`, and first-admin bootstrap path.
-3. Preserve the implemented EH8 workflow and validated EH9 exceptions workspace as the current operational baseline.
-4. Keep subsequent EH12 work anchored to the new route and zone records instead of reintroducing free-text operational grouping.
+1. Extend the shared list pattern to more record-heavy modules and keep the filter vocabulary consistent.
+2. Audit tablet and narrow-laptop behavior on dashboard cards, tables, and queue surfaces.
+3. Preserve the implemented EH8 through EH12 workflows while making them faster and easier to operate.
+4. Keep deployment hardening and Supabase/Vercel setup on the release path, but treat workflow usability as the active product-facing improvement lane.
 
 Current auth note:
 - Local Auth.js migration is now complete and working with a seeded `SUPER_ADMIN`.

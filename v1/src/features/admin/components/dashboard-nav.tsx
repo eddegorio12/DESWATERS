@@ -77,7 +77,7 @@ export function DashboardNav({ items }: { items: readonly DashboardNavItem[] }) 
               </p>
               <p
                 className={cn(
-                  "mt-1 text-xs leading-5",
+                  "mt-1 line-clamp-2 text-xs leading-5",
                   isActive ? "text-[#49617d]" : "text-white/56 group-hover:text-white/72"
                 )}
               >

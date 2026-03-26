@@ -26,6 +26,11 @@ Define the simplest stack that is still robust enough for an internal, money-han
 - **React Hook Form**
 - **Zod**
 
+### UX Implementation Direction
+- Reuse shared list, form, and status patterns instead of building page-specific interaction models repeatedly
+- Keep operator-facing screens optimized for fast scanning and clear next actions
+- Treat tablet and narrow laptop layouts as real internal-use targets, not edge cases
+
 ## Production Recommendation
 
 ### Keep This Simple
@@ -83,11 +88,17 @@ This is the simplest robust default because it avoids self-hosted database work,
 - Add a charting library only when specific dashboards need it
 - Avoid a warehouse, BI stack, or separate analytics service in the current phase
 
+### Workflow Usability
+- Prefer reusable search/filter/status-chip controls implemented inside the current React/Tailwind/shadcn stack
+- Avoid introducing heavy grid frameworks or admin-template dependencies just to compensate for weak page-level UX
+- Fix dense operational pages by improving structure and interaction patterns first, not by adding more tooling
+
 ## Current Repo Alignment
 - The repo already aligns with this direction: Next.js, TypeScript, Prisma, PostgreSQL-first runtime, Auth.js credentials auth, Tailwind, shadcn/ui, React Hook Form, and Zod
 - EH8 now keeps billing-cycle state, bill finalization locks, print batches, distribution statuses, and audit history inside the same Prisma/PostgreSQL core instead of pushing that workflow into external tools
 - Current notification hooks remain optional integrations, not required core infrastructure
 - Current printable outputs should continue to use app-native rendering unless archival/download requirements become stronger
+- The next planned improvement lane is EH13 usability refinement on top of the existing stack, not a tooling or platform rewrite
 
 ## Practical Summary
 - **Keep:** Next.js, TypeScript, PostgreSQL, Prisma, Auth.js Credentials, bcrypt, Tailwind CSS, shadcn/ui, React Hook Form, Zod
