@@ -5,8 +5,9 @@ import { notFound } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
 import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
-import { getModuleAccess } from "@/features/auth/lib/authorization";
+import { canPerformCapability, getModuleAccess } from "@/features/auth/lib/authorization";
 import { PrintBillButton } from "@/features/billing/components/print-bill-button";
+import { TrackBillReprintButton } from "@/features/billing/components/track-bill-reprint-button";
 import {
   calculateBillIssueDate,
   calculateGracePeriodEnd,
@@ -66,7 +67,21 @@ export default async function AdminBillTemplatePage({
       usageAmount: true,
       totalCharges: true,
       status: true,
+      lifecycleStatus: true,
+      distributionStatus: true,
+      reprintCount: true,
       createdAt: true,
+      billingCycle: {
+        select: {
+          billingPeriodLabel: true,
+          status: true,
+        },
+      },
+      printBatch: {
+        select: {
+          label: true,
+        },
+      },
       customer: {
         select: {
           accountNumber: true,
@@ -98,6 +113,7 @@ export default async function AdminBillTemplatePage({
   const gracePeriodEnd = calculateGracePeriodEnd(bill.dueDate);
   const penaltyNotice = formatPenaltyNotice();
   const statusLabel = bill.status.replaceAll("_", " ");
+  const canTrackReprint = canPerformCapability(access.user.role, "billing:print");
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#eef6f4_0%,#f7faf9_35%,#ffffff_100%)] px-4 py-6 print:min-h-0 print:bg-white print:px-0 print:py-0 sm:px-6 sm:py-8">
@@ -119,6 +135,7 @@ export default async function AdminBillTemplatePage({
 
             <div className="flex flex-wrap items-center gap-3">
               <PrintBillButton />
+              {canTrackReprint ? <TrackBillReprintButton billId={bill.id} /> : null}
               <Link
                 href="/admin/billing"
                 className={cn(
@@ -209,6 +226,42 @@ export default async function AdminBillTemplatePage({
                     </p>
                     <p className="mt-2 text-base font-semibold text-[#14383c] print:mt-1 print:text-sm">{statusLabel}</p>
                     <p className="mt-1 text-xs text-[#68807c] print:hidden">Current settlement standing</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 print:gap-2 sm:grid-cols-3">
+                  <div className="rounded-[1.25rem] border border-[#dbe9e5] bg-white px-4 py-3 print:px-3 print:py-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6b8481]">
+                      EH8 Bill State
+                    </p>
+                    <p className="mt-2 text-base font-semibold text-[#14383c] print:mt-1 print:text-sm">
+                      {bill.lifecycleStatus}
+                    </p>
+                    <p className="mt-1 text-xs text-[#68807c] print:hidden">
+                      {bill.billingCycle?.status || "No cycle"}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-[#dbe9e5] bg-white px-4 py-3 print:px-3 print:py-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6b8481]">
+                      Distribution
+                    </p>
+                    <p className="mt-2 text-base font-semibold text-[#14383c] print:mt-1 print:text-sm">
+                      {bill.distributionStatus.replaceAll("_", " ")}
+                    </p>
+                    <p className="mt-1 text-xs text-[#68807c] print:hidden">
+                      Batch: {bill.printBatch?.label || "Not assigned"}
+                    </p>
+                  </div>
+                  <div className="rounded-[1.25rem] border border-[#dbe9e5] bg-white px-4 py-3 print:px-3 print:py-2">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6b8481]">
+                      Reprint Count
+                    </p>
+                    <p className="mt-2 text-base font-semibold text-[#14383c] print:mt-1 print:text-sm">
+                      {bill.reprintCount}
+                    </p>
+                    <p className="mt-1 text-xs text-[#68807c] print:hidden">
+                      Logged from this printable view
+                    </p>
                   </div>
                 </div>
               </div>

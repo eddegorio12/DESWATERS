@@ -28,6 +28,11 @@ export type StaffCapability =
   | "readings:delete:any"
   | "readings:delete:own"
   | "billing:generate"
+  | "billing:finalize"
+  | "billing:reopen"
+  | "billing:regenerate"
+  | "billing:print"
+  | "billing:distribute"
   | "payments:record"
   | "followup:update"
   | "service:disconnect"
@@ -67,6 +72,11 @@ const capabilityAccess: Record<StaffCapability, readonly Role[]> = {
   "readings:delete:any": [Role.SUPER_ADMIN, Role.ADMIN],
   "readings:delete:own": [Role.SUPER_ADMIN, Role.ADMIN, Role.METER_READER],
   "billing:generate": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
+  "billing:finalize": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
+  "billing:reopen": [Role.SUPER_ADMIN],
+  "billing:regenerate": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
+  "billing:print": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
+  "billing:distribute": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
   "payments:record": [Role.SUPER_ADMIN, Role.ADMIN, Role.CASHIER],
   "followup:update": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
   "service:disconnect": [Role.SUPER_ADMIN, Role.ADMIN],
@@ -99,6 +109,11 @@ const capabilityLabels: Record<StaffCapability, string> = {
   "readings:delete:any": "delete pending readings",
   "readings:delete:own": "delete your pending readings",
   "billing:generate": "generate bills",
+  "billing:finalize": "finalize billing cycles",
+  "billing:reopen": "reopen finalized billing cycles",
+  "billing:regenerate": "regenerate bill batches",
+  "billing:print": "prepare print batches",
+  "billing:distribute": "track bill distribution",
   "payments:record": "record payments",
   "followup:update": "update receivables follow-up",
   "service:disconnect": "disconnect service accounts",
@@ -120,7 +135,7 @@ export const roleSummaries: Record<Role, string> = {
   ADMIN: "Operational control across customer, billing, metering, cashier, and follow-up work.",
   CASHIER: "Cashier posting and collections monitoring without customer or billing mutations.",
   BILLING:
-    "Tariff visibility, reading approval, bill generation, collections visibility, and receivables follow-up updates.",
+    "Tariff visibility, reading approval, billing-cycle control, bill generation, collections visibility, and receivables follow-up updates.",
   METER_READER:
     "Reading entry access plus deletion of their own pending submissions before review.",
   TECHNICIAN:

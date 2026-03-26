@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { BillStatus, ReadingStatus } from "@prisma/client";
+import { BillStatus, ReadingStatus, Role } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
@@ -11,6 +11,7 @@ import {
   getModuleAccess,
 } from "@/features/auth/lib/authorization";
 import { ApprovedReadingBillQueue } from "@/features/billing/components/approved-reading-bill-queue";
+import { BillingGovernancePanel } from "@/features/billing/components/billing-governance-panel";
 import { UnpaidBillList } from "@/features/billing/components/unpaid-bill-list";
 import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { prisma } from "@/lib/prisma";
@@ -25,7 +26,8 @@ export default async function AdminBillingPage() {
 
   await syncReceivableStatuses();
 
-  const [activeTariff, approvedReadings, unpaidBills] = await Promise.all([
+  const [activeTariff, approvedReadings, unpaidBills, billingCycles, selectedCycle, staffOptions] =
+    await Promise.all([
     prisma.tariff.findFirst({
       where: {
         isActive: true,
@@ -74,8 +76,10 @@ export default async function AdminBillingPage() {
         dueDate: true,
         usageAmount: true,
         totalCharges: true,
-        status: true,
-        customer: {
+            status: true,
+            lifecycleStatus: true,
+            distributionStatus: true,
+            customer: {
           select: {
             accountNumber: true,
             name: true,
@@ -92,8 +96,127 @@ export default async function AdminBillingPage() {
         },
       },
     }),
+    prisma.billingCycle.findMany({
+      orderBy: [{ periodKey: "desc" }],
+      take: 6,
+      select: {
+        id: true,
+        billingPeriodLabel: true,
+        status: true,
+        _count: {
+          select: {
+            bills: true,
+            printBatches: true,
+          },
+        },
+      },
+    }),
+    prisma.billingCycle.findFirst({
+      orderBy: [{ periodKey: "desc" }],
+      select: {
+        id: true,
+        billingPeriodLabel: true,
+        status: true,
+        checklistReviewCompleted: true,
+        checklistReceivablesVerified: true,
+        checklistPrintReady: true,
+        checklistDistributionReady: true,
+        checklistMonthEndLocked: true,
+        closedAt: true,
+        reopenedAt: true,
+        finalizedAt: true,
+        bills: {
+          orderBy: [{ createdAt: "asc" }],
+          select: {
+            id: true,
+            billingPeriod: true,
+            totalCharges: true,
+            lifecycleStatus: true,
+            distributionStatus: true,
+            reprintCount: true,
+            customer: {
+              select: {
+                accountNumber: true,
+                name: true,
+              },
+            },
+            reading: {
+              select: {
+                meter: {
+                  select: {
+                    meterNumber: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        printBatches: {
+          orderBy: [{ createdAt: "desc" }],
+          select: {
+            id: true,
+            label: true,
+            grouping: true,
+            groupingValue: true,
+            status: true,
+            notes: true,
+            createdAt: true,
+            printedAt: true,
+            distributedAt: true,
+            returnedAt: true,
+            failedDeliveryAt: true,
+            assignedTo: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+            bills: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+        events: {
+          orderBy: [{ occurredAt: "desc" }],
+          take: 10,
+          select: {
+            id: true,
+            type: true,
+            note: true,
+            occurredAt: true,
+            actor: {
+              select: {
+                name: true,
+                role: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+    prisma.user.findMany({
+      where: {
+        isActive: true,
+        role: {
+          in: [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING, Role.CASHIER],
+        },
+      },
+      orderBy: [{ role: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        role: true,
+      },
+    }),
   ]);
   const canGenerateBills = canPerformCapability(access.user.role, "billing:generate");
+  const canFinalizeCycle = canPerformCapability(access.user.role, "billing:finalize");
+  const canReopenCycle = canPerformCapability(access.user.role, "billing:reopen");
+  const canRegenerateCycle = canPerformCapability(access.user.role, "billing:regenerate");
+  const canManagePrintBatches = canPerformCapability(access.user.role, "billing:print");
+  const canTrackDistribution = canPerformCapability(access.user.role, "billing:distribute");
 
   return (
     <AdminPageShell
@@ -181,6 +304,40 @@ export default async function AdminBillingPage() {
           activeTariff={activeTariff}
           readings={approvedReadings}
           canGenerateBills={canGenerateBills}
+        />
+        <BillingGovernancePanel
+          key={
+            selectedCycle
+              ? [
+                  selectedCycle.id,
+                  selectedCycle.status,
+                  selectedCycle.checklistReviewCompleted,
+                  selectedCycle.checklistReceivablesVerified,
+                  selectedCycle.checklistPrintReady,
+                  selectedCycle.checklistDistributionReady,
+                  selectedCycle.checklistMonthEndLocked,
+                  selectedCycle.bills.length,
+                  selectedCycle.printBatches.length,
+                  selectedCycle.events.length,
+                ].join(":")
+              : "no-billing-cycle"
+          }
+          cycles={billingCycles.map((cycle) => ({
+            id: cycle.id,
+            billingPeriodLabel: cycle.billingPeriodLabel,
+            status: cycle.status,
+            billCount: cycle._count.bills,
+            printBatchCount: cycle._count.printBatches,
+          }))}
+          selectedCycle={selectedCycle}
+          staffOptions={staffOptions}
+          capabilities={{
+            canFinalizeCycle,
+            canReopenCycle,
+            canRegenerateCycle,
+            canManagePrintBatches,
+            canTrackDistribution,
+          }}
         />
         <UnpaidBillList bills={unpaidBills} />
     </AdminPageShell>

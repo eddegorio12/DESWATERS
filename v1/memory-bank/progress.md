@@ -3,7 +3,7 @@
 ## Summary
 - The DWDS MVP is implemented and the memory-bank now treats that MVP as the baseline rather than an active checklist.
 - There are **no open MVP blockers** recorded in the memory-bank.
-- Future work is now tracked as named enhancement phases `EH1` through `EH7`.
+- Future work is now tracked as named enhancement phases `EH1` through `EH12`.
 - Clerk has now been removed from the live repo and replaced with internal Auth.js credentials authentication.
 - Internal admin password management is now available through a signed-in change-password form and a SUPER_ADMIN set-temporary-password flow.
 - Temporary-password accounts are now blocked from `/dashboard` and `/admin/*` until they complete a required password change.
@@ -14,6 +14,8 @@
 - The public GitHub repository surface has now been cleaned up with a stronger root README, CI workflow, license, and real redacted product screenshots.
 - DWDS now includes a custom PNG logo system with transparent brand asset handling, shared marketing/auth/dashboard lockups, and branded browser/app icons.
 - DWDS deployment planning now uses Supabase Postgres as the practical managed database target, with pooled runtime connections and direct migration connections validated from the repo.
+- EH8 billing governance has now been tested and validated.
+- Monthly billing now uses explicit billing-cycle controls, month-end checklist state, audited regeneration reasons, print-batch tracking, batch print views, and per-bill physical distribution statuses.
 
 ## Implemented Milestones
 
@@ -127,5 +129,25 @@
 - Status: `complete`
 - Notes: Search-assisted `ui-ux-pro-max` execution now works through `scripts/run-ui-ux-pro-max.ps1` and `npm run design:search -- ...`, with sibling Python imports hardened inside the skill entrypoints.
 
+### EH8: Billing Governance & Distribution Controls
+- Status: `complete`
+- Notes: Billing cycles, bill finalization locks, SUPER_ADMIN-only reopen control, audited batch regeneration, print-batch workflow tracking, batch print rendering, physical distribution states, and single-bill reprint logging are implemented and validated.
+
+### EH9: Operational Exceptions & Field Service Workflow
+- Status: `planned`
+- Notes: This phase is intended to add anomaly detection, complaint intake, technician assignment, work-order tracking, repair history, leak reporting, and optional field-proof upload support.
+
+### EH10: Consumer Communication & Notice Management
+- Status: `planned`
+- Notes: This phase will standardize printable customer notices and keep them tied to billing, follow-up, and service-status events while extending the existing notification log model.
+
+### EH11: Tariff Governance, Backup Recovery, and Admin Security
+- Status: `planned`
+- Notes: This phase will add tariff versioning, fee/rule auditability, backup visibility and restore-readiness surfaces, plus stronger internal admin protections such as lockout, timeout, login history, and optional `SUPER_ADMIN` 2FA.
+
+### EH12: Route Operations & Management Analytics
+- Status: `planned`
+- Notes: This phase will add route-aware reading and bill-distribution operations plus management dashboards for collections, delinquency, consumption, and service-trend visibility.
+
 ## Current Next-Step Recommendation
-The next recommended step is to **finish Vercel deployment setup** for the current staff/admin DWDS product surface by closing the remaining infrastructure tasks: successful Supabase migration deployment, production Auth.js environment setup, and first-admin bootstrap.
+EH8 is now closed. Do not begin EH9 until the user explicitly requests it.

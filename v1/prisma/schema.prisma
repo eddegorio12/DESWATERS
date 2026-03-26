@@ -52,6 +52,21 @@ model User {
   receivableFollowUpUpdates Bill[] @relation("ReceivableFollowUpUpdatedBy")
   customerStatusUpdates Customer[] @relation("CustomerStatusUpdatedBy")
   triggeredNotifications NotificationLog[] @relation("TriggeredNotifications")
+  finalizedBillingCycles BillingCycle[] @relation("BillingCycleFinalizedBy")
+  reopenedBillingCycles BillingCycle[] @relation("BillingCycleReopenedBy")
+  closedBillingCycles BillingCycle[] @relation("BillingCycleClosedBy")
+  billingCycleEvents BillingCycleEvent[] @relation("BillingCycleEventActor")
+  createdPrintBatches BillPrintBatch[] @relation("BillPrintBatchCreatedBy")
+  assignedPrintBatches BillPrintBatch[] @relation("BillPrintBatchAssignedTo")
+  printedPrintBatches BillPrintBatch[] @relation("BillPrintBatchPrintedBy")
+  distributedPrintBatches BillPrintBatch[] @relation("BillPrintBatchDistributedBy")
+  returnedPrintBatches BillPrintBatch[] @relation("BillPrintBatchReturnedBy")
+  failedDeliveryPrintBatches BillPrintBatch[] @relation("BillPrintBatchFailedBy")
+  finalizedBills Bill[] @relation("BillFinalizedBy")
+  printedBills Bill[] @relation("BillPrintedBy")
+  distributedBills Bill[] @relation("BillDistributedBy")
+  returnedBills Bill[] @relation("BillReturnedBy")
+  failedDeliveryBills Bill[] @relation("BillFailedBy")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -166,10 +181,126 @@ enum ReadingStatus {
   FLAGGED
 }
 
+model BillingCycle {
+  id                           String             @id @default(uuid())
+  periodKey                    String             @unique
+  billingPeriodLabel           String             @unique
+  status                       BillingCycleStatus @default(OPEN)
+  checklistReviewCompleted     Boolean            @default(false)
+  checklistReceivablesVerified Boolean            @default(false)
+  checklistPrintReady          Boolean            @default(false)
+  checklistDistributionReady   Boolean            @default(false)
+  checklistMonthEndLocked      Boolean            @default(false)
+  closedAt                     DateTime?
+  closedById                   String?
+  closedBy                     User?              @relation("BillingCycleClosedBy", fields: [closedById], references: [id])
+  reopenedAt                   DateTime?
+  reopenedById                 String?
+  reopenedBy                   User?              @relation("BillingCycleReopenedBy", fields: [reopenedById], references: [id])
+  finalizedAt                  DateTime?
+  finalizedById                String?
+  finalizedBy                  User?              @relation("BillingCycleFinalizedBy", fields: [finalizedById], references: [id])
+  bills                        Bill[]
+  printBatches                 BillPrintBatch[]
+  events                       BillingCycleEvent[]
+  createdAt                    DateTime           @default(now())
+  updatedAt                    DateTime           @updatedAt
+
+  @@index([status])
+}
+
+enum BillingCycleStatus {
+  OPEN
+  CLOSED
+  FINALIZED
+}
+
+model BillPrintBatch {
+  id              String              @id @default(uuid())
+  billingCycleId  String
+  billingCycle    BillingCycle        @relation(fields: [billingCycleId], references: [id])
+  label           String
+  grouping        BillPrintGrouping   @default(ALL)
+  groupingValue   String?
+  status          BillPrintBatchStatus @default(DRAFT)
+  notes           String?
+  assignedToId    String?
+  assignedTo      User?               @relation("BillPrintBatchAssignedTo", fields: [assignedToId], references: [id])
+  createdById     String
+  createdBy       User                @relation("BillPrintBatchCreatedBy", fields: [createdById], references: [id])
+  printedAt       DateTime?
+  printedById     String?
+  printedBy       User?               @relation("BillPrintBatchPrintedBy", fields: [printedById], references: [id])
+  distributedAt   DateTime?
+  distributedById String?
+  distributedBy   User?               @relation("BillPrintBatchDistributedBy", fields: [distributedById], references: [id])
+  returnedAt      DateTime?
+  returnedById    String?
+  returnedBy      User?               @relation("BillPrintBatchReturnedBy", fields: [returnedById], references: [id])
+  failedDeliveryAt DateTime?
+  failedDeliveryById String?
+  failedDeliveryBy User?              @relation("BillPrintBatchFailedBy", fields: [failedDeliveryById], references: [id])
+  bills           Bill[]
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([billingCycleId, status])
+}
+
+enum BillPrintGrouping {
+  ALL
+  ZONE
+  ROUTE
+  PUROK
+  MANUAL
+}
+
+enum BillPrintBatchStatus {
+  DRAFT
+  PRINTED
+  DISTRIBUTED
+  RETURNED
+  FAILED_DELIVERY
+}
+
+model BillingCycleEvent {
+  id             String                @id @default(uuid())
+  billingCycleId String
+  billingCycle   BillingCycle          @relation(fields: [billingCycleId], references: [id])
+  type           BillingCycleEventType
+  actorId        String
+  actor          User                  @relation("BillingCycleEventActor", fields: [actorId], references: [id])
+  note           String?
+  billId         String?
+  billPrintBatchId String?
+  occurredAt     DateTime              @default(now())
+  createdAt      DateTime              @default(now())
+
+  @@index([billingCycleId, occurredAt(sort: Desc)])
+  @@index([type])
+}
+
+enum BillingCycleEventType {
+  CYCLE_CREATED
+  CYCLE_CLOSED
+  CYCLE_REOPENED
+  CYCLE_FINALIZED
+  BILLS_REGENERATED
+  PRINT_BATCH_CREATED
+  PRINT_BATCH_PRINTED
+  PRINT_BATCH_DISTRIBUTED
+  PRINT_BATCH_RETURNED
+  PRINT_BATCH_FAILED_DELIVERY
+  SINGLE_BILL_REPRINTED
+  CHECKLIST_UPDATED
+}
+
 // Bills generated from Readings
 model Bill {
   id            String   @id @default(uuid())
   billingPeriod String   // e.g., "Oct 2026"
+  billingCycleId String?
+  billingCycle  BillingCycle? @relation(fields: [billingCycleId], references: [id])
   dueDate       DateTime
   
   customerId    String
@@ -181,17 +312,55 @@ model Bill {
   usageAmount   Float
   totalCharges  Float
   status        BillStatus @default(UNPAID)
+  lifecycleStatus BillLifecycleStatus @default(DRAFT)
+  finalizedAt   DateTime?
+  finalizedById String?
+  finalizedBy   User? @relation("BillFinalizedBy", fields: [finalizedById], references: [id])
   followUpStatus ReceivableFollowUpStatus @default(CURRENT)
   followUpStatusUpdatedAt DateTime?
   followUpNote  String?
   followUpUpdatedById String?
   followUpUpdatedBy User? @relation("ReceivableFollowUpUpdatedBy", fields: [followUpUpdatedById], references: [id])
+  printBatchId  String?
+  printBatch    BillPrintBatch? @relation(fields: [printBatchId], references: [id])
+  distributionStatus BillDistributionStatus @default(PENDING_PRINT)
+  printedAt     DateTime?
+  printedById   String?
+  printedBy     User? @relation("BillPrintedBy", fields: [printedById], references: [id])
+  distributedAt DateTime?
+  distributedById String?
+  distributedBy User? @relation("BillDistributedBy", fields: [distributedById], references: [id])
+  returnedAt    DateTime?
+  returnedById  String?
+  returnedBy    User? @relation("BillReturnedBy", fields: [returnedById], references: [id])
+  failedDeliveryAt DateTime?
+  failedDeliveryById String?
+  failedDeliveryBy User? @relation("BillFailedBy", fields: [failedDeliveryById], references: [id])
+  deliveryNote  String?
+  reprintCount  Int @default(0)
   
   payments      Payment[]
   notifications NotificationLog[]
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+
+  @@index([billingCycleId, lifecycleStatus])
+  @@index([distributionStatus])
+  @@index([printBatchId])
+}
+
+enum BillLifecycleStatus {
+  DRAFT
+  FINALIZED
+}
+
+enum BillDistributionStatus {
+  PENDING_PRINT
+  PRINTED
+  DISTRIBUTED
+  RETURNED
+  FAILED_DELIVERY
 }
 
 enum BillStatus {

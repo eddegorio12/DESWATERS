@@ -21,6 +21,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH6 public-surface expansion is now validated and closed after testing.
 - EH6 now also includes the active DWDS logo system across core public/admin entry surfaces plus branded browser/app icons.
 - EH7 tooling recovery is now complete, and the searchable local design-assistant workflow is usable again from the repo.
+- EH8 billing governance is now implemented, tested, and validated.
 
 ## Product Principles
 - **Modularity is mandatory:** Features must be separated into focused modules.
@@ -136,6 +137,120 @@ Expected outcomes:
 Current status:
 - The searchable `ui-ux-pro-max` workflow has been restored through a repo-local PowerShell launcher and `npm run design:search -- ...`.
 - Skill entrypoints now resolve local sibling imports reliably across supported interpreter paths.
+
+### EH8: Billing Governance & Distribution Controls
+Goal: Make the monthly billing cycle safer, auditable, and operationally trackable from bill preparation through physical distribution.
+
+Expected outcomes:
+- billing cycle controls, including open/close billing periods
+- draft and finalized bill states
+- bill locking after finalization
+- billing reopen flow restricted to `SUPER_ADMIN`
+- bill-batch regeneration with required audit reason
+- month-end billing checklist
+- monthly billing batches
+- print workflows by zone, route, or purok
+- single-bill reprint support
+- printed and distributed bill statuses
+- distribution date and assigned staff tracking
+- failed-delivery and returned-bill status handling
+
+Rationale:
+- Prevent accidental edits after bills have already been finalized or distributed.
+- Turn printing and home distribution into a first-class workflow instead of a one-click output action.
+
+Current status:
+- Billing cycles now support open, closed, and finalized states, plus draft-versus-finalized bill locking.
+- SUPER_ADMIN-only reopen control, audited batch regeneration reasons, print-batch creation, and printed/distributed/returned/failed-delivery tracking are implemented.
+- The billing workspace now includes a month-end checklist and cycle audit trail, and printable bill views can log single-bill reprints.
+- Batch print output now renders as consumer-bill-first A5-ready pages without the dashboard operations-console shell.
+- EH8 is validated and closed. EH9 should not begin until the user explicitly requests it.
+
+### EH9: Operational Exceptions & Field Service Workflow
+Goal: Detect billing and metering anomalies early while connecting office records to field technician work.
+
+Expected outcomes:
+- exception alerts for missing meter readings
+- unusually high or unusually low consumption detection
+- possible leak flagging
+- duplicate-payment alerts
+- unpaid accounts nearing disconnection
+- disconnected accounts with recent payment activity
+- inactive consumers with new readings
+- complaint ticketing
+- technician assignment
+- work-order status tracking
+- repair history
+- leak report tracking
+- meter replacement history
+- photo upload for field proof
+
+Rationale:
+- Help administrators catch data issues and service risks before they escalate.
+- Create continuity between customer complaints, technician action, and historical asset/service records.
+
+### EH10: Consumer Communication & Notice Management
+Goal: Standardize customer-facing notices once billing and receivables workflows are stable.
+
+Expected outcomes:
+- printable notice templates
+- billing reminders
+- overdue reminders
+- disconnection notices
+- reconnection confirmations
+- service interruption announcements
+
+Rationale:
+- Printed/template-driven notices provide immediate operational value even before full SMS integration is approved.
+- Customer communication should build on authoritative billing, overdue, and service-status data.
+
+### EH11: Tariff Governance, Backup Recovery, and Admin Security
+Goal: Strengthen production readiness by making rate changes traceable, data recovery explicit, and internal access controls more resilient.
+
+Expected outcomes:
+- tariff table history
+- tariff effectivity dates
+- minimum-bill settings
+- penalty settings
+- reconnection-fee settings
+- audit trail for who changed rates and when
+- automatic database backups
+- backup-status visibility
+- downloadable exports
+- documented restore procedure
+- monthly snapshot exports
+- forced password reset for newly created admins
+- inactive-session timeout
+- failed-login lockout
+- optional 2FA for `SUPER_ADMIN`
+- IP/device logs
+- login history
+
+Rationale:
+- Rate changes must remain traceable to the exact billing cycle and rule set used.
+- Backup and restore capability is a core production requirement for a money-handling internal system.
+- Admin security controls are higher-value near-term safeguards than nonessential UI polish.
+
+### EH12: Route Operations & Management Analytics
+Goal: Improve day-to-day field execution and give owners/managers visibility into collection performance and operational risk.
+
+Expected outcomes:
+- route assignment per meter reader
+- route assignment per bill distributor
+- zone performance reporting
+- route-based overdue lists
+- route-based print batches
+- dashboards for collection efficiency
+- dashboards for overdue aging
+- top-delinquent-zone visibility
+- high-loss or high-complaint area visibility
+- average consumption per zone
+- monthly billed-versus-collected tracking
+- disconnection-to-reconnection trend reporting
+
+Rationale:
+- Route-aware tooling improves actual reading and distribution operations, not just recordkeeping.
+- Management dashboards should support decisions, prioritization, and accountability rather than only exposing raw reports.
 
 ## Rule of Thumb for Developers
 Always read [@architecture.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\@architecture.md) before changing schema or architecture. Every major addition must map either to the implemented MVP surface or to a named enhancement phase in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md).

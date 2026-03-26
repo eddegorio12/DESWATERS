@@ -81,7 +81,7 @@
 - `src/features/readings/`
   - Reading intake, deletion guardrails, approval actions, and approval/history UI
 - `src/features/billing/`
-  - Billing math, bill generation, unpaid-bill surfaces, and printable bill actions/UI
+  - Billing math, bill generation, billing-cycle governance, print/distribution tracking, and printable bill actions/UI
 - `src/features/payments/`
   - Manual payment validation, cashier entry UI, payment history UI, and printable receipt workflow
 - `src/features/reports/`
@@ -121,7 +121,10 @@
 
 ### Billing Workflow
 - Bills are generated from approved readings using the active tariff.
-- Printable bill views expose issue date, due date, grace period, and display-only disconnection notice.
+- Bill generation now auto-attaches each bill to a month-specific `BillingCycle` so close, finalize, reopen, and regeneration rules are enforced per cycle.
+- Finalizing a billing cycle locks its bills into `FINALIZED` lifecycle state, while reopen remains restricted to `SUPER_ADMIN` and is blocked after completed payments exist.
+- Monthly print handling now runs through `BillPrintBatch` records with grouping, assigned staff, printed/distributed/returned/failed-delivery states, and auditable cycle events.
+- Printable bill views expose issue date, due date, grace period, EH8 lifecycle/distribution context, and single-bill reprint logging.
 
 ### Payment Workflow
 - Payments are recorded manually against open bills.
@@ -203,7 +206,14 @@
 - The skill entrypoints now register their script directory before importing sibling modules so execution does not depend on a specific interpreter's default `sys.path` behavior.
 - Do not let tooling failure push design logic into giant page files or ad hoc styling sprawl.
 
+### EH8: Billing Governance & Distribution Controls
+- EH8 now introduces `BillingCycle`, `BillPrintBatch`, and `BillingCycleEvent` as first-class billing-governance records in the core Prisma schema.
+- `Bill` now carries draft-versus-finalized lifecycle state plus physical print/distribution fields so monthly closeout and home delivery remain auditable from the same transactional record set.
+- The billing workspace at `/admin/billing` is now the operational control point for checklist updates, cycle close/finalize/reopen actions, audited regeneration, print-batch creation, batch print access, and distribution updates.
+- Capability enforcement now distinguishes standard bill generation from finalization, reopen, regeneration, print-batch, and distribution authority.
+
 ## Database Schema: Current Repository Snapshot
+The excerpt below captures the long-lived core entities. EH8 billing-governance additions now also exist in the live schema through `BillingCycle`, `BillPrintBatch`, `BillingCycleEvent`, and the related lifecycle/distribution fields attached to `Bill`.
 
 ```prisma
 generator client {

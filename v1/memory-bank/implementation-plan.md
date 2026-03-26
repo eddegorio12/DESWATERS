@@ -11,7 +11,7 @@ Developers should not reopen completed MVP steps unless they are fixing regressi
 ### Foundation
 - Next.js App Router project initialized with TypeScript and Tailwind CSS
 - `shadcn/ui` base primitives configured under `src/components/ui`
-- Prisma integrated with the current local SQLite-backed development setup
+- Prisma integrated with the validated PostgreSQL-first runtime setup
 - Internal Auth.js credentials authentication now protects `/dashboard` and `/admin/*`
 - Admin accounts now authenticate directly against Prisma with bcrypt password hashes
 - Clerk has now been fully removed from the live auth flow and dependency surface
@@ -208,29 +208,152 @@ Current progress:
 - `package.json` now exposes `npm run design:search -- ...` as the stable repo entrypoint for searchable design-system and domain lookups.
 - Search and `--design-system` execution have been verified successfully from the repo after the recovery work.
 
+### EH8: Billing Governance & Distribution Controls
+**Priority:** Highest
+**Status:** Complete
+**Depends on:** EH1 and EH2 complete; benefits from EH4 and EH5 being complete
+
+Scope:
+1. Add billing-period lifecycle controls for open, closed, draft, and finalized states.
+2. Lock bills after finalization and restrict billing reopen actions to `SUPER_ADMIN`.
+3. Require an audit reason when regenerating a bill batch.
+4. Add monthly billing batches with print and distribution workflow tracking.
+5. Support print grouping by zone, route, or purok plus single-bill reprint.
+6. Track printed, distributed, returned, and failed-delivery statuses with assigned staff and dates.
+7. Add a month-end billing checklist so closeout becomes operationally explicit.
+
+Exit criteria:
+- Staff cannot accidentally edit or regenerate finalized billing data without an authorized workflow.
+- Monthly bill printing and home distribution are tracked as operational states, not ad hoc actions.
+- Audit history clearly shows who finalized, reopened, regenerated, printed, and distributed billing batches.
+
+Recommended implementation order:
+1. Introduce billing-cycle and bill-batch data model changes.
+2. Add finalization, locking, reopen, and regeneration server rules.
+3. Add print-batch creation plus print/distribution status transitions.
+4. Add month-end checklist UI and validation.
+5. Re-run full billing, payment, and printable-output smoke tests.
+
+Current progress:
+- Prisma now models `BillingCycle`, `BillPrintBatch`, and `BillingCycleEvent`, while `Bill` now carries lifecycle-lock and physical-distribution fields.
+- Bill generation now auto-attaches records to a month-specific billing cycle and blocks new bills once that cycle is closed or finalized.
+- The billing workspace now exposes the EH8 checklist, close/finalize controls, SUPER_ADMIN reopen flow, audited regeneration reason capture, print-batch creation, batch print access, distribution state transitions, and audit history.
+- Printable bill views now surface EH8 lock/distribution context and can log single-bill reprints into the cycle audit trail.
+- Batch print output now renders as consumer-bill-first A5-ready pages without inheriting the dashboard operations-console shell.
+- EH8 has been user-validated and is now closed.
+
+### EH9: Operational Exceptions & Field Service Workflow
+**Priority:** High
+**Status:** Planned
+**Depends on:** EH8 recommended for stable billing state; EH2 required for role boundaries
+
+Scope:
+1. Add exception detection for missing readings, abnormal consumption, possible leaks, duplicate payments, and status mismatches.
+2. Add complaint ticketing and technician assignment.
+3. Add work-order lifecycle tracking for field operations.
+4. Add repair history, leak report tracking, meter replacement history, and field-proof photo support.
+
+Exit criteria:
+- Admins can identify operational anomalies from a dedicated workspace without manually scanning records.
+- Complaints and technician work are traceable from intake through resolution.
+- Field actions can be tied back to consumers, meters, and service history.
+
+Recommended implementation order:
+1. Define exception rules and alert severity model.
+2. Add complaint, work-order, and service-history schema support.
+3. Build protected exception-monitoring and field-service routes.
+4. Add optional photo upload path only when storage is explicitly enabled.
+5. Validate alert accuracy against seeded abnormal cases and recent billing/payment flows.
+
+### EH10: Consumer Communication & Notice Management
+**Priority:** Medium
+**Status:** Planned
+**Depends on:** EH5 complete; EH8 recommended; EH9 optional for service-related notices
+
+Scope:
+1. Add printable notice templates for billing reminders, overdue reminders, and disconnection notices.
+2. Add reconnection confirmations and service interruption announcements.
+3. Keep notice generation tied to billing, follow-up, and service-status data.
+4. Preserve notification logging and approval context for each generated notice.
+
+Exit criteria:
+- Staff can produce standardized notices from the system without external templates.
+- Generated notices are traceable to the relevant billing, follow-up, or service event.
+- Notice content remains consistent with current account status and workflow stage.
+
+Recommended implementation order:
+1. Define template types and shared notice data contracts.
+2. Build printable server-rendered notice views.
+3. Add notice generation actions from follow-up, billing, and service screens.
+4. Extend notification logs to cover printed/manual notices as first-class records.
+
+### EH11: Tariff Governance, Backup Recovery, and Admin Security
+**Priority:** Highest
+**Status:** Planned
+**Depends on:** EH1 and EH2 complete
+
+Scope:
+1. Add tariff versioning with effectivity dates plus audit history for rate changes.
+2. Add minimum-bill, penalty, and reconnection-fee settings with explicit change tracking.
+3. Add backup-status visibility, monthly snapshot exports, and restore-procedure documentation surfaces.
+4. Add stronger internal admin protections: forced password reset for new admins, session timeout, failed-login lockout, optional `SUPER_ADMIN` 2FA, IP/device logs, and login history.
+
+Exit criteria:
+- Each billing cycle can be traced to the tariff rules active at generation time.
+- Backup and restore readiness is visible and documented from within operations.
+- Internal admin access has production-safe baseline safeguards for a money-handling system.
+
+Recommended implementation order:
+1. Add tariff-version and billing-rule schema support.
+2. Attach billing generation to effective tariff snapshots instead of mutable current settings.
+3. Add login audit and session-security controls within the existing Auth.js model.
+4. Expose backup status, exports, and restore documentation in an admin-only operations surface.
+5. Validate auth edge cases, tariff roll-forward behavior, and rollback/recovery documentation.
+
+### EH12: Route Operations & Management Analytics
+**Priority:** Medium
+**Status:** Planned
+**Depends on:** EH8 for route-based bill batches; EH9 recommended for richer field metrics
+
+Scope:
+1. Add route assignment per meter reader and bill distributor.
+2. Add route-based print batches, overdue lists, and zone performance reporting.
+3. Add management dashboards for collection efficiency, overdue aging, top delinquent zones, high-loss/high-complaint areas, average consumption per zone, billed-versus-collected trends, and disconnection-to-reconnection trends.
+
+Exit criteria:
+- Daily route operations can be planned and reviewed directly in the system.
+- Managers can evaluate collection performance and problem areas without assembling data manually.
+- Analytics remain derived from authoritative transactional records in the main application database.
+
+Recommended implementation order:
+1. Add route, zone, and assignment data structures.
+2. Extend billing/distribution and readings workflow to use route ownership.
+3. Build route-focused operational reports.
+4. Add management dashboards using server-side queries first, with charting only if needed.
+
 ## Current Next Recommendation
 
-The next recommended task is **Vercel deployment setup** for the implemented DWDS staff/admin application.
+EH8 is closed. Do not begin EH9 until the user explicitly requests that next phase.
 
 Target outcomes:
-1. Confirm the Vercel project root directory remains `v1`, which is already configured.
-2. Finish the Supabase-managed PostgreSQL connection by completing successful migration deployment and wiring the hosted app to the managed database environment variables.
-3. Set secure Auth.js production environment variables, especially `AUTH_SECRET`.
-4. Define the first-admin bootstrap path before exposing the admin sign-in flow publicly.
-5. Validate the hosted staff sign-in and dashboard flow against the final deployment infrastructure.
+1. Keep the production stack simple: one Next.js app, one Supabase Postgres database, one Auth.js internal admin flow.
+2. Finish deployment wiring first: hosted PostgreSQL migration deployment, `AUTH_SECRET`, and first-admin bootstrap path.
+3. Preserve the implemented EH8 workflow as the new billing-governance baseline.
+4. Do not begin EH9 until the user explicitly requests that next phase.
 
 Current auth note:
 - Local Auth.js migration is now complete and working with a seeded `SUPER_ADMIN`.
-- The next auth-related work should focus on production environment setup and any future forced-password-rotation UX, not on restoring external identity providers.
+- The next auth-related work should focus on production environment setup plus EH11 security controls, not on restoring external identity providers.
 
 Current dependency note:
-- Until the production auth variables and first-admin seed are in place, treat the Vercel deployment as staging rather than the final production release.
+- Until the production auth variables and first-admin seed are in place, treat the hosted app as staging rather than the final production release.
 - For managed Postgres deployment, keep `DATABASE_URL` on the provider pooler/runtime path and `DIRECT_URL` on the provider direct migration path.
+- EH8 should not be treated as done until finalized bills can no longer be edited through any existing billing or payment mutation path.
 
 Current rollout status:
 - Vercel is already building from the `v1` root directory.
 - Supabase pooled and direct connection strings have been validated far enough for Prisma to reach the managed database and enumerate the committed migrations.
-- Final database rollout is not yet closed until migration deployment finishes successfully and the hosted app is confirmed against those environment variables.
+- Final deployment hardening is not yet closed until migration deployment finishes successfully and the hosted app is confirmed against those environment variables.
 
 ## Backlog Intake Rule
 Any new future work should be added here as a named enhancement phase with:

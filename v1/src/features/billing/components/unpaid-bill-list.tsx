@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import type { BillStatus } from "@prisma/client";
+import type { BillDistributionStatus, BillLifecycleStatus, BillStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
@@ -14,6 +14,8 @@ type UnpaidBillListProps = {
     usageAmount: number;
     totalCharges: number;
     status: BillStatus;
+    lifecycleStatus: BillLifecycleStatus;
+    distributionStatus: BillDistributionStatus;
     customer: {
       accountNumber: string;
       name: string;
@@ -33,6 +35,22 @@ function getStatusClasses(status: BillStatus) {
 
   if (status === "PARTIALLY_PAID") {
     return "bg-primary/10 text-primary";
+  }
+
+  return "bg-secondary text-secondary-foreground";
+}
+
+function getDistributionClasses(status: BillDistributionStatus) {
+  if (status === "DISTRIBUTED") {
+    return "bg-[#dff3eb] text-[#145c3b]";
+  }
+
+  if (status === "RETURNED" || status === "FAILED_DELIVERY") {
+    return "bg-[#ffe4e1] text-[#8d2a21]";
+  }
+
+  if (status === "PRINTED") {
+    return "bg-[#eef3ff] text-[#294b8f]";
   }
 
   return "bg-secondary text-secondary-foreground";
@@ -67,6 +85,7 @@ export function UnpaidBillList({ bills }: UnpaidBillListProps) {
                 <th className="px-4 py-3 font-medium">Total charges</th>
                 <th className="px-4 py-3 font-medium">Due date</th>
                 <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">EH8 state</th>
                 <th className="px-4 py-3 text-right font-medium">Template</th>
               </tr>
             </thead>
@@ -105,6 +124,20 @@ export function UnpaidBillList({ bills }: UnpaidBillListProps) {
                         {bill.status.replace("_", " ")}
                       </span>
                     </td>
+                    <td className="px-4 py-4">
+                      <div className="flex flex-col gap-2">
+                        <span className="inline-flex rounded-full bg-[#eef7f4] px-3 py-1 text-xs font-medium text-[#21514b]">
+                          {bill.lifecycleStatus === "FINALIZED" ? "Locked" : "Draft"}
+                        </span>
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-xs font-medium ${getDistributionClasses(
+                            bill.distributionStatus
+                          )}`}
+                        >
+                          {bill.distributionStatus.replaceAll("_", " ")}
+                        </span>
+                      </div>
+                    </td>
                     <td className="px-4 py-4 text-right">
                       <Link
                         href={`/admin/billing/${bill.id}`}
@@ -124,7 +157,7 @@ export function UnpaidBillList({ bills }: UnpaidBillListProps) {
               ) : (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={9}
                     className="px-4 py-10 text-center text-sm text-muted-foreground"
                   >
                     No unpaid bills have been generated yet.
