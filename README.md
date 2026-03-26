@@ -46,15 +46,15 @@ Real product captures, with sensitive constituent fields explicitly redacted for
 
 ### Operations Dashboard
 > *A high-level command center highlighting active routing, billing queues, and system performance.*
-<img src="./v1/public/github/dashboard.png" alt="Operations Dashboard" width="800" />
+![Operations Dashboard](./v1/public/github/dashboard.png)
 
 ### Billing Review
 > *Streamlined assessment interfaces for pending bills, approvals, and settlements.*
-<img src="./v1/public/github/billing.png" alt="Billing Review" width="800" />
+![Billing Review](./v1/public/github/billing.png)
 
 ### Receivables Follow-Up
 > *Comprehensive ledger of outstanding statements, aging statuses, and disruption checkpoints.*
-<img src="./v1/public/github/follow-up.png" alt="Receivables Follow-Up" width="800" />
+![Receivables Follow-Up](./v1/public/github/follow-up.png)
 
 ---
 
