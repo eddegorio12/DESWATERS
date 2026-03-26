@@ -1,11 +1,8 @@
-import Link from "next/link";
-
 import { BillStatus, PaymentStatus } from "@prisma/client";
 
-import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
-import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { FollowUpBoard } from "@/features/follow-up/components/follow-up-board";
 import {
@@ -15,7 +12,6 @@ import {
 } from "@/features/follow-up/lib/workflow";
 import { NotificationLogList } from "@/features/notifications/components/notification-log-list";
 import { prisma } from "@/lib/prisma";
-import { cn } from "@/lib/utils";
 
 export default async function AdminFollowUpPage() {
   const access = await getModuleAccess("followUp");
@@ -199,45 +195,12 @@ export default async function AdminFollowUpPage() {
       title="Move overdue balances through reminder, escalation, disconnection, and reinstatement states."
       description="EH5 turns printed overdue language into an operational workflow with explicit staff actions, customer service-status control, and server-enforced reinstatement rules."
       actions={
-        <>
-          <Link
-            href="/admin/collections"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-          >
-            Reporting workspace
-          </Link>
-          <Link
-            href="/admin/billing"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-          >
-            Billing module
-          </Link>
-          <Link
-            href="/admin/dashboard"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-          >
-            Back to dashboard
-          </Link>
-          <AdminSessionButton />
-        </>
+        <AdminPageActions
+          links={[
+            { href: "/admin/collections", label: "Reporting workspace" },
+            { href: "/admin/billing", label: "Billing module" },
+          ]}
+        />
       }
       stats={[
         {

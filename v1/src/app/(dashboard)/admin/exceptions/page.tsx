@@ -1,15 +1,12 @@
-import Link from "next/link";
-
 import {
   BillStatus,
   CustomerStatus,
   PaymentStatus,
 } from "@prisma/client";
 
-import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
-import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { ExceptionsBoard } from "@/features/exceptions/components/exceptions-board";
 import {
@@ -18,7 +15,6 @@ import {
 } from "@/features/exceptions/lib/monitoring";
 import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { prisma } from "@/lib/prisma";
-import { cn } from "@/lib/utils";
 
 function getDaysAgo(days: number, now = new Date()) {
   return new Date(now.getTime() - days * 86_400_000);
@@ -192,45 +188,12 @@ export default async function AdminExceptionsPage() {
       title="Catch reading, receivable, payment, and service anomalies before they become field disputes."
       description="EH9 starts with a dedicated exceptions workspace that scans live DWDS records for missing readings, suspicious consumption changes, duplicate cashier posting patterns, disconnection risks, and office-versus-field status mismatches."
       actions={
-        <>
-          <Link
-            href="/admin/readings"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-          >
-            Reading module
-          </Link>
-          <Link
-            href="/admin/follow-up"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-          >
-            Follow-up workflow
-          </Link>
-          <Link
-            href="/admin/dashboard"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-          >
-            Back to dashboard
-          </Link>
-          <AdminSessionButton />
-        </>
+        <AdminPageActions
+          links={[
+            { href: "/admin/readings", label: "Reading module" },
+            { href: "/admin/follow-up", label: "Follow-up workflow" },
+          ]}
+        />
       }
       stats={[
         {

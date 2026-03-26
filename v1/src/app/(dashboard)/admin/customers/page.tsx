@@ -1,9 +1,6 @@
-import Link from "next/link";
-
-import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
-import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import {
   getSearchParamText,
   matchesSearch,
@@ -13,7 +10,6 @@ import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { CustomerForm } from "@/features/customers/components/customer-form";
 import { CustomerList } from "@/features/customers/components/customer-list";
 import { prisma } from "@/lib/prisma";
-import { cn } from "@/lib/utils";
 
 type CustomerPageProps = {
   searchParams: Promise<Record<string, SearchParamValue>>;
@@ -85,35 +81,7 @@ export default async function AdminCustomersPage({ searchParams }: CustomerPageP
       eyebrow="Customer Operations"
       title="Build and audit the active consumer registry from one operations view."
       description="Create customer records, inspect service addresses and contact details, and verify which accounts still need a linked water meter before downstream reading and billing work starts."
-      actions={
-        <>
-            <Link
-              href="/admin/meters"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Meter module
-            </Link>
-            <Link
-              href="/admin/dashboard"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Back to dashboard
-            </Link>
-            <AdminSessionButton />
-        </>
-      }
+      actions={<AdminPageActions links={[{ href: "/admin/meters", label: "Meter module" }]} />}
       stats={[
         {
           label: "Accounts",

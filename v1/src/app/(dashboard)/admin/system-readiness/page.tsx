@@ -1,13 +1,9 @@
-import Link from "next/link";
-
-import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
-import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { SystemReadinessBoard } from "@/features/system-readiness/components/system-readiness-board";
 import { prisma } from "@/lib/prisma";
-import { cn } from "@/lib/utils";
 
 export default async function AdminSystemReadinessPage() {
   const access = await getModuleAccess("systemReadiness");
@@ -58,35 +54,7 @@ export default async function AdminSystemReadinessPage() {
       eyebrow="System Readiness"
       title="Keep recovery readiness and admin security visible from inside operations."
       description="EH11 adds backup snapshot logging, restore procedure guidance, environment readiness checks, and recent security signal visibility for internal staff access."
-      actions={
-        <>
-          <Link
-            href="/admin/staff-access"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-          >
-            Staff access
-          </Link>
-          <Link
-            href="/admin/dashboard"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-          >
-            Back to dashboard
-          </Link>
-          <AdminSessionButton />
-        </>
-      }
+      actions={<AdminPageActions links={[{ href: "/admin/staff-access", label: "Staff access" }]} />}
       stats={[
         {
           label: "Logged snapshots",

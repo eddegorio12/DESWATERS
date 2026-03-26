@@ -59,3 +59,6 @@ __pycache__/
 *.db
 *.sqlite
 *.sqlite3
+
+# local sample/reference uploads
+public/codebase.png

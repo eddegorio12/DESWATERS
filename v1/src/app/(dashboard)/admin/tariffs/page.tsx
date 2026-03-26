@@ -1,9 +1,6 @@
-import Link from "next/link";
-
-import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
-import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import {
   canPerformCapability,
   getModuleAccess,
@@ -11,7 +8,6 @@ import {
 import { TariffForm } from "@/features/tariffs/components/tariff-form";
 import { TariffList } from "@/features/tariffs/components/tariff-list";
 import { prisma } from "@/lib/prisma";
-import { cn } from "@/lib/utils";
 
 export default async function AdminTariffsPage() {
   const access = await getModuleAccess("tariffs");
@@ -83,35 +79,7 @@ export default async function AdminTariffsPage() {
       eyebrow="Billing Rules"
       title="Control the active water tariff with a clearer view of pricing logic and saved revisions."
       description="Configure the live billing tariff, maintain progressive usage tiers, and keep older tariff records visible so operations can confirm which pricing schedule is currently in force."
-      actions={
-        <>
-            <Link
-              href="/admin/meters"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Meter module
-            </Link>
-            <Link
-              href="/admin/dashboard"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Back to dashboard
-            </Link>
-            <AdminSessionButton />
-        </>
-      }
+      actions={<AdminPageActions links={[{ href: "/admin/meters", label: "Meter module" }]} />}
       stats={[
         {
           label: "Saved tariffs",
@@ -141,8 +109,7 @@ export default async function AdminTariffsPage() {
         },
       ]}
     >
-
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
           {canCreateTariff ? (
             <TariffForm />
           ) : (
@@ -162,7 +129,7 @@ export default async function AdminTariffsPage() {
             </section>
           )}
           <TariffList tariffs={tariffs} />
-        </section>
+      </section>
     </AdminPageShell>
   );
 }

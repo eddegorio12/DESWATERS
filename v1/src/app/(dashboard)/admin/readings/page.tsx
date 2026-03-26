@@ -1,8 +1,6 @@
-import Link from "next/link";
-
 import { MeterStatus, RouteResponsibility } from "@prisma/client";
 
-import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import {
   getSearchParamText,
@@ -10,7 +8,6 @@ import {
   type SearchParamValue,
 } from "@/features/admin/lib/list-filters";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
-import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import {
   canPerformCapability,
   getModuleAccess,
@@ -19,7 +16,6 @@ import { PendingReadingApprovals } from "@/features/readings/components/pending-
 import { ReadingForm } from "@/features/readings/components/reading-form";
 import { ReadingList } from "@/features/readings/components/reading-list";
 import { prisma } from "@/lib/prisma";
-import { cn } from "@/lib/utils";
 
 type ReadingsPageProps = {
   searchParams: Promise<Record<string, SearchParamValue>>;
@@ -229,45 +225,12 @@ export default async function AdminReadingsPage({ searchParams }: ReadingsPagePr
       title="Move field submissions from meter entry to bill-ready approval without losing audit visibility."
       description="Encode readings for active service connections, inspect the pending review queue, and keep the most recent encoding history available for correction, supervision, and downstream billing handoff."
       actions={
-        <>
-            <Link
-              href="/admin/billing"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Billing module
-            </Link>
-            <Link
-              href="/admin/tariffs"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Tariff module
-            </Link>
-            <Link
-              href="/admin/dashboard"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Back to dashboard
-            </Link>
-            <AdminSessionButton />
-        </>
+        <AdminPageActions
+          links={[
+            { href: "/admin/billing", label: "Billing module" },
+            { href: "/admin/tariffs", label: "Tariff module" },
+          ]}
+        />
       }
       stats={[
         {
@@ -290,43 +253,42 @@ export default async function AdminReadingsPage({ searchParams }: ReadingsPagePr
         },
       ]}
     >
+      {canCreateReading ? (
+        <section className="grid gap-6 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
+          <ReadingForm meters={meterOptions} />
+        </section>
+      ) : (
+        <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
+          <div className="space-y-2">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+              Read-Only Entry
+            </p>
+            <h2 className="text-2xl font-semibold tracking-tight text-foreground">
+              This role cannot encode new readings.
+            </h2>
+            <p className="text-sm leading-6 text-muted-foreground">
+              Meter reading entry remains limited to field readers, managers, and admins.
+              You can still review pending submissions and recent reading history here.
+            </p>
+          </div>
+        </section>
+      )}
 
-        {canCreateReading ? (
-          <section className="grid gap-6 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
-            <ReadingForm meters={meterOptions} />
-          </section>
-        ) : (
-          <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-            <div className="space-y-2">
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                Read-Only Entry
-              </p>
-              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                This role cannot encode new readings.
-              </h2>
-              <p className="text-sm leading-6 text-muted-foreground">
-                Meter reading entry remains limited to field readers, managers, and admins.
-                You can still review pending submissions and recent reading history here.
-              </p>
-            </div>
-          </section>
-        )}
-
-        <PendingReadingApprovals
-          readings={filteredPendingReadings}
-          canApprove={canApproveReading}
-          canDeleteAny={canDeleteAnyReading}
-          canDeleteOwn={canDeleteOwnReading}
-          currentUserId={access.user.id}
-          totalCount={pendingReadings.length}
-          query={pendingQuery}
-        />
-        <ReadingList
-          readings={readings}
-          canDeleteAny={canDeleteAnyReading}
-          canDeleteOwn={canDeleteOwnReading}
-          currentUserId={access.user.id}
-        />
+      <PendingReadingApprovals
+        readings={filteredPendingReadings}
+        canApprove={canApproveReading}
+        canDeleteAny={canDeleteAnyReading}
+        canDeleteOwn={canDeleteOwnReading}
+        currentUserId={access.user.id}
+        totalCount={pendingReadings.length}
+        query={pendingQuery}
+      />
+      <ReadingList
+        readings={readings}
+        canDeleteAny={canDeleteAnyReading}
+        canDeleteOwn={canDeleteOwnReading}
+        currentUserId={access.user.id}
+      />
     </AdminPageShell>
   );
 }

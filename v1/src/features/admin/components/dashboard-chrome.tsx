@@ -3,18 +3,7 @@
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
-function isStandaloneRoute(pathname: string) {
-  if (pathname.includes("/receipt")) {
-    return true;
-  }
-
-  if (pathname.includes("/admin/notices/")) {
-    return true;
-  }
-
-  const billingMatch = pathname.match(/^\/admin\/billing\/[^/]+$/);
-  return Boolean(billingMatch);
-}
+import { isStandaloneAdminRoute } from "@/features/admin/lib/dashboard-navigation";
 
 export function DashboardChrome({
   sidebar,
@@ -25,7 +14,7 @@ export function DashboardChrome({
 }) {
   const pathname = usePathname();
 
-  if (isStandaloneRoute(pathname)) {
+  if (isStandaloneAdminRoute(pathname)) {
     return <div className="min-h-dvh">{children}</div>;
   }
 

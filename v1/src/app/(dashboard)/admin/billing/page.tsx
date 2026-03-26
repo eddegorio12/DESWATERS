@@ -1,8 +1,6 @@
-import Link from "next/link";
-
 import { BillStatus, ReadingStatus, Role, RouteResponsibility } from "@prisma/client";
 
-import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import {
   getSearchParamText,
@@ -10,7 +8,6 @@ import {
   type SearchParamValue,
 } from "@/features/admin/lib/list-filters";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
-import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import {
   canPerformCapability,
   getModuleAccess,
@@ -20,7 +17,6 @@ import { BillingGovernancePanel } from "@/features/billing/components/billing-go
 import { UnpaidBillList } from "@/features/billing/components/unpaid-bill-list";
 import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { prisma } from "@/lib/prisma";
-import { cn } from "@/lib/utils";
 
 type BillingPageProps = {
   searchParams: Promise<Record<string, SearchParamValue>>;
@@ -315,57 +311,13 @@ export default async function AdminBillingPage({ searchParams }: BillingPageProp
       title="Turn approved usage into receivables with the active tariff and a printable bill trail."
       description="Generate bills from approved readings, keep open receivables visible, and move directly into statement printing and cashier follow-up without leaving the billing workspace."
       actions={
-        <>
-            <Link
-              href="/admin/payments"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Payments module
-            </Link>
-            <Link
-              href="/admin/follow-up"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Follow-up workflow
-            </Link>
-            <Link
-              href="/admin/readings"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Reading module
-            </Link>
-            <Link
-              href="/admin/dashboard"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Back to dashboard
-            </Link>
-            <AdminSessionButton />
-        </>
+        <AdminPageActions
+          links={[
+            { href: "/admin/payments", label: "Payments module" },
+            { href: "/admin/follow-up", label: "Follow-up workflow" },
+            { href: "/admin/readings", label: "Reading module" },
+          ]}
+        />
       }
       stats={[
         {
@@ -390,49 +342,48 @@ export default async function AdminBillingPage({ searchParams }: BillingPageProp
         },
       ]}
     >
-
-        <ApprovedReadingBillQueue
-          activeTariff={activeTariff}
-          readings={filteredApprovedReadings}
-          canGenerateBills={canGenerateBills}
-          totalCount={approvedReadings.length}
-          query={queueQuery}
-        />
-        <BillingGovernancePanel
-          key={
-            selectedCycle
-              ? [
-                  selectedCycle.id,
-                  selectedCycle.status,
-                  selectedCycle.checklistReviewCompleted,
-                  selectedCycle.checklistReceivablesVerified,
-                  selectedCycle.checklistPrintReady,
-                  selectedCycle.checklistDistributionReady,
-                  selectedCycle.checklistMonthEndLocked,
-                  selectedCycle.bills.length,
-                  selectedCycle.printBatches.length,
-                  selectedCycle.events.length,
-                ].join(":")
-              : "no-billing-cycle"
-          }
-          cycles={billingCycles.map((cycle) => ({
-            id: cycle.id,
-            billingPeriodLabel: cycle.billingPeriodLabel,
-            status: cycle.status,
-            billCount: cycle._count.bills,
-            printBatchCount: cycle._count.printBatches,
-          }))}
-          selectedCycle={selectedCycle}
-          staffOptions={staffOptions}
-          capabilities={{
-            canFinalizeCycle,
-            canReopenCycle,
-            canRegenerateCycle,
-            canManagePrintBatches,
-            canTrackDistribution,
-          }}
-        />
-        <UnpaidBillList bills={unpaidBills} />
+      <ApprovedReadingBillQueue
+        activeTariff={activeTariff}
+        readings={filteredApprovedReadings}
+        canGenerateBills={canGenerateBills}
+        totalCount={approvedReadings.length}
+        query={queueQuery}
+      />
+      <BillingGovernancePanel
+        key={
+          selectedCycle
+            ? [
+                selectedCycle.id,
+                selectedCycle.status,
+                selectedCycle.checklistReviewCompleted,
+                selectedCycle.checklistReceivablesVerified,
+                selectedCycle.checklistPrintReady,
+                selectedCycle.checklistDistributionReady,
+                selectedCycle.checklistMonthEndLocked,
+                selectedCycle.bills.length,
+                selectedCycle.printBatches.length,
+                selectedCycle.events.length,
+              ].join(":")
+            : "no-billing-cycle"
+        }
+        cycles={billingCycles.map((cycle) => ({
+          id: cycle.id,
+          billingPeriodLabel: cycle.billingPeriodLabel,
+          status: cycle.status,
+          billCount: cycle._count.bills,
+          printBatchCount: cycle._count.printBatches,
+        }))}
+        selectedCycle={selectedCycle}
+        staffOptions={staffOptions}
+        capabilities={{
+          canFinalizeCycle,
+          canReopenCycle,
+          canRegenerateCycle,
+          canManagePrintBatches,
+          canTrackDistribution,
+        }}
+      />
+      <UnpaidBillList bills={unpaidBills} />
     </AdminPageShell>
   );
 }

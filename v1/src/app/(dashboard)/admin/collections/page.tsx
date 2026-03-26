@@ -1,11 +1,8 @@
-import Link from "next/link";
-
 import { BillStatus, PaymentStatus } from "@prisma/client";
 
-import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
-import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { CollectionsFilterForm } from "@/features/reports/components/collections-filter-form";
@@ -16,7 +13,6 @@ import { ReceivablesSummary } from "@/features/reports/components/receivables-su
 import { getCollectionRangeFromSearchParams } from "@/features/reports/lib/collections";
 import { summarizeReceivables } from "@/features/reports/lib/receivables";
 import { prisma } from "@/lib/prisma";
-import { cn } from "@/lib/utils";
 
 type AdminCollectionsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -113,45 +109,12 @@ export default async function AdminCollectionsPage({
       title="Review collection history and live receivables from one finance control surface."
       description="Filter completed payment activity by date range, verify posted collections, and keep unpaid, partially paid, and overdue balances visible for follow-up without leaving the reporting module."
       actions={
-        <>
-          <Link
-            href="/admin/payments"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-            >
-              Payments module
-          </Link>
-          <Link
-            href="/admin/follow-up"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-          >
-            Follow-up workflow
-          </Link>
-          <Link
-            href="/admin/dashboard"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-          >
-            Back to dashboard
-          </Link>
-          <AdminSessionButton />
-        </>
+        <AdminPageActions
+          links={[
+            { href: "/admin/payments", label: "Payments module" },
+            { href: "/admin/follow-up", label: "Follow-up workflow" },
+          ]}
+        />
       }
       stats={[
         {

@@ -1,8 +1,6 @@
-import Link from "next/link";
-
 import { BillStatus } from "@prisma/client";
 
-import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import {
   getSearchParamText,
@@ -10,13 +8,11 @@ import {
   type SearchParamValue,
 } from "@/features/admin/lib/list-filters";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
-import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { PaymentForm } from "@/features/payments/components/payment-form";
 import { PaymentHistoryList } from "@/features/payments/components/payment-history-list";
 import { prisma } from "@/lib/prisma";
-import { cn } from "@/lib/utils";
 
 type PaymentsPageProps = {
   searchParams: Promise<Record<string, SearchParamValue>>;
@@ -158,57 +154,13 @@ export default async function AdminPaymentsPage({ searchParams }: PaymentsPagePr
       title="Post utility payments against live receivables and keep recent settlement activity within reach."
       description="Select an open bill, accept full or partial settlement, issue an official receipt, and review the latest cashier transactions together with the bill status they affected."
       actions={
-        <>
-            <Link
-              href="/admin/collections"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Reporting workspace
-            </Link>
-            <Link
-              href="/admin/follow-up"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Follow-up workflow
-            </Link>
-            <Link
-              href="/admin/billing"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Billing module
-            </Link>
-            <Link
-              href="/admin/dashboard"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Back to dashboard
-            </Link>
-            <AdminSessionButton />
-        </>
+        <AdminPageActions
+          links={[
+            { href: "/admin/collections", label: "Reporting workspace" },
+            { href: "/admin/follow-up", label: "Follow-up workflow" },
+            { href: "/admin/billing", label: "Billing module" },
+          ]}
+        />
       }
       stats={[
         {
@@ -235,16 +187,15 @@ export default async function AdminPaymentsPage({ searchParams }: PaymentsPagePr
         },
       ]}
     >
-
-        <section className="grid gap-6 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
-          <PaymentForm bills={billOptions} />
-          <PaymentHistoryList
-            payments={filteredPayments}
-            totalCount={payments.length}
-            query={historyQuery}
-            billStatus={historyBillStatus || "ALL"}
-          />
-        </section>
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
+        <PaymentForm bills={billOptions} />
+        <PaymentHistoryList
+          payments={filteredPayments}
+          totalCount={payments.length}
+          query={historyQuery}
+          billStatus={historyBillStatus || "ALL"}
+        />
+      </section>
     </AdminPageShell>
   );
 }

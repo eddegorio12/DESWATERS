@@ -1,16 +1,12 @@
-import Link from "next/link";
-
-import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
-import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { MeterAssignmentForm } from "@/features/meters/components/meter-assignment-form";
 import { MeterForm } from "@/features/meters/components/meter-form";
 import { MeterHolderTransferForm } from "@/features/meters/components/meter-holder-transfer-form";
 import { MeterList } from "@/features/meters/components/meter-list";
 import { prisma } from "@/lib/prisma";
-import { cn } from "@/lib/utils";
 
 export default async function AdminMetersPage() {
   const access = await getModuleAccess("meters");
@@ -109,45 +105,12 @@ export default async function AdminMetersPage() {
       title="Keep every service connection visible from registration through assignment."
       description="Register new hardware, link unassigned meters to active customer accounts, and confirm which installed units are already in service versus still waiting for deployment."
       actions={
-        <>
-            <Link
-              href="/admin/customers"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Customer module
-            </Link>
-            <Link
-              href="/admin/routes"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Route operations
-            </Link>
-            <Link
-              href="/admin/dashboard"
-              className={cn(
-                buttonVariants({
-                  variant: "outline",
-                  className:
-                    "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                })
-              )}
-            >
-              Back to dashboard
-            </Link>
-            <AdminSessionButton />
-        </>
+        <AdminPageActions
+          links={[
+            { href: "/admin/customers", label: "Customer module" },
+            { href: "/admin/routes", label: "Route operations" },
+          ]}
+        />
       }
       stats={[
         {
@@ -182,14 +145,13 @@ export default async function AdminMetersPage() {
         },
       ]}
     >
-
-        <section className="grid gap-6 xl:grid-cols-3">
+      <section className="grid gap-6 xl:grid-cols-3">
           <MeterForm />
           <MeterAssignmentForm customers={customers} unassignedMeters={unassignedMeters} />
           <MeterHolderTransferForm customers={customers} assignedMeters={assignedMeters} />
-        </section>
+      </section>
 
-        <MeterList meters={meters} />
+      <MeterList meters={meters} />
     </AdminPageShell>
   );
 }

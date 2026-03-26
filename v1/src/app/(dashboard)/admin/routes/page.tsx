@@ -1,11 +1,8 @@
-import Link from "next/link";
-
 import { BillStatus, PaymentStatus, RouteResponsibility } from "@prisma/client";
 
-import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
-import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import {
   canPerformCapability,
   getModuleAccess,
@@ -15,7 +12,6 @@ import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { RouteOperationsManager } from "@/features/routes/components/route-operations-manager";
 import { average, percentage, roundMetric } from "@/features/routes/lib/route-analytics";
 import { prisma } from "@/lib/prisma";
-import { cn } from "@/lib/utils";
 
 export default async function AdminRoutesPage() {
   const access = await getModuleAccess("routeOperations");
@@ -259,45 +255,12 @@ export default async function AdminRoutesPage() {
       title="Plan field coverage by zone, route owner, and route-level financial pressure."
       description="EH12 starts with route-aware operations: define the field map, assign reading and distribution ownership, and review which routes are carrying the highest overdue and collection pressure."
       actions={
-        <>
-          <Link
-            href="/admin/readings"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-          >
-            Reading module
-          </Link>
-          <Link
-            href="/admin/billing"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-          >
-            Billing module
-          </Link>
-          <Link
-            href="/admin/dashboard"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-          >
-            Back to dashboard
-          </Link>
-          <AdminSessionButton />
-        </>
+        <AdminPageActions
+          links={[
+            { href: "/admin/readings", label: "Reading module" },
+            { href: "/admin/billing", label: "Billing module" },
+          ]}
+        />
       }
       stats={[
         {

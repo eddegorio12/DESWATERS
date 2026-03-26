@@ -1,13 +1,9 @@
-import Link from "next/link";
-
-import { buttonVariants } from "@/components/ui/button-variants";
+import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
-import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
 import { StaffAccessBoard } from "@/features/auth/components/staff-access-board";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { prisma } from "@/lib/prisma";
-import { cn } from "@/lib/utils";
 
 export default async function AdminStaffAccessPage() {
   const access = await getModuleAccess("staffAccess");
@@ -55,23 +51,7 @@ export default async function AdminStaffAccessPage() {
       eyebrow="Admin Management"
       title="Manage internal admin accounts."
       description="SUPER_ADMIN accounts can create admins, change roles, and deactivate or reactivate access here. There is no public signup flow."
-      actions={
-        <>
-          <Link
-            href="/admin/dashboard"
-            className={cn(
-              buttonVariants({
-                variant: "outline",
-                className:
-                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-              })
-            )}
-          >
-            Back to dashboard
-          </Link>
-          <AdminSessionButton />
-        </>
-      }
+      actions={<AdminPageActions />}
       stats={[
         {
           label: "Total Admins",
