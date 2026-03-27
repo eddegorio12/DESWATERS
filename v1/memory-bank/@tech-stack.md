@@ -30,6 +30,7 @@ Define the simplest stack that is still robust enough for an internal, money-han
 - Reuse shared list, form, and status patterns instead of building page-specific interaction models repeatedly
 - Keep operator-facing screens optimized for fast scanning and clear next actions
 - Treat tablet and narrow laptop layouts as real internal-use targets, not edge cases
+- Do not default to card grids as the main composition system; reserve cards for stateful/actionable objects and use lighter-weight grouping for navigation, summaries, and support content
 
 ## Production Recommendation
 
@@ -94,13 +95,16 @@ This is the simplest robust default because it avoids self-hosted database work,
 - Fix dense operational pages by improving structure and interaction patterns first, not by adding more tooling
 - Finish the shared usability pattern rollout on remaining admin modules before adding dashboard-specific libraries or isolated analytics widgets
 - Treat meters as the first remaining rollout target because it is a high-frequency operational module and a good baseline for the remaining EH13 passes
+- When refining visual quality, prefer composition changes over decorative escalation: fewer nested panels, fewer equal-weight tiles, and stronger hierarchy from layout and typography rather than more shadows, gradients, and rounded containers
+- For enterprise dashboard refinement, prefer reusable console primitives inside the current Tailwind/shadcn stack over page-specific styling drift: consistent metric cards, sidebar items, section headers, action rows, and status badges should carry the visual system
+- EH14.1 now establishes those console primitives in the repo for the protected shell and dashboard, so future admin-surface refinement should extend them instead of introducing parallel dashboard styling systems
 
 ## Current Repo Alignment
 - The repo already aligns with this direction: Next.js, TypeScript, Prisma, PostgreSQL-first runtime, Auth.js credentials auth, Tailwind, shadcn/ui, React Hook Form, and Zod
 - EH8 now keeps billing-cycle state, bill finalization locks, print batches, distribution statuses, and audit history inside the same Prisma/PostgreSQL core instead of pushing that workflow into external tools
 - Current notification hooks remain optional integrations, not required core infrastructure
 - Current printable outputs should continue to use app-native rendering unless archival/download requirements become stronger
-- The next planned improvement lane is EH13 usability refinement on top of the existing stack, not a tooling or platform rewrite, with management analytics and audit/security refinements sequenced after that active product-surface pass
+- The current planned improvement lane is EH14 composition refinement on top of the existing stack, not a tooling or platform rewrite, with broader management analytics and audit/security refinements sequenced after that active product-surface pass
 
 ## Practical Summary
 - **Keep:** Next.js, TypeScript, PostgreSQL, Prisma, Auth.js Credentials, bcrypt, Tailwind CSS, shadcn/ui, React Hook Form, Zod

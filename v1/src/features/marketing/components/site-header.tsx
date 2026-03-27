@@ -14,7 +14,7 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-40 mx-auto w-full max-w-7xl px-5 pb-2 pt-4 sm:px-8">
-      <div className="dwds-panel px-4 py-3 sm:px-5">
+      <div className="dwds-section px-4 py-3 sm:px-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
           <div className="flex items-center justify-between gap-3 lg:min-w-0 lg:flex-none">
             <BrandLockup compact className="min-w-0" />

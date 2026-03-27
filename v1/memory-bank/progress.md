@@ -22,14 +22,18 @@
 - EH10 has now been tested and validated.
 - EH11 has now been tested and validated.
 - EH12 has now been tested and validated for the implemented route-operations and route-aware billing slice.
-- EH13 has now started with the first workflow-usability slice across the current admin surface.
-- The clearest next contribution path is now to finish EH13 rollout on remaining admin modules before reopening broader analytics, field-service, or security expansions.
+- EH13 has now completed the workflow-usability pass across the current admin surface.
+- The clearest next contribution path is now a visual-composition pass that reduces card sprawl, then broader EH12 analytics, followed by dedicated admin-management audit logging, before later field-service or security refinements are reopened.
 - EH13.2a is now validated on the meters module, EH13.2b is now validated on route operations, EH13.2c is now validated on collections plus exceptions, and EH13.2d is now validated on follow-up with an urgency-first queue, escalation filters, and separated service-action panels.
 - EH13.3a is now complete as a code-level narrow-screen audit covering the dashboard shell, sidebar navigation, follow-up, routes, and the current table-heavy list surfaces.
 - EH13.3b has now been validated.
 - EH13.4 is now implemented as the shared visual status-priority pass for pending, overdue, read-only, ready, success, and attention-required states across the active EH13 admin surfaces plus adjacent admin workflow boards.
 - EH13.5 is now implemented as the final usability consistency sweep for shared filter language, operator-facing copy cleanup, and stronger next-step empty states across the remaining admin boards.
 - EH13 has now been fully validated and closed.
+- A new follow-on UI refinement lane is now recommended because the current admin and marketing surfaces still show too many similarly styled cards and nested panels, which makes the product feel more template-driven than intended.
+- EH14 has now started with the first visual-composition slice implemented across the protected shell, shared admin page hero, admin dashboard, and top marketing entry surfaces.
+- EH14 now also has a dashboard-focused planning slice defined for a FortiGate-inspired enterprise-console refinement pass that preserves the current DWDS structure and identity.
+- EH14.1 has now been implemented as a dashboard-console refinement pass with reusable enterprise-style sidebar, metric, panel, section-header, and action-row primitives across the protected shell and admin dashboard.
 
 ## Implemented Milestones
 
@@ -72,6 +76,9 @@
 - The audited EH13 list surfaces now also expose a shared narrow-screen fallback that swaps dense desktop tables for stacked summary cards below the chosen breakpoint.
 - A dedicated EH13.3a audit note now records the main narrow-screen pressure points: sidebar-first mobile stacking, horizontal-scroll-only table handling, tall hero shells before task controls, wrapped follow-up action rows, and route-scoreboard density.
 - The final EH13 consistency sweep now standardizes list-control wording around explicit filter actions, removes roadmap-step labels from live operator copy, and upgrades older empty states with clearer next-step guidance.
+- EH14 now adds lighter-weight shared composition primitives plus an editorial row/split-layout treatment on the dashboard and key marketing entry pages so summary and navigation content no longer default to equal-weight cards.
+- EH14.1 now refines the admin dashboard console through stronger sidebar item hierarchy, denser KPI-counter treatment, clearer section framing, and reusable action rows without changing the overall dashboard concept.
+- The next planned EH14 implementation target is broader rollout of the refined console language to adjacent admin entry surfaces and the remaining secondary marketing pages that still overuse equal-weight cards.
 
 ## Important Historical Constraints
 
@@ -80,7 +87,7 @@
 - Prisma v7 configuration remains centralized in `prisma.config.ts`.
 - A baseline PostgreSQL migration and repeatable environment setup guidance now exist in the repo.
 - MVP workflow validation against a live PostgreSQL environment has been completed, so EH1 is now closed.
-- Supabase pooler-based `DATABASE_URL` plus direct `DIRECT_URL` testing now reaches the managed Postgres target from the repo, and Prisma can enumerate the committed migrations against that environment.
+- Supabase pooler-based `DATABASE_URL` testing plus separate direct-connection validation now reaches the managed Postgres target from the repo, and Prisma can enumerate the committed migrations against that environment.
 
 ### Authorization Constraint
 - Role-based authorization is now enforced in protected admin routes and server actions.
@@ -122,6 +129,12 @@
 - Dashboard, list, and queue surfaces should now be optimized for scan speed, prioritization, and next-step clarity before broader new-domain expansion.
 - Future UX work should stay inside the current modular feature structure and should prefer shared patterns over one-off page rewrites.
 - EH13.5 now implements the final consistency cleanup, and the full EH13 usability lane is now validated and closed.
+
+### Visual Composition Constraint
+- The current UI still overuses similarly styled rounded panels on dashboard, page-shell, and marketing summary surfaces.
+- Too many equal-weight cards flatten hierarchy and create a generic "vibecoded" feel even when the underlying workflow design is solid.
+- The next UI pass should reserve cards for actionable or stateful content and use lighter-weight composition for navigation, summaries, and supporting information.
+- EH14.1 now also establishes reusable dashboard-console primitives so future admin summary surfaces can inherit the same denser enterprise hierarchy instead of adding more one-off card layouts.
 
 ### Cashiering Constraint
 - Cashier posting now supports auditable partial settlements plus printable official receipts.
@@ -202,5 +215,9 @@
 - Notes: The first EH13 slice is now implemented for dashboard wording simplification, reusable searchable/filterable list surfaces, clearer empty states, shared status-pill treatment on the new list pattern, and stronger next-step guidance on customer, reading, and payment workflows. EH13.2a now extends that shared pattern to `/admin/meters` with server-side search and registry filters for active, unassigned, unrouted, defective, and replaced units plus stronger holder-history scanability. EH13.2b now extends the same usability pass to `/admin/routes` with server-side search, route-focus filters for ownership and coverage gaps, clearer route attention pills, and filtered zone plus overdue side panels, and that route pass has now been user-validated. EH13.2c now extends the shared interaction model to `/admin/collections` and `/admin/exceptions` with server-side search/filter handling, result counts, reset actions, and stronger urgency-first list treatment while preserving the existing reporting and anomaly logic, and that pass has now been user-validated. EH13.2d now applies the same EH13 baseline to `/admin/follow-up` with server-side search and escalation-focus filters, bill-level urgency ordering, and dedicated disconnection or reinstatement action panels while preserving the existing EH5 workflow rules, and that follow-up pass is now validated. EH13.3a now records the narrow-screen audit baseline in `memory-bank/eh13.3a-narrow-screen-audit.md`, including the current shell, hero, table, queue-action, and route-density findings that drive EH13.3b. EH13.3b has now been user-validated across the protected shell, dashboard/page-shell hero density, follow-up action groups, and the audited dense-table surfaces through shared stacked-card fallbacks. EH13.4 is now validated across the active admin workflow surfaces, and EH13.5 completes the final consistency sweep through explicit filter-action wording, roadmap-copy cleanup on live admin pages, and stronger next-step empty states on the remaining secondary boards. The full EH13 usability lane is now validated and closed.
 - Planned task order: `EH13.2a` meters, `EH13.2b` routes, `EH13.2c` collections and exceptions, `EH13.2d` follow-up, `EH13.3a` narrow-screen audit, `EH13.3b` responsive fallbacks, `EH13.4` shared status-priority system, and `EH13.5` final consistency sweep. All planned EH13 implementation slices are now in the repo.
 
+### EH14: Visual Composition & Anti-Template Refinement
+- Status: `in progress`
+- Notes: The first implemented EH14 slice now introduces lighter-weight shared composition primitives, reduces nested panel density in the protected shell and shared admin page hero, refactors the admin dashboard into a stronger workflow-plus-directory split, and replaces the top marketing home/platform tile grids with denser editorial rows and split layouts. EH14.1 is now implemented as the dashboard-only refinement pass focused on typography, sidebar clarity, KPI consistency, action-row usability, and shared enterprise-console dashboard primitives. Broader EH14 rollout across the remaining marketing pages and secondary admin surfaces is still pending user validation of this dashboard pass.
+
 ## Current Next-Step Recommendation
-EH13 is now closed. The next recommended order is broader EH12 analytics first, then dedicated admin-management audit logging, then optional deferred EH11 and EH9 refinements only if they remain product priorities.
+EH13 is now closed. The next recommended order is EH14 visual composition refinement first, then broader EH12 analytics, then dedicated admin-management audit logging, then optional deferred EH11 and EH9 refinements only if they remain product priorities.

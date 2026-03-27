@@ -28,13 +28,16 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH10 has now been tested and validated.
 - EH11 has now been tested and validated.
 - EH12 has now been tested and validated for the implemented route-operations and route-aware billing slice.
-- The next recommended product pass is usability and operator-efficiency refinement on the existing admin surface before broader new-domain expansion.
-- The strongest current contribution path is to finish EH13 on remaining record-heavy and narrow-screen-sensitive admin surfaces before starting new top-level workflow domains.
+- The next recommended product pass is visual-composition refinement on the existing admin and marketing surfaces so the product feels more deliberate and less template-driven before broader new-domain expansion resumes.
+- The strongest current contribution path is now a focused anti-card-sprawl pass that reduces repeated panel nesting and equal-weight tile grids on the most visible surfaces.
 - EH13.3a has now been completed as a narrow-screen audit baseline for the current admin shell, dashboard, queues, and table-heavy modules.
 - EH13.3b has now been validated.
 - EH13.4 is now implemented as the shared visual status-priority pass for pending, overdue, read-only, ready, completed, and attention-required states.
 - EH13.5 is now implemented as the final consistency sweep for shared filter wording, live operator copy cleanup, and stronger next-step empty states across the remaining admin boards.
 - EH13 has now been fully validated and closed.
+- A follow-on visual-composition pass is now recommended because several admin and marketing surfaces still rely on too many similarly styled cards, which makes the product feel more templated than intentional.
+- EH14 is now in progress through an initial composition slice on the shared admin shell, admin dashboard, and top marketing entry surfaces.
+- EH14.1 is now implemented as a dashboard-only maturity pass that sharpens the current admin console into a more readable, denser enterprise operations surface without redesigning it.
 
 ## Product Principles
 - **Modularity is mandatory:** Features must be separated into focused modules.
@@ -42,6 +45,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 - **Server-enforced business rules:** Validation, settlement, billing math, and workflow state changes must remain authoritative on the server.
 - **Expand without rewrites:** Future customer channels, notifications, and advanced workflows should layer onto the same core data model.
 - **Operator efficiency matters:** The admin UI should minimize scan time, shorten repetitive workflows, and surface the next important action clearly.
+- **Intentional composition over card sprawl:** Cards should be reserved for actionable or stateful content. Simple grouping, navigation, and supporting information should more often use lists, rows, sections, dividers, and typography instead of repeated nested panels.
 
 ## Implemented MVP Scope
 1. **Authentication:** internal admin email/password sign-in and protected admin routes.
@@ -317,10 +321,31 @@ Current status:
 - Visual priority treatment for pending, overdue, read-only, success, and attention-required states is now implemented across the active admin workflow surfaces.
 
 ## Current Contribution Priority
-1. Resume EH12 with broader management analytics.
-2. Add dedicated admin-management audit logging.
-3. Revisit deferred auditability and security refinements such as optional `SUPER_ADMIN` 2FA and automated backup/export support only if they remain priorities.
-4. Revisit deferred EH9 field-service expansion only if operations explicitly reprioritize it.
+1. Run a visual-composition refinement pass that reduces card overuse, flattens nested panel hierarchy, and strengthens section rhythm across the current admin and marketing surfaces.
+2. Resume EH12 with broader management analytics after that composition pass is stable.
+3. Add dedicated admin-management audit logging.
+4. Revisit deferred auditability and security refinements such as optional `SUPER_ADMIN` 2FA and automated backup/export support only if they remain priorities.
+5. Revisit deferred EH9 field-service expansion only if operations explicitly reprioritize it.
+
+### Visual-Composition Refinement Direction
+Goal: make DWDS feel intentionally designed rather than template-assembled by reducing repeated card patterns and letting hierarchy come more from layout, typography, and state emphasis.
+
+Expected outcomes:
+- fewer nested cards inside already framed sections
+- navigation and module directories rendered as denser lists, rows, or split layouts instead of equal-weight tiles
+- cards reserved primarily for queues, alerts, records, and other actionable or stateful objects
+- dashboard hierarchy that emphasizes one primary control surface, one compact KPI band, and one urgency-first workflow area
+- public marketing sections that alternate between screenshot-led, editorial, process, and proof layouts instead of repeating the same card grid treatment
+
+Rationale:
+- The current information architecture is sound, but too many similarly styled rounded panels create a generic "vibecoded" feel.
+- Reducing decorative container repetition should improve scan speed and make the product feel more confident and product-specific.
+
+Current status:
+- EH14 is now in progress.
+- The first implemented slice adds lighter-weight section treatments, a denser admin dashboard directory/workflow composition, and editorial row/split-layout patterns on the marketing home and platform pages.
+- EH14.1 now adds reusable dashboard-console primitives, a tighter protected-shell sidebar treatment, stricter KPI hierarchy, and denser action-row composition on `/admin/dashboard`.
+- Broader rollout across the remaining marketing routes and secondary admin summary surfaces remains pending.
 
 ### EH13 Recommended Task Breakdown
 1. `EH13.2a` Upgrade the meters module to the shared list/filter/empty-state interaction pattern. Completed.
@@ -333,10 +358,11 @@ Current status:
 8. `EH13.5` Run a final usability sweep for consistency of copy, filters, empty states, and next-step cues. Implemented and validated.
 
 ### Post-EH13 Priority Order
-1. Broader EH12 management analytics.
-2. Dedicated admin-management audit logging.
-3. Optional later EH11 security and backup refinements.
-4. Optional later EH9 field-service expansion.
+1. Visual composition and anti-template refinement across the admin and marketing surfaces.
+2. Broader EH12 management analytics.
+3. Dedicated admin-management audit logging.
+4. Optional later EH11 security and backup refinements.
+5. Optional later EH9 field-service expansion.
 
 ## Rule of Thumb for Developers
 Always read [@architecture.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\@architecture.md) before changing schema or architecture. Every major addition must map either to the implemented MVP surface or to a named enhancement phase in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md).

@@ -71,7 +71,7 @@ Current progress:
 - Prisma schema and runtime have been switched to PostgreSQL-first operation.
 - The repo now includes a PostgreSQL baseline migration and local/staging/production setup guidance.
 - MVP baseline validation against a live PostgreSQL environment has been completed and validated.
-- Prisma v7 config now also supports the production-style split of pooled `DATABASE_URL` runtime connections and direct `DIRECT_URL` migration connections needed by managed providers such as Supabase.
+- Prisma v7 config now uses `DATABASE_URL` for the live runtime path, while managed-provider deployment guidance still keeps `DIRECT_URL` available as the direct-connection variable for migration and restore workflows where needed.
 
 ### EH2: Authorization & Staff Controls
 **Priority:** High
@@ -364,7 +364,7 @@ Current progress:
 
 ### EH13: Workflow Usability & Operator Efficiency
 **Priority:** High
-**Status:** In Progress
+**Status:** Complete
 **Depends on:** EH2 complete; benefits from EH8 through EH12 being stable
 
 Scope:
@@ -415,14 +415,38 @@ Recommended task sequence:
 
 ## Current Next Recommendation
 
-EH13 is now closed. Resume the roadmap with broader EH12 management analytics, then dedicated admin-management audit logging.
+EH13 is now closed. Run a focused visual-composition refinement pass first, then resume the roadmap with broader EH12 management analytics, then dedicated admin-management audit logging.
 
 Target outcomes:
-1. Extend the shared list pattern to more record-heavy modules and keep the filter vocabulary consistent.
-2. Implement the audited tablet and narrow-laptop fallbacks for dashboard cards, tables, and queue surfaces only after the audit checkpoint is accepted.
-3. Preserve the implemented EH8 through EH12 workflows while making them faster and easier to operate.
-4. Standardize visual priority treatment for pending, overdue, read-only, success, and attention-required states.
-5. Keep deployment hardening and Supabase/Vercel setup on the release path, but treat workflow usability as the active product-facing improvement lane.
+1. Reduce card overuse and nested panel density on the most visible admin and marketing surfaces.
+2. Preserve the implemented EH8 through EH13 workflows while making the product feel more deliberate and less template-driven.
+3. Resume broader EH12 management analytics on top of that more stable visual baseline.
+4. Add dedicated admin-management audit logging without reopening the completed EH13 workflow-usability lane.
+5. Keep deployment hardening and Supabase/Vercel setup on the release path while treating composition refinement, analytics, and audit logging as the current product-facing follow-up work.
+
+### EH14: Visual Composition & Anti-Template Refinement
+**Priority:** High
+**Status:** In progress
+**Depends on:** EH13 complete
+
+Scope:
+1. Reduce repeated card-on-card composition across dashboard, page shells, record-summary areas, and marketing sections.
+2. Replace some equal-weight tile grids used for navigation or supporting content with denser list, row, split-layout, or editorial section patterns.
+3. Reserve full card treatments for actionable, stateful, or high-signal content such as queues, alerts, records, and workflow objects.
+4. Tighten visual hierarchy by relying more on spacing, typography, dividers, and section rhythm, and less on repeated border-radius-plus-shadow containers.
+5. Preserve the current DWDS brand direction and enterprise-operational readability while removing the strongest "vibecoded" signals.
+
+Exit criteria:
+- Core admin and marketing entry surfaces no longer feel dominated by repeated equal-weight cards.
+- Dashboard hierarchy clearly emphasizes the first taskable area instead of many competing framed blocks.
+- Navigation, proof, and summary areas use lighter-weight composition where cards do not add meaning.
+- The UI still reads as DWDS and does not regress on scanability, responsiveness, or role-driven workflow clarity.
+
+Recommended implementation order:
+1. Audit dashboard, page shell, and marketing-home composition for unnecessary card nesting.
+2. Refactor module-launch and proof sections into mixed layout patterns with fewer equal-weight tiles.
+3. Normalize shared section primitives so lightweight groups are not forced into the same visual treatment as actionable cards.
+4. Revalidate narrow-screen behavior after the hierarchy changes.
 
 Current auth note:
 - Local Auth.js migration is now complete and working with a seeded `SUPER_ADMIN`.
@@ -430,7 +454,7 @@ Current auth note:
 
 Current dependency note:
 - Until the production auth variables and first-admin seed are in place, treat the hosted app as staging rather than the final production release.
-- For managed Postgres deployment, keep `DATABASE_URL` on the provider pooler/runtime path and `DIRECT_URL` on the provider direct migration path.
+- For managed Postgres deployment, keep `DATABASE_URL` on the provider pooler/runtime path. Use `DIRECT_URL` as the direct migration or restore connection variable only where the target environment and tooling are configured to consume it.
 - EH8 should not be treated as done until finalized bills can no longer be edited through any existing billing or payment mutation path.
 
 Current rollout status:
@@ -439,10 +463,61 @@ Current rollout status:
 - Final deployment hardening is not yet closed until migration deployment finishes successfully and the hosted app is confirmed against those environment variables.
 
 Post-EH13 sequencing:
-1. Resume EH12 with broader management analytics.
-2. Add dedicated admin-management audit logging.
-3. Revisit later EH11 refinements such as optional `SUPER_ADMIN` 2FA and automated backup/export support only if still needed.
-4. Revisit later EH9 field-service expansion only if operations explicitly prioritizes it.
+1. Run EH14 visual composition and anti-template refinement.
+2. Resume EH12 with broader management analytics.
+3. Add dedicated admin-management audit logging.
+4. Revisit later EH11 refinements such as optional `SUPER_ADMIN` 2FA and automated backup/export support only if still needed.
+5. Revisit later EH9 field-service expansion only if operations explicitly prioritizes it.
+
+Current progress:
+- Shared composition primitives now distinguish lighter-weight sections from full `dwds-panel` cards so summary and navigation content do not always inherit the same heavy treatment.
+- `src/features/admin/components/admin-page-shell.tsx` and the protected shell now use fewer nested inset cards and more divider-led grouping for page-level framing.
+- `/admin/dashboard` now emphasizes one primary workflow board, one compact KPI strip, and one denser module directory instead of multiple competing card grids.
+- The public home and platform pages plus the shared product-showcase component now use editorial row/split-layout patterns instead of repeating equal-weight tile sections.
+- `EH14.1` is now implemented through shared `DashboardMetricCard`, `DashboardPanel`, `ActionRow`, and `SectionHeader` primitives plus a tighter `SidebarNavItem` treatment for the protected shell and admin dashboard.
+- Remaining EH14 work should continue across the other marketing pages and any secondary admin summary surfaces that still overuse nested bordered tiles.
+
+### EH14.1: Admin Dashboard Console Refinement
+**Priority:** Highest within EH14
+**Status:** Implemented, pending user validation
+**Depends on:** current EH14 composition baseline already in repo
+
+Scope:
+1. Refine the existing admin dashboard and protected shell without changing the overall dashboard structure, sidebar placement, or DWDS visual identity.
+2. Improve readability through stronger type scale separation, slightly larger body copy, better secondary-text contrast, and less dependence on tiny uppercase helper labels.
+3. Tighten the left gradient sidebar into a clearer control panel with stronger active-state treatment, cleaner icon alignment, less noisy helper text, and more deliberate vertical rhythm.
+4. Strengthen the top dashboard banner so the primary operation path is more obvious and the banner reads as an operations overview rather than a generic hero.
+5. Refine the KPI strip into stricter enterprise counters with more consistent padding, label placement, value hierarchy, and subdued state color handling.
+6. Improve the "What needs attention next" and "Open the module you need" panels through denser row design, clearer hover/selection behavior, better alignment of action indicators, and less wasted interior space.
+7. Standardize shared dashboard-facing primitives such as `SidebarNavItem`, `DashboardMetricCard`, `DashboardPanel`, `ActionRow`, `StatusBadge`, and `SectionHeader` so later admin surfaces can reuse the same enterprise-console language.
+
+Exit criteria:
+- The dashboard still reads as the same DWDS product, not a redesign.
+- Sidebar, hero, KPI strip, and main operational panels feel more mature, more readable, and more enterprise-oriented.
+- Text hierarchy is clearer at a glance and inactive/helper copy no longer weakens scan speed.
+- Hover, active, and button states feel operational and intentional rather than decorative.
+- Shared primitives reduce one-off spacing and typography drift in the dashboard layer.
+
+Design guardrails:
+- Preserve the left gradient sidebar, DWDS blue/teal/white identity, KPI strip, modular dashboard structure, and internal utility-operations tone.
+- Do not add decorative charts, flashy widgets, consumer-SaaS motifs, or playful styling.
+- Keep the layout desktop-first and enterprise-dense, but breathable.
+- Prefer stronger dividers, disciplined spacing, and clearer type hierarchy over heavier shadows or more rounded containers.
+
+Planned implementation order:
+1. Audit and normalize shared dashboard spacing, typography, and radius conventions in the active shell/dashboard components.
+2. Refactor sidebar navigation into a reusable high-clarity `SidebarNavItem` pattern with compressed helper copy and stronger active-state cues.
+3. Refine the dashboard banner into a clearer operations-overview header with one dominant primary action and cleaner support metadata.
+4. Introduce a shared `DashboardMetricCard` treatment and migrate the KPI strip to that pattern.
+5. Introduce reusable `DashboardPanel`, `SectionHeader`, and `ActionRow` primitives, then migrate the two main dashboard panels.
+6. Re-run dashboard-level visual and responsive validation before extending the refined dashboard language to adjacent admin entry pages.
+
+Current progress:
+- `src/features/admin/components/dashboard-console.tsx` now centralizes the shared dashboard-console primitives for metrics, section headers, action rows, and panel framing.
+- `src/features/admin/components/dashboard-nav.tsx` now uses a reusable higher-clarity sidebar item treatment with stronger active-state contrast, cleaner icon framing, and tighter helper-copy rhythm.
+- `src/app/(dashboard)/layout.tsx` now reads more like a control panel than a stacked marketing sidebar while preserving the current shell structure.
+- `src/app/(dashboard)/admin/dashboard/page.tsx` now uses denser metric cards and reusable action rows for both the operational pulse board and module directory.
+- Targeted linting and a short Next.js startup pass have completed successfully; user-facing validation is the remaining checkpoint before wider EH14 rollout.
 
 ## Backlog Intake Rule
 Any new future work should be added here as a named enhancement phase with:

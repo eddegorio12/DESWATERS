@@ -6,7 +6,7 @@ import { footerLinks } from "@/features/marketing/lib/site-content";
 export function SiteFooter() {
   return (
     <footer className="mx-auto mt-10 w-full max-w-7xl px-5 pb-8 sm:px-8">
-      <div className="dwds-panel overflow-hidden px-6 py-8 sm:px-8">
+      <div className="dwds-section overflow-hidden px-6 py-8 sm:px-8">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-xl">
             <div className="dwds-kicker border-primary/10 bg-primary/6 text-primary/76">

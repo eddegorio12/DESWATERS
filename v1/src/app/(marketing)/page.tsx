@@ -49,7 +49,7 @@ export default function HomePage() {
         primaryAction={{ href: "/sign-in", label: "Open admin access" }}
         secondaryAction={{ href: "/platform", label: "Explore the platform" }}
       >
-        <article className="dwds-panel overflow-hidden p-4">
+        <article className="dwds-section overflow-hidden p-4">
           <div className="rounded-[1.7rem] border border-border/70 bg-[linear-gradient(180deg,rgba(224,239,249,0.94),rgba(247,250,253,0.76))] p-3">
             <Image
               src="/marketing/dashboard-preview.svg"
@@ -60,14 +60,14 @@ export default function HomePage() {
               priority
             />
           </div>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid gap-0 overflow-hidden rounded-[1.45rem] border border-border/70 bg-white/76 sm:grid-cols-2">
             {siteStats.map((stat, index) => {
               const Icon = statIcons[index];
 
               return (
                 <article
                   key={stat.label}
-                  className="rounded-[1.6rem] border border-border/70 bg-white/88 p-4"
+                  className="border-b border-border/70 p-4 last:border-b-0 sm:border-b-0 [&:nth-child(odd)]:sm:border-r [&:nth-child(odd)]:sm:border-border/70"
                 >
                   <Icon className="size-5 text-primary" />
                   <p className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
@@ -81,11 +81,11 @@ export default function HomePage() {
         </article>
       </PageHero>
 
-      <section className="dwds-panel grid gap-4 p-6 lg:grid-cols-3">
+      <section className="grid gap-4 border-y border-border/75 py-4 lg:grid-cols-3">
         {proofStatements.map((statement) => (
           <div
             key={statement}
-            className="rounded-[1.4rem] border border-border/70 bg-secondary/45 px-4 py-4 text-sm leading-6 text-muted-foreground"
+            className="border-l-2 border-primary/18 pl-4 text-sm leading-6 text-muted-foreground"
           >
             {statement}
           </div>
@@ -99,7 +99,7 @@ export default function HomePage() {
             title="Built for utility operations, not generic invoicing."
             description="The product mirrors the real DWDS workflow: account maintenance, meter assignment, reading validation, bill generation, payment posting, and same-day reporting."
           />
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="divide-y divide-border/75 overflow-hidden rounded-[1.5rem] border border-border/75 bg-white/72">
             {[
               "Internal admin auth for role-based operations",
               "Progressive tier tariff support with minimum usage logic",
@@ -108,10 +108,10 @@ export default function HomePage() {
             ].map((item) => (
               <div
                 key={item}
-                className="rounded-[1.75rem] border border-border/70 bg-white/82 p-4 text-sm leading-6 text-muted-foreground shadow-[0_18px_60px_-40px_rgba(15,35,62,0.35)]"
+                className="flex items-start gap-3 px-4 py-4 text-sm leading-6 text-muted-foreground"
               >
-                <BadgeCheck className="mb-3 size-4 text-primary" />
-                {item}
+                <BadgeCheck className="mt-1 size-4 shrink-0 text-primary" />
+                <span>{item}</span>
               </div>
             ))}
           </div>
@@ -147,22 +147,26 @@ export default function HomePage() {
           title="Every major DWDS workflow has a dedicated screen and responsibility."
           description="The platform is intentionally modular so staff can manage utility operations without fighting a monolithic interface."
         />
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+        <div className="divide-y divide-border/75 overflow-hidden rounded-[1.65rem] border border-border/75 bg-white/72">
           {moduleHighlights.map((item, index) => {
             const Icon = moduleIcons[index];
 
             return (
-              <article
-                key={item.title}
-                className="dwds-panel p-6"
-              >
-                <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <Icon className="size-5" />
+              <article key={item.title} className="px-5 py-5">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div className="flex min-w-0 items-start gap-4">
+                    <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                      <Icon className="size-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-heading text-2xl text-foreground">{item.title}</h3>
+                      <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm font-medium text-primary">Dedicated workflow surface</p>
                 </div>
-                <h3 className="mt-5 font-heading text-2xl text-foreground">{item.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  {item.description}
-                </p>
               </article>
             );
           })}
@@ -179,17 +183,17 @@ export default function HomePage() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-        <article className="dwds-panel p-8">
+        <article className="dwds-section p-8">
           <SectionHeading
             eyebrow="Reporting Layer"
             title="Collections stay auditable from cashier posting to dashboard totals."
             description="DWDS keeps reporting close to the transaction flow, so operators can verify what was paid today and what still needs action."
           />
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div className="mt-8 divide-y divide-border/70 overflow-hidden rounded-[1.5rem] border border-border/70 bg-white/72">
             {reportingHighlights.map((item) => (
               <div
                 key={item.title}
-                className="rounded-[1.5rem] border border-border/70 bg-secondary/35 p-4"
+                className="px-4 py-4"
               >
                 <p className="text-sm font-semibold text-foreground">{item.title}</p>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
@@ -233,12 +237,9 @@ export default function HomePage() {
           title="DWDS now presents itself like a deployable utility product."
           description="The public identity stays aligned with the restrained, operational character already established in the admin workspace."
         />
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-3">
           {brandPrinciples.map((item) => (
-            <article
-              key={item.title}
-              className="dwds-panel p-6"
-            >
+            <article key={item.title} className="dwds-subtle-block px-5 py-5">
               <h3 className="font-heading text-2xl text-foreground">{item.title}</h3>
               <p className="mt-3 text-sm leading-6 text-muted-foreground">
                 {item.description}

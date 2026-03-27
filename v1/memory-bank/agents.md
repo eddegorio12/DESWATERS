@@ -32,7 +32,8 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - EH11 is now complete through tariff governance, admin security hardening, and the backup-readiness workspace.
 - EH12 is now validated for the implemented route-operations and route-aware billing slice.
 - EH13 is now fully validated and closed.
-- The preferred next contribution is now broader EH12 analytics, followed by dedicated admin-management audit logging.
+- EH14 visual composition refinement is now in progress through the first shell/dashboard/marketing slice, and the next contribution after that should remain broader EH12 analytics, then dedicated admin-management audit logging.
+- EH14.1 is now implemented as the dashboard-only enterprise-console refinement pass. Preserve that current DWDS dashboard concept and shared console primitives when extending adjacent admin surfaces; do not redesign the dashboard from scratch unless the user explicitly changes scope.
 - The concrete EH13 order is: meters first, then routes, then collections/exceptions, then follow-up, then responsive hardening, then shared status-priority treatment, then the final consistency sweep.
 
 ## 3. Enhancement Backlog Handling
@@ -47,7 +48,8 @@ When the requested work is UI/UX-oriented:
 - Treat the current priority as workflow usability, not a visual redesign for its own sake.
 - Prefer improvements that reduce scan time, simplify decisions, clarify next actions, and strengthen consistency across existing modules.
 - Keep UX changes modular and reusable; do not collapse feature boundaries with page-specific one-off patterns unless there is a strong reason.
-- Prefer finishing EH13 on remaining record-heavy modules before proposing new top-level dashboards or workflow domains.
+- Prefer composition refinements that reduce card sprawl, nested panel density, and equal-weight tile grids before proposing new top-level dashboards or workflow domains.
+- Reserve cards for actionable or stateful content; lighter-weight groupings should usually be lists, rows, dividers, or section structures instead of more bordered tiles.
 
 When the requested work is roadmap or planning oriented:
 - Recommend EH13 completion before deeper EH12 analytics expansion, dedicated admin audit logging, or later deferred EH9/EH11 refinements unless the user explicitly reprioritizes.

@@ -18,7 +18,9 @@ import { cn } from "@/lib/utils";
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const current = await getCurrentStaffUser();
   const isAuthenticated = current.isAuthenticated && current.user;
-  const navItems = isAuthenticated ? getDashboardNavItems(getAccessibleAdminModules(current.user.role)) : [];
+  const navItems = isAuthenticated
+    ? getDashboardNavItems(getAccessibleAdminModules(current.user.role))
+    : [];
 
   return (
     <div className="dwds-shell min-h-dvh">
@@ -28,23 +30,23 @@ export default async function DashboardLayout({ children }: { children: ReactNod
             <details className="dwds-panel-dark overflow-hidden lg:hidden">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-2xl border border-white/12 bg-white/8 text-white">
+                  <div className="flex size-10 items-center justify-center rounded-[0.95rem] border border-white/12 bg-white/8 text-white">
                     <Menu className="size-4" />
                   </div>
                   <div>
                     <BrandLockup inverse size="sm" className="w-fit" />
                     <p className="mt-1 text-xs text-white/60">
-                      {isAuthenticated ? `${current.user.name} · ${roleDisplayName[current.user.role]}` : "Protected navigation"}
+                      {isAuthenticated
+                        ? `${current.user.name} · ${roleDisplayName[current.user.role]}`
+                        : "Protected navigation"}
                     </p>
                   </div>
                 </div>
-                <div className="dwds-kicker border-white/12 bg-white/8 text-white/78">
-                  Menu
-                </div>
+                <div className="dwds-kicker border-white/12 bg-white/8 text-white/78">Menu</div>
               </summary>
 
               <div className="space-y-4 border-t border-white/10 px-4 py-4">
-                <div className="rounded-[1.4rem] border border-white/12 bg-white/8 p-4">
+                <div className="pb-1">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/56">
                     Workspace
                   </p>
@@ -53,7 +55,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                   </p>
                 </div>
 
-                {navItems.length ? <DashboardNav items={navItems} /> : null}
+                {navItems.length ? (
+                  <div className="border-y border-white/10 py-4">
+                    <DashboardNav items={navItems} />
+                  </div>
+                ) : null}
 
                 <div className="space-y-3">
                   <Link
@@ -83,7 +89,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                   </div>
                 </div>
 
-                <div className="rounded-[1.5rem] border border-white/12 bg-white/8 p-4">
+                <div className="border-b border-white/10 pb-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/56">
                     Workspace
                   </p>
@@ -91,13 +97,13 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                     DWDS operations
                   </h1>
                   <p className="mt-3 text-sm leading-6 text-white/68">
-                    Move from account setup to collections without leaving the protected
-                    staff workspace.
+                    Daily utility workflow, queue review, and finance control in one staff
+                    console.
                   </p>
                 </div>
 
                 {isAuthenticated ? (
-                  <div className="rounded-[1.5rem] border border-white/12 bg-white/8 p-4">
+                  <div className="border-b border-white/10 pb-5">
                     <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/56">
                       Signed in
                     </p>
@@ -105,15 +111,22 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                     <p className="mt-1 text-sm text-white/68">
                       {roleDisplayName[current.user.role]}
                     </p>
+                    <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-white/50">
+                      Active internal access
+                    </p>
                   </div>
                 ) : (
-                  <div className="rounded-[1.5rem] border border-white/12 bg-white/8 p-4 text-sm leading-6 text-white/68">
+                  <div className="border-b border-white/10 pb-5 text-sm leading-6 text-white/68">
                     Sign in to open the protected DWDS modules.
                   </div>
                 )}
               </div>
 
-              {navItems.length ? <DashboardNav items={navItems} /> : null}
+              {navItems.length ? (
+                <div className="border-b border-white/10 pb-5">
+                  <DashboardNav items={navItems} />
+                </div>
+              ) : null}
 
               <div className="mt-auto space-y-3">
                 <Link

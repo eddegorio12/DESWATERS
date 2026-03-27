@@ -24,6 +24,11 @@
    - New UI work should reduce decision friction, shorten scan time, and make urgent next actions obvious
    - Prefer progressive disclosure, concise labels, and task-prioritized surfaces over long explanatory blocks
 
+6. **Intentional composition over repeated containers**
+   - Do not solve every layout problem with another rounded panel
+   - Reserve card treatments for actionable, stateful, or high-signal objects such as queues, alerts, records, and workflow items
+   - Prefer lists, grouped rows, dividers, split layouts, and typography-led hierarchy for navigation, summaries, and supporting information
+
 ## Product Naming Convention
 - **Formal name:** `DEGORIO WATER DISTRIBUTION SERVICES`
 - **Short name:** `DWDS`
@@ -41,7 +46,7 @@
 - The repository has been moved back to a **PostgreSQL-first runtime path**.
 - The prior SQLite adapter path has been removed from the intended runtime.
 - EH1 has been validated and closed, so PostgreSQL is now the confirmed primary runtime path in the repo.
-- Prisma v7 connection configuration now lives in `prisma.config.ts`, where pooled `DATABASE_URL` runtime access and direct `DIRECT_URL` migration access can be defined separately for managed Postgres providers.
+- Prisma v7 connection configuration now lives in `prisma.config.ts`, which currently binds the repo runtime to `DATABASE_URL`. `DIRECT_URL` remains an optional deployment/readiness variable for direct migration or restore workflows in managed Postgres environments.
 
 ## Physical Architecture: Implemented Surfaces
 
@@ -72,7 +77,7 @@
 - `src/lib/prisma.ts`
   - Central Prisma singleton used by server components and server actions with environment-driven PostgreSQL connections
 - `prisma.config.ts`
-  - Central Prisma v7 datasource binding for `DATABASE_URL` runtime access and optional `DIRECT_URL` migration access
+  - Central Prisma v7 datasource binding for the current `DATABASE_URL` runtime path, with deployment guidance that may also use `DIRECT_URL` for direct migration or restore workflows
 - `src/features/auth/lib/authorization.ts`
   - Central role matrix for protected module access and sensitive server-side capability checks
 - `src/features/auth/actions/auth-actions.ts`
@@ -185,12 +190,16 @@
 - Key operational pages still expose data well, but they do not consistently expose the fastest next action.
 - Search, filtering, prioritization, and urgency cues are not yet strong enough on high-volume record screens.
 - Some screens currently assume trained operators and will feel dense to occasional users or newly onboarded staff.
+- Several admin and marketing surfaces still stack too many similarly styled panels and sub-cards, which flattens hierarchy and makes the product feel more template-driven than product-specific.
 
 ### Architectural Interpretation
 - DWDS is already structurally sound, but its next UX gains should come from workflow compression rather than new top-level modules.
 - Future usability work should favor shared interaction patterns inside existing feature domains instead of one-off page rewrites.
 - The goal is not consumer-style simplification; the goal is lower operator effort for repetitive daily work.
 - The most useful near-term architecture work is rollout and consistency work inside existing modules, not new domain sprawl.
+- The next visual-quality gain should come from composition discipline: fewer containers, less nested card-on-card structure, and clearer contrast between navigation, summary, and task objects.
+- EH14 has now started by introducing lighter-weight composition primitives for summary and navigation areas, while keeping stronger card treatments for workflow queues and stateful records.
+- EH14.1 now introduces shared dashboard-console primitives so the protected shell and admin dashboard can preserve their current structure while improving enterprise-console readability, sidebar control density, KPI consistency, and reusable operational row patterns.
 
 ## Usability Architecture Targets
 
@@ -200,6 +209,7 @@
 - Introduce reusable form-surface patterns for field grouping, inline validation, save-state feedback, and post-submit next steps.
 - Standardize "priority first" page composition so urgent queues, blocking exceptions, and time-sensitive actions appear before long descriptive content.
 - Preserve server-authoritative workflows while making client surfaces more obvious and less verbose.
+- Use section-level framing sparingly; not every subsection needs its own bordered card if spacing, headings, and dividers already establish structure.
 
 ### Prioritized UX Work
 
@@ -228,12 +238,19 @@
 - Reserve dense descriptive copy for secondary help text; primary surfaces should communicate state through structure and emphasis first.
 - Build shared visual rules for "attention required", "read-only", "ready", and "completed" states across modules.
 
+#### UX6: Composition and Card-Density Reduction
+- Audit dashboard, module directories, page shells, and marketing sections for repeated card-on-card composition.
+- Replace equal-weight tile grids used for navigation or supporting information with denser list, row, or split-layout patterns where appropriate.
+- Keep one strong page frame when needed, but reduce nested bordered/shadowed containers inside that frame.
+- Let typography, spacing, alignment, and dividers carry more hierarchy so the UI reads as deliberate instead of template-generated.
+
 ### Current Usability Sequence
 1. Extend the EH13 shared record-list and status treatment to remaining record-heavy modules such as follow-up, then validate that pass before moving on. This is now complete through the validated follow-up pass.
 2. Audit `/admin/dashboard`, dashboard navigation, queue surfaces, and table-heavy modules for narrow-screen fallback quality. This is now complete through `memory-bank/eh13.3a-narrow-screen-audit.md`.
 3. Validate the implemented EH13.3b responsive fallbacks on the audited admin surfaces, then continue the wider EH13 consistency pass.
 4. Keep future EH12 analytics work attached to existing route/reporting domains after the operator-efficiency pass is stable, rather than bypassing EH13 with isolated dashboard additions.
 5. Treat dedicated admin-management audit logging as the next auditability refinement once the active usability pass is in better shape.
+6. Before expanding management analytics further, run a composition pass that reduces card sprawl across the most visible admin and marketing surfaces.
 
 ### EH13 Execution Order
 1. `EH13.2a` Meters should be the first remaining module brought onto the shared list/filter/status baseline. This is now implemented on `/admin/meters`.
@@ -356,259 +373,27 @@
 - The final EH13 sweep now also standardizes shared list-control wording around explicit filter actions and removes roadmap-phase language from live operator copy so the production UI reads as an operations tool rather than an implementation checklist.
 - Meters were treated as the first implementation target because they are a frequent operational surface and a clean bridge between customer, route, and reading workflows.
 
+### EH14: Visual Composition & Anti-Template Refinement
+- EH14 should refine the visual structure of the already-implemented surfaces without reopening core workflow rules or feature boundaries.
+- The primary target is repeated card sprawl across the dashboard, page shells, module-launch areas, marketing sections, and other summary-heavy surfaces.
+- Shared primitives should distinguish between page-level frames, actionable/stateful cards, lightweight grouped lists or rows, and plain supporting copy blocks.
+- Dashboard and marketing work should prefer stronger section rhythm and fewer equal-weight tiles so the product feels more intentional and less like a stacked component library demo.
+- EH14 should preserve the current DWDS light-mode enterprise direction while reducing excess radius, shadow repetition, and nested panel density where those treatments do not communicate state.
+- The first implemented EH14 slice now adds lighter-weight `dwds-section` and `dwds-subtle-block` treatments, reduces nested card usage in the protected shell and shared admin page hero, and shifts the dashboard plus top marketing entry pages toward row-based directories and editorial split layouts.
+- EH14.1 now refactors the active dashboard into a more mature operations console through reusable dashboard primitives: a higher-clarity sidebar item, stricter metric card, denser action row, clearer section header, and calmer panel framing while preserving the existing DWDS dashboard concept.
+
 ## Database Schema: Current Repository Snapshot
-The excerpt below captures the long-lived core entities. EH8 billing-governance additions now also exist in the live schema through `BillingCycle`, `BillPrintBatch`, `BillingCycleEvent`, and the related lifecycle/distribution fields attached to `Bill`.
+The live schema now moves faster than a safe hand-maintained excerpt in this file. Treat [prisma/schema.prisma](C:/Users/eddeg/OneDrive/Documents/GitHub/DESWATERS/v1/prisma/schema.prisma) as the authoritative schema source.
 
-```prisma
-generator client {
-  provider = "prisma-client-js"
-}
+Current long-lived schema domains include:
+- Core utility records: `Customer`, `Meter`, `MeterHolderTransfer`, `Reading`, `Tariff`, `TariffTier`, `Bill`, and `Payment`
+- Authentication and admin security: `User`, `AdminLoginAttempt`, password-rotation fields, lockout fields, and role enums
+- Billing governance: `BillingCycle`, `BillPrintBatch`, `BillingCycleEvent`, bill lifecycle fields, and print/distribution tracking fields
+- Notifications and notices: `NotificationLog` with `EMAIL`, `SMS`, and `PRINT` channels plus template enums used by billing and follow-up workflows
+- Route operations: `ServiceZone`, `ServiceRoute`, and `StaffRouteAssignment`
+- Recovery readiness: `BackupSnapshot`
 
-datasource db {
-  provider = "postgresql"
-}
-
-model Tariff {
-  id              String      @id @default(uuid())
-  name            String      @unique
-  isActive        Boolean     @default(false)
-  minimumCharge   Float
-  minimumUsage    Float
-  installationFee Float
-  tiers           TariffTier[]
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-}
-
-model TariffTier {
-  id         String   @id @default(uuid())
-  tariffId   String
-  tariff     Tariff   @relation(fields: [tariffId], references: [id])
-  minVolume  Float
-  maxVolume  Float?
-  ratePerCuM Float
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-}
-
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  name      String
-  passwordHash String
-  role      Role     @default(VIEWER)
-  isActive  Boolean  @default(true)
-  readings  Reading[]
-  recordedPayments Payment[] @relation("RecordedPayments")
-  receivableFollowUpUpdates Bill[] @relation("ReceivableFollowUpUpdatedBy")
-  customerStatusUpdates Customer[] @relation("CustomerStatusUpdatedBy")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-enum Role {
-  SUPER_ADMIN
-  ADMIN
-  CASHIER
-  BILLING
-  METER_READER
-  TECHNICIAN
-  VIEWER
-}
-
-model Customer {
-  id            String         @id @default(uuid())
-  accountNumber String         @unique
-  name          String
-  address       String
-  contactNumber String?
-  email         String?
-  status        CustomerStatus @default(ACTIVE)
-  statusNote    String?
-  statusUpdatedAt DateTime?
-  statusUpdatedById String?
-  statusUpdatedBy User? @relation("CustomerStatusUpdatedBy", fields: [statusUpdatedById], references: [id])
-  meters        Meter[]
-  receivedMeterTransfers MeterHolderTransfer[] @relation("MeterHolderTransferToCustomer")
-  releasedMeterTransfers MeterHolderTransfer[] @relation("MeterHolderTransferFromCustomer")
-  bills         Bill[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-}
-
-enum CustomerStatus {
-  ACTIVE
-  INACTIVE
-  DISCONNECTED
-}
-
-model Meter {
-  id          String      @id @default(uuid())
-  meterNumber String      @unique
-  installDate DateTime
-  status      MeterStatus @default(ACTIVE)
-  customerId  String?
-  customer    Customer?   @relation(fields: [customerId], references: [id])
-  readings    Reading[]
-  holderTransfers MeterHolderTransfer[]
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-}
-
-enum MeterStatus {
-  ACTIVE
-  DEFECTIVE
-  REPLACED
-}
-
-model MeterHolderTransfer {
-  id              String    @id @default(uuid())
-  meterId         String
-  meter           Meter     @relation(fields: [meterId], references: [id])
-  fromCustomerId  String?
-  fromCustomer    Customer? @relation("MeterHolderTransferFromCustomer", fields: [fromCustomerId], references: [id])
-  toCustomerId    String
-  toCustomer      Customer  @relation("MeterHolderTransferToCustomer", fields: [toCustomerId], references: [id])
-  effectiveDate   DateTime
-  transferReading Float?
-  reason          String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-}
-
-model Reading {
-  id              String        @id @default(uuid())
-  meterId         String
-  meter           Meter         @relation(fields: [meterId], references: [id])
-  readerId        String
-  reader          User          @relation(fields: [readerId], references: [id])
-  readingDate     DateTime      @default(now())
-  previousReading Float
-  currentReading  Float
-  consumption     Float
-  status          ReadingStatus @default(PENDING_REVIEW)
-  bill            Bill?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-}
-
-enum ReadingStatus {
-  PENDING_REVIEW
-  APPROVED
-  FLAGGED
-}
-
-model Bill {
-  id            String     @id @default(uuid())
-  billingPeriod String
-  dueDate       DateTime
-  customerId    String
-  customer      Customer   @relation(fields: [customerId], references: [id])
-  readingId     String     @unique
-  reading       Reading    @relation(fields: [readingId], references: [id])
-  usageAmount   Float
-  totalCharges  Float
-  status        BillStatus @default(UNPAID)
-  followUpStatus ReceivableFollowUpStatus @default(CURRENT)
-  followUpStatusUpdatedAt DateTime?
-  followUpNote  String?
-  followUpUpdatedById String?
-  followUpUpdatedBy User? @relation("ReceivableFollowUpUpdatedBy", fields: [followUpUpdatedById], references: [id])
-  payments      Payment[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-}
-
-enum BillStatus {
-  UNPAID
-  PARTIALLY_PAID
-  PAID
-  OVERDUE
-}
-
-enum ReceivableFollowUpStatus {
-  CURRENT
-  REMINDER_SENT
-  FINAL_NOTICE_SENT
-  DISCONNECTION_REVIEW
-  DISCONNECTED
-  RESOLVED
-}
-
-model NotificationLog {
-  id            String             @id @default(uuid())
-  customerId    String
-  customer      Customer           @relation(fields: [customerId], references: [id])
-  billId        String?
-  bill          Bill?              @relation(fields: [billId], references: [id])
-  channel       NotificationChannel
-  template      NotificationTemplate
-  status        NotificationStatus @default(PENDING)
-  provider      String
-  destination   String
-  subject       String?
-  message       String
-  providerMessageId String?
-  errorMessage  String?
-  triggeredById String?
-  triggeredBy   User?              @relation("TriggeredNotifications", fields: [triggeredById], references: [id])
-  sentAt        DateTime?
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-}
-
-enum NotificationChannel {
-  EMAIL
-  SMS
-}
-
-enum NotificationTemplate {
-  FOLLOW_UP_REMINDER
-  FINAL_NOTICE
-  DISCONNECTION
-  REINSTATEMENT
-}
-
-enum NotificationStatus {
-  PENDING
-  SENT
-  FAILED
-  SKIPPED
-}
-
-model Payment {
-  id          String        @id @default(uuid())
-  receiptNumber String      @unique
-  amount      Float
-  paymentDate DateTime      @default(now())
-  method      PaymentMethod
-  referenceId String?
-  balanceBefore Float
-  balanceAfter Float
-  recordedById String
-  recordedBy  User          @relation("RecordedPayments", fields: [recordedById], references: [id])
-  billId      String
-  bill        Bill          @relation(fields: [billId], references: [id])
-  status      PaymentStatus @default(COMPLETED)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-}
-
-enum PaymentMethod {
-  CASH
-  BANK_TRANSFER
-  GCASH
-  MAYA
-  CARD
-}
-
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
-}
-```
+When updating architecture notes after a schema change, prefer summarizing the affected domains here and keep the canonical field-level detail in `prisma/schema.prisma`.
 
 ## Update Rules
 - Update this document after any major schema, module-structure, runtime, or workflow change.

@@ -2,7 +2,6 @@ import type { ComponentType } from "react";
 import Link from "next/link";
 import {
   Activity,
-  ArrowRight,
   BanknoteArrowDown,
   ClipboardCheck,
   FileSpreadsheet,
@@ -20,6 +19,12 @@ import { BillStatus, PaymentStatus, ReadingStatus, type Role } from "@prisma/cli
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import {
+  ActionRow,
+  DashboardMetricCard,
+  DashboardPanel,
+  SectionHeader,
+} from "@/features/admin/components/dashboard-console";
 import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { ChangePasswordPanel } from "@/features/auth/components/change-password-panel";
 import {
@@ -233,37 +238,37 @@ export default async function AdminDashboardPage() {
       label: "Customers",
       value: customerCount.toString(),
       detail: "Registered consumer accounts",
-      accent: "bg-[#e4f3ef] text-[#19545a]",
+      accent: "teal",
     },
     {
       label: "Active meters",
       value: activeMeterCount.toString(),
       detail: "Meters currently in service",
-      accent: "bg-[#e7f1fb] text-[#1d4f84]",
+      accent: "sky",
     },
     {
       label: "Pending readings",
       value: pendingReadingCount.toString(),
       detail: "Waiting for billing review",
-      accent: "bg-[#fbedd9] text-[#7a4f11]",
+      accent: "amber",
     },
     {
       label: "Approved to bill",
       value: approvedReadingCount.toString(),
       detail: "Ready for bill generation",
-      accent: "bg-[#ede7fb] text-[#5a3ca3]",
+      accent: "violet",
     },
     {
       label: "Active routes",
       value: activeRouteCount.toString(),
       detail: `${routedMeterCount} meters already mapped into route coverage`,
-      accent: "bg-[#e8f6ef] text-[#175447]",
+      accent: "emerald",
     },
     {
       label: "Open bills",
       value: openBillCount.toString(),
       detail: "Still awaiting settlement",
-      accent: "bg-[#fae4e2] text-[#8a2f28]",
+      accent: "rose",
     },
   ] as const;
   const workflowBoard = [
@@ -273,6 +278,8 @@ export default async function AdminDashboardPage() {
       summary: "Track zone ownership, route staffing, and overdue pressure by field area.",
       count: `${activeRouteCount} routes`,
       href: "/admin/routes",
+      action: "Open routes",
+      icon: MapPinned,
     },
     {
       module: "customers" as const,
@@ -280,6 +287,8 @@ export default async function AdminDashboardPage() {
       summary: "Customer setup and active service linkage.",
       count: `${customerCount} accounts`,
       href: "/admin/customers",
+      action: "Open customers",
+      icon: Users,
     },
     {
       module: "readings" as const,
@@ -287,6 +296,8 @@ export default async function AdminDashboardPage() {
       summary: "Pending field submissions requiring validation.",
       count: `${pendingReadingCount} pending`,
       href: "/admin/readings",
+      action: "Open readings",
+      icon: ClipboardCheck,
     },
     {
       module: "billing" as const,
@@ -294,6 +305,8 @@ export default async function AdminDashboardPage() {
       summary: "Approved usage records that can move into receivables.",
       count: `${approvedReadingCount} approved`,
       href: "/admin/billing",
+      action: "Open billing",
+      icon: ReceiptText,
     },
     {
       module: "exceptions" as const,
@@ -301,6 +314,8 @@ export default async function AdminDashboardPage() {
       summary: "Monitor anomalies that need office review before they become billing or service issues.",
       count: "Alerts workspace",
       href: "/admin/exceptions",
+      action: "Open exceptions",
+      icon: TriangleAlert,
     },
     {
       module: "followUp" as const,
@@ -308,6 +323,8 @@ export default async function AdminDashboardPage() {
       summary: "Escalate past-due balances into reminder and service actions.",
       count: `${openBillCount} open bills`,
       href: "/admin/follow-up",
+      action: "Open follow-up",
+      icon: ShieldAlert,
     },
   ].filter((item) => accessibleModules.has(item.module));
   const roleCapabilities = getRoleCapabilities(localUser.role);
@@ -316,7 +333,7 @@ export default async function AdminDashboardPage() {
     <section className="bg-transparent">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
         <section className="dwds-panel-dark overflow-hidden">
-          <div className="grid gap-4 px-5 py-5 sm:px-6 sm:py-6 lg:grid-cols-[1.2fr_0.8fr] lg:gap-6 lg:px-8 lg:py-8">
+          <div className="grid gap-6 px-5 py-5 sm:px-6 sm:py-6 lg:grid-cols-[1.22fr_0.78fr] lg:gap-8 lg:px-8 lg:py-8">
             <div className="space-y-5">
               <BrandLockup inverse size="lg" className="w-fit max-sm:max-w-[10rem]" />
               <div className="flex flex-wrap items-center gap-3">
@@ -338,7 +355,7 @@ export default async function AdminDashboardPage() {
                 </p>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:flex-wrap">
                 {accessibleModules.has("readings") ? (
                   <Link
                     href="/admin/readings"
@@ -369,159 +386,123 @@ export default async function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="grid gap-3 self-start sm:grid-cols-2 lg:grid-cols-1">
-              <article className="rounded-[1.75rem] border border-white/12 bg-white/8 p-5 backdrop-blur">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
-                  Signed-in staff
-                </p>
-                <p className="mt-3 text-xl font-semibold tracking-tight">{localUser.name}</p>
-                <p className="mt-2 text-sm text-white/72">
-                  {roleDisplayName[localUser.role]} with active internal admin access
-                </p>
-              </article>
-
-              <article className="rounded-[1.75rem] border border-white/12 bg-[linear-gradient(145deg,rgba(255,255,255,0.16),rgba(255,255,255,0.04))] p-5 backdrop-blur">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
-                  Today&apos;s collections
-                </p>
-                <p className="mt-3 text-3xl font-semibold tracking-tight">
-                  {formatCurrency(todayCollections)}
-                </p>
-                <p className="mt-2 text-sm text-white/72">
-                  {todayPayments.length} completed payment
-                  {todayPayments.length === 1 ? "" : "s"} posted in the current operating
-                  day
-                </p>
-              </article>
-
-              <div className="flex flex-col gap-4 rounded-[1.75rem] border border-white/12 bg-white/8 px-5 py-4 sm:col-span-2 sm:flex-row sm:items-center sm:justify-between lg:col-span-1">
-                <div>
+            <div className="self-start overflow-hidden rounded-[1.65rem] border border-white/12 bg-white/7">
+              <div className="grid gap-0 sm:grid-cols-2 lg:grid-cols-1">
+                <article className="border-b border-white/10 p-5 sm:border-r sm:border-white/10 lg:border-r-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
-                    Role coverage
+                    Signed-in staff
                   </p>
-                  <p className="mt-2 max-w-[16rem] text-sm font-medium text-white">
-                    {roleSummaries[localUser.role]}
+                  <p className="mt-3 text-xl font-semibold tracking-tight">{localUser.name}</p>
+                  <p className="mt-2 text-sm text-white/72">
+                    {roleDisplayName[localUser.role]} with active internal admin access
                   </p>
-                  <p className="mt-2 max-w-[16rem] text-xs text-white/72">
-                    {roleCapabilities.length
-                      ? roleCapabilities.join(" | ")
-                      : "No operational capabilities are currently assigned."}
+                </article>
+
+                <article className="border-b border-white/10 p-5 lg:border-b lg:border-white/10">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
+                    Today&apos;s collections
                   </p>
+                  <p className="mt-3 text-3xl font-semibold tracking-tight">
+                    {formatCurrency(todayCollections)}
+                  </p>
+                  <p className="mt-2 text-sm text-white/72">
+                    {todayPayments.length} completed payment
+                    {todayPayments.length === 1 ? "" : "s"} posted in the current operating
+                    day
+                  </p>
+                </article>
+
+                <div className="flex flex-col gap-4 p-5 sm:col-span-2 lg:col-span-1">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
+                      Role coverage
+                    </p>
+                    <p className="mt-2 max-w-[18rem] text-sm font-medium text-white">
+                      {roleSummaries[localUser.role]}
+                    </p>
+                    <p className="mt-2 text-xs leading-6 text-white/72">
+                      {roleCapabilities.length
+                        ? roleCapabilities.join(" | ")
+                        : "No operational capabilities are currently assigned."}
+                    </p>
+                  </div>
+                  <div className="border-t border-white/10 pt-4">
+                    <AdminSessionButton />
+                  </div>
                 </div>
-                <AdminSessionButton />
               </div>
             </div>
           </div>
         </section>
 
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          {operationsSnapshot.map((item) => (
-            <article
-              key={item.label}
-              className="dwds-panel p-5"
-            >
-              <div
-                className={cn(
-                  "inline-flex rounded-full px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.18em]",
-                  item.accent
-                )}
-              >
-                {item.label}
-              </div>
-              <p className="mt-4 text-4xl font-semibold tracking-tight text-foreground">
-                {item.value}
-              </p>
-              <p className="mt-2 text-sm leading-6 text-muted-foreground">{item.detail}</p>
-            </article>
-          ))}
+        <section className="dwds-section overflow-hidden">
+          <div className="grid gap-0 md:grid-cols-2 xl:grid-cols-6">
+            {operationsSnapshot.map((item) => (
+              <DashboardMetricCard
+                key={item.label}
+                label={item.label}
+                value={item.value}
+                detail={item.detail}
+                accent={item.accent}
+              />
+            ))}
+          </div>
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-          <article className="dwds-panel p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary/72">
-                  Operational Pulse
-                </p>
-                <h2 className="mt-3 font-heading text-3xl text-foreground">
-                  What needs attention next
-                </h2>
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-                  The workflow is staged so staff can see where activity is sitting right
-                  now, from account setup through receivable follow-up.
-                </p>
-              </div>
-              <div className="hidden rounded-2xl bg-primary/8 p-3 text-primary sm:flex">
-                <Activity className="size-5" />
-              </div>
+          <DashboardPanel className="p-0">
+            <div className="border-b border-border/75 px-5 py-5 sm:px-6">
+              <SectionHeader
+                eyebrow="Operational Pulse"
+                title="What needs attention next"
+                description="The workflow stays staged by urgency so staff can move from live queue pressure into the next operational action without re-scanning the full system."
+                icon={Activity}
+              />
             </div>
 
-            <div className="mt-8 grid gap-4">
+            <div className="divide-y divide-border/75 overflow-hidden">
               {workflowBoard.length ? (
                 workflowBoard.map((item) => (
-                  <Link
+                  <ActionRow
                     key={item.title}
                     href={item.href}
-                    className="cursor-pointer rounded-[1.5rem] border border-border/80 bg-secondary/35 px-5 py-4 transition-colors duration-200 hover:bg-secondary/60"
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-base font-semibold text-foreground">{item.title}</p>
-                      <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                        {item.summary}
-                      </p>
-                    </div>
-                      <ArrowRight className="mt-1 size-4 shrink-0 text-primary" />
-                    </div>
-                    <p className="mt-4 text-sm font-medium text-primary">{item.count}</p>
-                  </Link>
+                    title={item.title}
+                    summary={item.summary}
+                    meta={item.count}
+                    actionLabel={item.action}
+                    icon={item.icon}
+                  />
                 ))
               ) : (
-                <div className="rounded-[1.5rem] border border-border/80 bg-secondary/35 px-5 py-5 text-sm leading-6 text-muted-foreground">
+                <div className="px-5 py-5 text-sm leading-6 text-muted-foreground sm:px-6">
                   No downstream workflow modules are assigned to this role yet.
                 </div>
               )}
             </div>
-          </article>
+          </DashboardPanel>
 
-          <article className="dwds-panel p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary/72">
-                  Modules
-                </p>
-                <h2 className="mt-3 font-heading text-3xl text-foreground">
-                  Open the module you need
-                </h2>
-              </div>
+          <DashboardPanel className="p-0">
+            <div className="border-b border-border/75 px-5 py-5 sm:px-6">
+              <SectionHeader
+                eyebrow="Modules"
+                title="Open the module you need"
+                description="The directory stays compact on purpose. Use it to move straight into the responsibility area you need instead of scanning a second dashboard grid."
+              />
             </div>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
-              {visibleModuleCards.map((item) => {
-                const Icon = item.icon;
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="cursor-pointer rounded-[1.6rem] border border-border/80 bg-white/88 px-5 py-5 shadow-[0_18px_50px_-45px_rgba(16,63,67,0.32)] transition-colors duration-200 hover:bg-secondary/35"
-                  >
-                    <div className="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                      <Icon className="size-5" />
-                    </div>
-                    <h3 className="mt-4 text-lg font-semibold text-foreground">{item.title}</h3>
-                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                      {item.description}
-                    </p>
-                    <div className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-primary">
-                      {item.action}
-                      <ArrowRight className="size-4" />
-                    </div>
-                  </Link>
-                );
-              })}
+            <div className="divide-y divide-border/75 overflow-hidden">
+              {visibleModuleCards.map((item) => (
+                <ActionRow
+                  key={item.href}
+                  href={item.href}
+                  title={item.title}
+                  summary={item.description}
+                  actionLabel={item.action}
+                  icon={item.icon}
+                />
+              ))}
             </div>
-          </article>
+          </DashboardPanel>
         </section>
 
         <ChangePasswordPanel />

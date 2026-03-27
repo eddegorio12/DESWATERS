@@ -34,7 +34,7 @@ export default function PlatformPage() {
         title="A modular utility platform with a clear operating model."
         description="DWDS is structured around the work staff actually perform, with separate modules for records, billing, cashiering, follow-up, and reports instead of one overcrowded screen."
       >
-        <article className="dwds-panel overflow-hidden p-4">
+        <article className="dwds-section overflow-hidden p-4">
           <Image
             src="/marketing/dashboard-preview.svg"
             alt="DWDS platform dashboard preview"
@@ -46,39 +46,45 @@ export default function PlatformPage() {
         </article>
       </PageHero>
 
-      <section className="grid gap-5 lg:grid-cols-3">
+      <section className="divide-y divide-border/75 overflow-hidden rounded-[1.65rem] border border-border/75 bg-white/72">
         {platformPillars.map((pillar, index) => {
           const Icon = pillarIcons[index];
 
           return (
-            <article
-              key={pillar.title}
-              className="dwds-panel p-6"
-            >
-              <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Icon className="size-5" />
+            <article key={pillar.title} className="px-5 py-5">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className="flex min-w-0 items-start gap-4">
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <Icon className="size-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h2 className="font-heading text-2xl text-foreground">
+                      {pillar.title}
+                    </h2>
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                      {pillar.description}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm font-medium text-primary">Platform principle</p>
               </div>
-              <h2 className="mt-5 font-heading text-2xl text-foreground">{pillar.title}</h2>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                {pillar.description}
-              </p>
             </article>
           );
         })}
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <article className="dwds-panel p-8">
+        <article className="dwds-section p-8">
           <SectionHeading
             eyebrow="Module Map"
             title="Each business function has a dedicated surface."
             description="That separation keeps DWDS easier to extend, easier to maintain, and safer for role-based work."
           />
-          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+          <div className="mt-8 divide-y divide-border/70 overflow-hidden rounded-[1.5rem] border border-border/70 bg-white/72">
             {moduleHighlights.map((item) => (
               <div
                 key={item.title}
-                className="rounded-[1.5rem] border border-border/70 bg-secondary/35 p-5"
+                className="px-5 py-4"
               >
                 <p className="text-base font-semibold text-foreground">{item.title}</p>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
@@ -118,20 +124,24 @@ export default function PlatformPage() {
           title="Reporting is treated as a first-class operational layer."
           description="The platform is designed so teams can understand present-day cash movement and unfinished utility work without leaving the system."
         />
-        <div className="grid gap-5 md:grid-cols-3">
+        <div className="divide-y divide-border/75 overflow-hidden rounded-[1.65rem] border border-border/75 bg-white/72">
           {reportingHighlights.map((item, index) => {
             const Icon = sectionIcons[index];
 
             return (
-              <article
-                key={item.title}
-              className="dwds-panel p-6"
-              >
-                <Icon className="size-5 text-primary" />
-                <h3 className="mt-5 font-heading text-2xl text-foreground">{item.title}</h3>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  {item.description}
-                </p>
+              <article key={item.title} className="px-5 py-5">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div className="flex min-w-0 items-start gap-4">
+                    <Icon className="mt-1 size-5 shrink-0 text-primary" />
+                    <div className="min-w-0">
+                      <h3 className="font-heading text-2xl text-foreground">{item.title}</h3>
+                      <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-sm font-medium text-primary">Operational visibility</p>
+                </div>
               </article>
             );
           })}

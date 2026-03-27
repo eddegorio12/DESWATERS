@@ -43,49 +43,68 @@ export type DashboardNavItem = {
   icon: keyof typeof iconMap;
 };
 
+function SidebarNavItem({
+  item,
+  isActive,
+}: {
+  item: DashboardNavItem;
+  isActive: boolean;
+}) {
+  const Icon = iconMap[item.icon];
+
+  return (
+    <Link
+      key={item.href}
+      href={item.href}
+      aria-current={isActive ? "page" : undefined}
+      className={cn(
+        "group flex cursor-pointer items-start gap-3 rounded-[1.15rem] border px-3.5 py-3 text-left transition-colors duration-200",
+        isActive
+          ? "border-white/12 bg-white text-[#13253f] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]"
+          : "border-transparent bg-white/[0.03] text-white/80 hover:border-white/10 hover:bg-white/8 hover:text-white"
+      )}
+    >
+      <div
+        className={cn(
+          "mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-[0.95rem] border transition-colors duration-200",
+          isActive
+            ? "border-[#bdeee5] bg-[#dff8f1] text-[#11645e]"
+            : "border-white/8 bg-white/7 text-white/82 group-hover:border-white/14 group-hover:bg-white/10"
+        )}
+      >
+        <Icon className="size-[1.05rem]" />
+      </div>
+      <div className="min-w-0">
+        <p
+          className={cn(
+            "text-[0.95rem] font-semibold tracking-[-0.01em]",
+            isActive ? "text-[#13253f]" : "text-white"
+          )}
+        >
+          {item.label}
+        </p>
+        <p
+          className={cn(
+            "mt-1 line-clamp-2 text-[0.72rem] leading-5",
+            isActive ? "text-[#4a627e]" : "text-white/60 group-hover:text-white/74"
+          )}
+        >
+          {item.description}
+        </p>
+      </div>
+    </Link>
+  );
+}
+
 export function DashboardNav({ items }: { items: readonly DashboardNavItem[] }) {
   const pathname = usePathname();
 
   return (
-    <nav className="grid gap-2">
+    <nav className="grid gap-1.5">
       {items.map((item) => {
         const isActive = pathname === item.href;
-        const Icon = iconMap[item.icon];
 
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              "group flex cursor-pointer items-start gap-3 rounded-[1.3rem] border px-3.5 py-3 text-left transition-colors duration-200",
-              isActive
-                ? "border-white/10 bg-white text-[#13253f]"
-                : "border-transparent bg-transparent text-white/74 hover:border-white/10 hover:bg-white/8 hover:text-white"
-            )}
-          >
-            <div
-              className={cn(
-                "mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl",
-                isActive ? "bg-[#d9f8f1] text-[#11645e]" : "bg-white/8 text-white/80"
-              )}
-            >
-              <Icon className="size-[1.1rem]" />
-            </div>
-            <div className="min-w-0">
-              <p className={cn("text-sm font-semibold", isActive ? "text-[#13253f]" : "text-white")}>
-                {item.label}
-              </p>
-              <p
-                className={cn(
-                  "mt-1 line-clamp-2 text-xs leading-5",
-                  isActive ? "text-[#49617d]" : "text-white/56 group-hover:text-white/72"
-                )}
-              >
-                {item.description}
-              </p>
-            </div>
-          </Link>
-        );
+        return <SidebarNavItem key={item.href} item={item} isActive={isActive} />;
       })}
     </nav>
   );
