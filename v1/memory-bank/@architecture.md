@@ -200,6 +200,7 @@
 - The next visual-quality gain should come from composition discipline: fewer containers, less nested card-on-card structure, and clearer contrast between navigation, summary, and task objects.
 - EH14 has now started by introducing lighter-weight composition primitives for summary and navigation areas, while keeping stronger card treatments for workflow queues and stateful records.
 - EH14.1 now introduces shared dashboard-console primitives so the protected shell and admin dashboard can preserve their current structure while improving enterprise-console readability, sidebar control density, KPI consistency, and reusable operational row patterns.
+- EH14.2 now applies that same refinement logic to the homepage: one dominant operational promise, larger screenshot-led workflow sections, an early readiness/trust strip, repeated CTA vocabulary, and clearer staff-facing positioning instead of a broad feature-grid narrative.
 
 ## Usability Architecture Targets
 
@@ -381,6 +382,7 @@
 - EH14 should preserve the current DWDS light-mode enterprise direction while reducing excess radius, shadow repetition, and nested panel density where those treatments do not communicate state.
 - The first implemented EH14 slice now adds lighter-weight `dwds-section` and `dwds-subtle-block` treatments, reduces nested card usage in the protected shell and shared admin page hero, and shifts the dashboard plus top marketing entry pages toward row-based directories and editorial split layouts.
 - EH14.1 now refactors the active dashboard into a more mature operations console through reusable dashboard primitives: a higher-clarity sidebar item, stricter metric card, denser action row, clearer section header, and calmer panel framing while preserving the existing DWDS dashboard concept.
+- EH14.2 now refactors the homepage around a single operational promise, an early trust/readiness strip, and three screenshot-led workflow proof sections so the marketing surface emphasizes deployment readiness and operator fit ahead of broad feature enumeration.
 
 ## Database Schema: Current Repository Snapshot
 The live schema now moves faster than a safe hand-maintained excerpt in this file. Treat [prisma/schema.prisma](C:/Users/eddeg/OneDrive/Documents/GitHub/DESWATERS/v1/prisma/schema.prisma) as the authoritative schema source.

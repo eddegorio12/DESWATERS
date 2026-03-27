@@ -34,6 +34,7 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - EH13 is now fully validated and closed.
 - EH14 visual composition refinement is now in progress through the first shell/dashboard/marketing slice, and the next contribution after that should remain broader EH12 analytics, then dedicated admin-management audit logging.
 - EH14.1 is now implemented as the dashboard-only enterprise-console refinement pass. Preserve that current DWDS dashboard concept and shared console primitives when extending adjacent admin surfaces; do not redesign the dashboard from scratch unless the user explicitly changes scope.
+- EH14.2 is now implemented as the landing-page proof pass. Preserve that sharper homepage narrative when refining adjacent marketing routes: one operational promise, screenshot-led workflow proof, early readiness/trust signals, tighter CTA vocabulary, and explicit staff-facing positioning over broad feature-grid enumeration.
 - The concrete EH13 order is: meters first, then routes, then collections/exceptions, then follow-up, then responsive hardening, then shared status-priority treatment, then the final consistency sweep.
 
 ## 3. Enhancement Backlog Handling

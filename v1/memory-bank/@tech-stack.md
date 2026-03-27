@@ -98,6 +98,7 @@ This is the simplest robust default because it avoids self-hosted database work,
 - When refining visual quality, prefer composition changes over decorative escalation: fewer nested panels, fewer equal-weight tiles, and stronger hierarchy from layout and typography rather than more shadows, gradients, and rounded containers
 - For enterprise dashboard refinement, prefer reusable console primitives inside the current Tailwind/shadcn stack over page-specific styling drift: consistent metric cards, sidebar items, section headers, action rows, and status badges should carry the visual system
 - EH14.1 now establishes those console primitives in the repo for the protected shell and dashboard, so future admin-surface refinement should extend them instead of introducing parallel dashboard styling systems
+- EH14.2 now applies that homepage direction in the repo: the same Next.js/Tailwind/shadcn stack now drives a sharper hero promise, an early proof strip, screenshot-led editorial sections, and tighter repeated CTA language instead of large equal-weight feature grids
 
 ## Current Repo Alignment
 - The repo already aligns with this direction: Next.js, TypeScript, Prisma, PostgreSQL-first runtime, Auth.js credentials auth, Tailwind, shadcn/ui, React Hook Form, and Zod

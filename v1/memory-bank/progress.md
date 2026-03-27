@@ -34,6 +34,7 @@
 - EH14 has now started with the first visual-composition slice implemented across the protected shell, shared admin page hero, admin dashboard, and top marketing entry surfaces.
 - EH14 now also has a dashboard-focused planning slice defined for a FortiGate-inspired enterprise-console refinement pass that preserves the current DWDS structure and identity.
 - EH14.1 has now been implemented as a dashboard-console refinement pass with reusable enterprise-style sidebar, metric, panel, section-header, and action-row primitives across the protected shell and admin dashboard.
+- EH14.2 has now been implemented as a proof-led homepage refinement pass with one sharper operational promise, an early deployment-readiness strip, screenshot-led workflow sections, repeated platform-versus-rollout CTA language, and clearer staff-facing positioning.
 
 ## Implemented Milestones
 
@@ -78,7 +79,8 @@
 - The final EH13 consistency sweep now standardizes list-control wording around explicit filter actions, removes roadmap-step labels from live operator copy, and upgrades older empty states with clearer next-step guidance.
 - EH14 now adds lighter-weight shared composition primitives plus an editorial row/split-layout treatment on the dashboard and key marketing entry pages so summary and navigation content no longer default to equal-weight cards.
 - EH14.1 now refines the admin dashboard console through stronger sidebar item hierarchy, denser KPI-counter treatment, clearer section framing, and reusable action rows without changing the overall dashboard concept.
-- The next planned EH14 implementation target is broader rollout of the refined console language to adjacent admin entry surfaces and the remaining secondary marketing pages that still overuse equal-weight cards.
+- EH14.2 now also refactors the homepage around a single operational promise, earlier readiness proof, and larger workflow screenshots so the page reads more like a deployment-ready utility product than a feature catalog.
+- The next planned EH14 implementation target is broader rollout of the refined composition language to adjacent admin entry surfaces and the remaining secondary marketing pages that still overuse equal-weight cards.
 
 ## Important Historical Constraints
 
@@ -217,7 +219,7 @@
 
 ### EH14: Visual Composition & Anti-Template Refinement
 - Status: `in progress`
-- Notes: The first implemented EH14 slice now introduces lighter-weight shared composition primitives, reduces nested panel density in the protected shell and shared admin page hero, refactors the admin dashboard into a stronger workflow-plus-directory split, and replaces the top marketing home/platform tile grids with denser editorial rows and split layouts. EH14.1 is now implemented as the dashboard-only refinement pass focused on typography, sidebar clarity, KPI consistency, action-row usability, and shared enterprise-console dashboard primitives. Broader EH14 rollout across the remaining marketing pages and secondary admin surfaces is still pending user validation of this dashboard pass.
+- Notes: The first implemented EH14 slice now introduces lighter-weight shared composition primitives, reduces nested panel density in the protected shell and shared admin page hero, refactors the admin dashboard into a stronger workflow-plus-directory split, and replaces the top marketing home/platform tile grids with denser editorial rows and split layouts. EH14.1 is now implemented as the dashboard-only refinement pass focused on typography, sidebar clarity, KPI consistency, action-row usability, and shared enterprise-console dashboard primitives. EH14.2 is now implemented on the homepage through a sharper single operational promise, an early deployment-readiness trust strip, screenshot-led workflow proof for meter-to-bill, daily control, and overdue operations, tighter repeated CTA vocabulary, and explicit staff-facing positioning. Broader EH14 rollout across the remaining marketing pages and secondary admin surfaces is still pending.
 
 ## Current Next-Step Recommendation
-EH13 is now closed. The next recommended order is EH14 visual composition refinement first, then broader EH12 analytics, then dedicated admin-management audit logging, then optional deferred EH11 and EH9 refinements only if they remain product priorities.
+EH13 is now closed. The next recommended step is broader `EH14` rollout across the remaining marketing and admin summary surfaces, followed by broader EH12 analytics, then dedicated admin-management audit logging, then optional deferred EH11 and EH9 refinements only if they remain product priorities.

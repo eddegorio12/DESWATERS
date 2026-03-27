@@ -415,7 +415,7 @@ Recommended task sequence:
 
 ## Current Next Recommendation
 
-EH13 is now closed. Run a focused visual-composition refinement pass first, then resume the roadmap with broader EH12 management analytics, then dedicated admin-management audit logging.
+EH13 is now closed. Continue the focused EH14 visual-composition rollout across the remaining marketing and admin summary surfaces, then resume the roadmap with broader EH12 management analytics, then dedicated admin-management audit logging.
 
 Target outcomes:
 1. Reduce card overuse and nested panel density on the most visible admin and marketing surfaces.
@@ -475,7 +475,8 @@ Current progress:
 - `/admin/dashboard` now emphasizes one primary workflow board, one compact KPI strip, and one denser module directory instead of multiple competing card grids.
 - The public home and platform pages plus the shared product-showcase component now use editorial row/split-layout patterns instead of repeating equal-weight tile sections.
 - `EH14.1` is now implemented through shared `DashboardMetricCard`, `DashboardPanel`, `ActionRow`, and `SectionHeader` primitives plus a tighter `SidebarNavItem` treatment for the protected shell and admin dashboard.
-- Remaining EH14 work should continue across the other marketing pages and any secondary admin summary surfaces that still overuse nested bordered tiles.
+- `EH14.2` is now implemented on the homepage itself: the hero now carries one sharper operational promise, the page introduces an early deployment-readiness trust strip, workflow proof is screenshot-led, CTA language now repeats a tighter platform-versus-rollout pair, and the homepage no longer depends on several equal-weight feature-card sections.
+- Remaining EH14 work should now continue across the other marketing pages and any secondary admin summary surfaces that still overuse nested bordered tiles.
 
 ### EH14.1: Admin Dashboard Console Refinement
 **Priority:** Highest within EH14
@@ -518,6 +519,38 @@ Current progress:
 - `src/app/(dashboard)/layout.tsx` now reads more like a control panel than a stacked marketing sidebar while preserving the current shell structure.
 - `src/app/(dashboard)/admin/dashboard/page.tsx` now uses denser metric cards and reusable action rows for both the operational pulse board and module directory.
 - Targeted linting and a short Next.js startup pass have completed successfully; user-facing validation is the remaining checkpoint before wider EH14 rollout.
+
+### EH14.2: Landing Page Proof-Led Refinement
+**Priority:** Highest within EH14 after EH14.1 validation
+**Status:** Implemented, pending user validation
+**Depends on:** EH14 composition baseline and current public marketing assets already in repo
+
+Scope:
+1. Rebuild the homepage hero around one clear operational promise for DWDS as an internal utility-operations platform.
+2. Replace generic or equal-weight feature-card sections with screenshot-led workflow narratives that show meter-to-bill, billing/collections control, and overdue/route operations.
+3. Add an early trust-and-readiness strip that confirms deployment fit, internal-auth posture, billing governance, and managed Postgres readiness.
+4. Tighten CTA vocabulary so the page repeats only a small set of deliberate actions such as viewing the platform and planning rollout.
+5. Clarify product fit for utility operators and administrators, including the fact that DWDS is staff-facing and not a consumer self-service portal.
+
+Exit criteria:
+- The homepage communicates one dominant product promise instead of reading like a balanced feature catalog.
+- Product proof comes primarily from larger screenshots and workflow outcomes rather than many small tiles.
+- Readiness and trust cues appear high enough on the page to support evaluation by operational buyers.
+- CTA labels feel deliberate and repeated, not ad hoc.
+- The homepage still fits the existing DWDS brand and does not regress into generic SaaS marketing language.
+
+Planned implementation order:
+1. Rewrite the homepage hero headline, subcopy, and CTA pair around one stronger operational promise.
+2. Add a near-hero trust/readiness strip for internal auth, role controls, printable outputs, billing governance, and deployment posture.
+3. Refactor the main body into three screenshot-led workflow sections with concise outcome bullets.
+4. Remove or collapse remaining equal-weight feature grids that do not add proof.
+5. Rework the final CTA block so the page closes with the same focused CTA language used above the fold.
+
+Current progress:
+- `src/app/(marketing)/page.tsx` now centers the homepage hero on one operations-first promise and reuses a tighter CTA pair: `View platform` and `Plan rollout`.
+- The homepage now introduces an early readiness strip for internal auth posture, billing governance, managed-Postgres deployment fit, and printable-output coverage.
+- Product proof now leans on three large screenshot-led workflow sections covering meter-to-bill control, daily billing-plus-collections oversight, and overdue or route-aware operational follow-through.
+- The prior equal-weight module, product-view, reporting, and brand-principle blocks have been collapsed into a denser editorial structure so the homepage reads less like a feature catalog.
 
 ## Backlog Intake Rule
 Any new future work should be added here as a named enhancement phase with:

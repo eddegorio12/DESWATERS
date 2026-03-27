@@ -38,6 +38,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 - A follow-on visual-composition pass is now recommended because several admin and marketing surfaces still rely on too many similarly styled cards, which makes the product feel more templated than intentional.
 - EH14 is now in progress through an initial composition slice on the shared admin shell, admin dashboard, and top marketing entry surfaces.
 - EH14.1 is now implemented as a dashboard-only maturity pass that sharpens the current admin console into a more readable, denser enterprise operations surface without redesigning it.
+- EH14.2 is now implemented as a landing-page refinement pass that makes the homepage more proof-led, more deployment-ready, less dependent on equal-weight feature-card sections, and clearer about DWDS being a staff-facing platform.
 
 ## Product Principles
 - **Modularity is mandatory:** Features must be separated into focused modules.
@@ -321,7 +322,7 @@ Current status:
 - Visual priority treatment for pending, overdue, read-only, success, and attention-required states is now implemented across the active admin workflow surfaces.
 
 ## Current Contribution Priority
-1. Run a visual-composition refinement pass that reduces card overuse, flattens nested panel hierarchy, and strengthens section rhythm across the current admin and marketing surfaces.
+1. Continue the visual-composition refinement pass across the remaining admin and marketing surfaces now that the homepage proof-led slice is implemented.
 2. Resume EH12 with broader management analytics after that composition pass is stable.
 3. Add dedicated admin-management audit logging.
 4. Revisit deferred auditability and security refinements such as optional `SUPER_ADMIN` 2FA and automated backup/export support only if they remain priorities.
@@ -345,7 +346,29 @@ Current status:
 - EH14 is now in progress.
 - The first implemented slice adds lighter-weight section treatments, a denser admin dashboard directory/workflow composition, and editorial row/split-layout patterns on the marketing home and platform pages.
 - EH14.1 now adds reusable dashboard-console primitives, a tighter protected-shell sidebar treatment, stricter KPI hierarchy, and denser action-row composition on `/admin/dashboard`.
+- EH14.2 now tightens the homepage hero around one operational promise, moves more of the proof burden onto larger workflow screenshots, adds a trust/readiness strip near the top of the page, and reduces the remaining equal-weight feature-card patterns on `/`.
 - Broader rollout across the remaining marketing routes and secondary admin summary surfaces remains pending.
+
+### Landing Page Refinement Direction
+Goal: make the DWDS homepage read like a deployment-ready utility-operations product with stronger proof, clearer buyer fit, and less feature-grid sprawl.
+
+Expected outcomes:
+- one sharper hero promise with only one primary CTA and one secondary CTA
+- a trust/readiness strip near the top of the homepage
+- screenshot-led workflow sections for meter-to-bill operations, billing and collections control, and overdue/route operations
+- fewer equal-weight cards and more editorial split layouts or proof rows
+- clearer positioning that DWDS is an internal staff/admin platform, not a consumer self-service portal
+
+Rationale:
+- The current marketing direction is coherent, but the homepage can still read too evenly distributed across multiple sections.
+- Buyers evaluating an internal operations platform should see operational proof and deployment readiness earlier than a broad list of features.
+- Stronger hierarchy should make the page feel more intentional and more specific to the utility-operations problem DWDS solves.
+
+Current status:
+- EH14.2 is now implemented on the homepage.
+- The hero, CTA language, and closing block now repeat the same focused platform-versus-rollout decision instead of mixing multiple access prompts.
+- The page now surfaces internal-auth posture, billing governance, managed-Postgres readiness, and printable-output coverage near the top.
+- Workflow proof now relies on larger screenshot-led editorial sections instead of several equal-weight feature grids.
 
 ### EH13 Recommended Task Breakdown
 1. `EH13.2a` Upgrade the meters module to the shared list/filter/empty-state interaction pattern. Completed.
