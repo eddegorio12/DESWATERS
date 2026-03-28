@@ -68,7 +68,7 @@ export function AdminPageShell({
                   {stats.map((stat) => (
                     <article
                       key={`${stat.label}-${stat.value}`}
-                      className="border-b border-white/10 p-4 last:border-b-0 md:border-b-0 md:p-5 [&:nth-child(odd)]:md:border-r [&:nth-child(odd)]:md:border-white/10"
+                      className="border-b border-white/10 p-3.5 last:border-b-0 md:border-b-0 md:p-4 [&:nth-child(odd)]:md:border-r [&:nth-child(odd)]:md:border-white/10"
                     >
                       <span
                         className={cn(
@@ -78,10 +78,10 @@ export function AdminPageShell({
                       >
                         {stat.label}
                       </span>
-                      <p className="mt-4 break-words text-xl font-semibold tracking-tight text-white sm:text-2xl md:text-[2rem]">
+                      <p className="mt-3 break-words text-xl font-semibold tracking-tight text-white sm:text-2xl md:text-[1.85rem]">
                         {stat.value}
                       </p>
-                      <p className="mt-2 text-sm leading-6 text-white/70">{stat.detail}</p>
+                      <p className="mt-1.5 text-sm leading-5 text-white/70">{stat.detail}</p>
                     </article>
                   ))}
                 </div>
