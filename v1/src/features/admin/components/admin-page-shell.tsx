@@ -64,11 +64,11 @@ export function AdminPageShell({
 
             <div className="self-start lg:justify-self-end">
               {stats.length ? (
-                <div className="grid gap-0 overflow-hidden rounded-[1.5rem] border border-white/12 bg-white/7 sm:grid-cols-2">
+                <div className="grid gap-0 overflow-hidden rounded-[1.5rem] border border-white/12 bg-white/7 md:grid-cols-2">
                   {stats.map((stat) => (
                     <article
                       key={`${stat.label}-${stat.value}`}
-                      className="border-b border-white/10 p-4 last:border-b-0 sm:border-b-0 sm:p-5 [&:nth-child(odd)]:sm:border-r [&:nth-child(odd)]:sm:border-white/10"
+                      className="border-b border-white/10 p-4 last:border-b-0 md:border-b-0 md:p-5 [&:nth-child(odd)]:md:border-r [&:nth-child(odd)]:md:border-white/10"
                     >
                       <span
                         className={cn(
@@ -78,7 +78,7 @@ export function AdminPageShell({
                       >
                         {stat.label}
                       </span>
-                      <p className="mt-4 break-words text-2xl font-semibold tracking-tight text-white sm:text-[2rem]">
+                      <p className="mt-4 break-words text-xl font-semibold tracking-tight text-white sm:text-2xl md:text-[2rem]">
                         {stat.value}
                       </p>
                       <p className="mt-2 text-sm leading-6 text-white/70">{stat.detail}</p>

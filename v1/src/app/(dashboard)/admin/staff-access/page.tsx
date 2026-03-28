@@ -80,21 +80,21 @@ export default async function AdminStaffAccessPage() {
       actions={<AdminPageActions />}
       stats={[
         {
-          label: "Total Admins",
+          label: "Admins",
           value: admins.length.toString(),
-          detail: "Admin accounts in the DWDS database",
+          detail: "Internal accounts",
           accent: "teal",
         },
         {
           label: "Active",
           value: admins.filter((user) => user.isActive).length.toString(),
-          detail: "Accounts that can currently sign in",
+          detail: "Can sign in now",
           accent: "sky",
         },
         {
           label: "Inactive",
           value: admins.filter((user) => !user.isActive).length.toString(),
-          detail: "Accounts blocked from sign-in",
+          detail: "Sign-in blocked",
           accent: "rose",
         },
         {
@@ -102,15 +102,15 @@ export default async function AdminStaffAccessPage() {
           value: admins
             .filter((user) => user.lockedUntil && user.lockedUntil > new Date())
             .length.toString(),
-          detail: "Accounts currently blocked by failed-login lockout",
+          detail: "Lockout active",
           accent: "violet",
         },
         {
-          label: "2FA Enabled",
+          label: "2FA",
           value: admins
             .filter((user) => user.role === "SUPER_ADMIN" && user.twoFactorEnabled)
             .length.toString(),
-          detail: "SUPER_ADMIN accounts currently protected by authenticator sign-in",
+          detail: "Protected super admins",
           accent: "teal",
         },
       ]}
