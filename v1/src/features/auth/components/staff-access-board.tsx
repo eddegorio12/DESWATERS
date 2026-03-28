@@ -78,6 +78,19 @@ function formatDate(value: Date | null) {
   }).format(value);
 }
 
+function formatCompactDate(value: Date | null) {
+  if (!value) {
+    return "Never";
+  }
+
+  return new Intl.DateTimeFormat("en-PH", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(value);
+}
+
 function formatLoginAttemptStatus(status: AdminLoginAttemptStatus) {
   switch (status) {
     case AdminLoginAttemptStatus.SUCCESS:
@@ -281,7 +294,7 @@ export function StaffAccessBoard({
                       </StatusPill>
                       {admin.lockedUntil && admin.lockedUntil > new Date() ? (
                         <StatusPill priority="attention" className="uppercase tracking-[0.18em]">
-                          Locked until {formatDate(admin.lockedUntil)}
+                          Locked until {formatCompactDate(admin.lockedUntil)}
                         </StatusPill>
                       ) : null}
                       {admin.role === Role.SUPER_ADMIN ? (
@@ -296,12 +309,12 @@ export function StaffAccessBoard({
                     <p className="text-sm text-muted-foreground">{admin.email}</p>
                   </div>
 
-                  <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-4">
+                  <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-2 xl:grid-cols-4">
                     <div className="rounded-[1.15rem] border border-border/65 bg-secondary/26 px-4 py-3">
                       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
                         Last login
                       </p>
-                      <p className="mt-2 text-sm text-foreground">{formatDate(admin.lastLoginAt)}</p>
+                      <p className="mt-2 text-sm text-foreground">{formatCompactDate(admin.lastLoginAt)}</p>
                     </div>
                     <div className="rounded-[1.15rem] border border-border/65 bg-secondary/26 px-4 py-3">
                       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
@@ -313,14 +326,14 @@ export function StaffAccessBoard({
                       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
                         Created
                       </p>
-                      <p className="mt-2 text-sm text-foreground">{formatDate(admin.createdAt)}</p>
+                      <p className="mt-2 text-sm text-foreground">{formatCompactDate(admin.createdAt)}</p>
                     </div>
                     <div className="rounded-[1.15rem] border border-border/65 bg-secondary/26 px-4 py-3">
                       <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
                         2FA enabled
                       </p>
                       <p className="mt-2 text-sm text-foreground">
-                        {admin.twoFactorEnabledAt ? formatDate(admin.twoFactorEnabledAt) : "Not enabled"}
+                        {admin.twoFactorEnabledAt ? formatCompactDate(admin.twoFactorEnabledAt) : "Not enabled"}
                       </p>
                     </div>
                   </div>
