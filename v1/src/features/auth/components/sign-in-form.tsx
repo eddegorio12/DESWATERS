@@ -46,11 +46,46 @@ export function SignInForm({ callbackUrl }: { callbackUrl?: string }) {
         />
       </div>
 
+      <div>
+        <label className="text-sm font-medium text-foreground" htmlFor="verificationCode">
+          Authenticator code
+        </label>
+        <input
+          id="verificationCode"
+          name="verificationCode"
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]{6}"
+          autoComplete="one-time-code"
+          placeholder="Optional unless SUPER_ADMIN 2FA is enabled"
+          className={fieldClassName}
+        />
+      </div>
+
+      <div>
+        <label className="text-sm font-medium text-foreground" htmlFor="recoveryCode">
+          Recovery code
+        </label>
+        <input
+          id="recoveryCode"
+          name="recoveryCode"
+          type="text"
+          autoComplete="off"
+          placeholder="Use only if you cannot access the authenticator app"
+          className={fieldClassName}
+        />
+      </div>
+
       {state?.error ? (
         <p className="rounded-2xl border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
           {state.error}
         </p>
       ) : null}
+
+      <p className="text-sm leading-6 text-muted-foreground">
+        Standard admins still sign in with email and password only. SUPER_ADMIN accounts use the
+        extra field only after optional two-factor sign-in is enabled from the dashboard.
+      </p>
 
       <Button type="submit" size="lg" className="h-11 w-full rounded-2xl" disabled={pending}>
         {pending ? "Signing in..." : "Sign in"}

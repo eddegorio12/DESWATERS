@@ -4,6 +4,11 @@ import bcrypt from "bcrypt";
 import { AdminLoginAttemptStatus, Role } from "@prisma/client";
 import { z } from "zod";
 
+import {
+  decryptTwoFactorSecret,
+  hashRecoveryCode,
+  verifyTwoFactorCode,
+} from "@/features/auth/lib/two-factor";
 import { prisma } from "@/lib/prisma";
 
 const SESSION_MAX_AGE_SECONDS = 60 * 30;
@@ -13,6 +18,8 @@ const LOCKOUT_WINDOW_MINUTES = 15;
 const signInSchema = z.object({
   email: z.email().trim().toLowerCase(),
   password: z.string().min(1),
+  verificationCode: z.string().trim().optional(),
+  recoveryCode: z.string().trim().optional(),
 });
 
 function getRequestHeader(request: unknown, name: string) {
@@ -106,6 +113,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             email: true,
             passwordHash: true,
             mustChangePassword: true,
+            twoFactorEnabled: true,
+            twoFactorSecretCiphertext: true,
+            twoFactorRecoveryCodeHashes: true,
             role: true,
             isActive: true,
             failedSignInCount: true,
@@ -173,6 +183,77 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null;
         }
 
+        const isSuperAdminTwoFactorProtected =
+          admin.role === Role.SUPER_ADMIN &&
+          admin.twoFactorEnabled &&
+          Boolean(admin.twoFactorSecretCiphertext);
+        let nextRecoveryCodeHashes: string[] | undefined;
+
+        if (isSuperAdminTwoFactorProtected) {
+          const decryptedSecret = decryptTwoFactorSecret(admin.twoFactorSecretCiphertext!);
+          const verificationCode = parsedCredentials.data.verificationCode ?? "";
+          const recoveryCode = parsedCredentials.data.recoveryCode ?? "";
+          const usesVerificationCode = verificationCode.trim().length > 0;
+          const usesRecoveryCode = recoveryCode.trim().length > 0;
+
+          if (!usesVerificationCode && !usesRecoveryCode) {
+            await logLoginAttempt({
+              email: parsedCredentials.data.email,
+              userId: admin.id,
+              status: AdminLoginAttemptStatus.FAILED,
+              failureReason: "TWO_FACTOR_REQUIRED",
+              ipAddress,
+              userAgent,
+            });
+
+            return null;
+          }
+
+          nextRecoveryCodeHashes = admin.twoFactorRecoveryCodeHashes;
+
+          if (usesVerificationCode) {
+            const twoFactorMatches = verifyTwoFactorCode({
+              secret: decryptedSecret,
+              code: verificationCode,
+            });
+
+            if (!twoFactorMatches) {
+              await logLoginAttempt({
+                email: parsedCredentials.data.email,
+                userId: admin.id,
+                status: AdminLoginAttemptStatus.FAILED,
+                failureReason: "INVALID_TWO_FACTOR_CODE",
+                ipAddress,
+                userAgent,
+              });
+
+              return null;
+            }
+          } else {
+            const hashedRecoveryCode = hashRecoveryCode(recoveryCode);
+            const matchedIndex = admin.twoFactorRecoveryCodeHashes.findIndex(
+              (storedHash) => storedHash === hashedRecoveryCode
+            );
+
+            if (matchedIndex === -1) {
+              await logLoginAttempt({
+                email: parsedCredentials.data.email,
+                userId: admin.id,
+                status: AdminLoginAttemptStatus.FAILED,
+                failureReason: "INVALID_RECOVERY_CODE",
+                ipAddress,
+                userAgent,
+              });
+
+              return null;
+            }
+
+            nextRecoveryCodeHashes = admin.twoFactorRecoveryCodeHashes.filter(
+              (_hash, index) => index !== matchedIndex
+            );
+          }
+        }
+
         await prisma.user.update({
           where: { id: admin.id },
           data: {
@@ -180,6 +261,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             failedSignInCount: 0,
             lastFailedSignInAt: null,
             lockedUntil: null,
+            twoFactorLastVerifiedAt: isSuperAdminTwoFactorProtected ? now : undefined,
+            twoFactorRecoveryCodeHashes: nextRecoveryCodeHashes,
           },
         });
 
@@ -197,6 +280,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: admin.email,
           mustChangePassword: admin.mustChangePassword,
           role: admin.role,
+          twoFactorEnabled: admin.twoFactorEnabled,
         };
       },
     }),
@@ -207,6 +291,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.sub = user.id;
         token.role = user.role as Role;
         token.mustChangePassword = Boolean(user.mustChangePassword);
+        token.twoFactorEnabled = Boolean(user.twoFactorEnabled);
       }
 
       return token;
@@ -216,6 +301,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.sub;
         session.user.role = token.role as Role;
         session.user.mustChangePassword = Boolean(token.mustChangePassword);
+        session.user.twoFactorEnabled = Boolean(token.twoFactorEnabled);
       }
 
       return session;

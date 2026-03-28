@@ -7,12 +7,14 @@ declare module "next-auth" {
       id: string;
       mustChangePassword: boolean;
       role: Role;
+      twoFactorEnabled: boolean;
     };
   }
 
   interface User {
     mustChangePassword?: boolean;
     role: Role;
+    twoFactorEnabled?: boolean;
   }
 }
 
@@ -20,5 +22,6 @@ declare module "next-auth/jwt" {
   interface JWT {
     mustChangePassword?: boolean;
     role?: Role;
+    twoFactorEnabled?: boolean;
   }
 }

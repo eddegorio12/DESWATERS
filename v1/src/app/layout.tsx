@@ -1,15 +1,7 @@
-import type { Metadata } from "next";
-
 import "./globals.css";
+import { createRootMetadata } from "@/features/marketing/lib/metadata";
 
-export const metadata: Metadata = {
-  title: {
-    default: "DEGORIO WATER DISTRIBUTION SERVICES",
-    template: "%s",
-  },
-  description:
-    "DEGORIO WATER DISTRIBUTION SERVICES is a water utility operations platform for customer records, metering, billing, cashiering, and collections reporting.",
-};
+export const metadata = createRootMetadata();
 
 export default function RootLayout({
   children,

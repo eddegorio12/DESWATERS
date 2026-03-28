@@ -1,5 +1,6 @@
 import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
+import { AdminSurfacePanel } from "@/features/admin/components/admin-surface-panel";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
 import {
   canPerformCapability,
@@ -110,25 +111,25 @@ export default async function AdminTariffsPage() {
       ]}
     >
       <section className="grid gap-6 xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
-          {canCreateTariff ? (
-            <TariffForm />
-          ) : (
-            <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-              <div className="space-y-2">
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  Read-Only Tariff Access
-                </p>
-                <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                  This role can review tariff history but cannot change pricing rules.
-                </h2>
-                <p className="text-sm leading-6 text-muted-foreground">
-                  Tariff creation and activation remain limited to managers and admins
-                  because those changes affect downstream billing calculations.
-                </p>
-              </div>
-            </section>
-          )}
-          <TariffList tariffs={tariffs} />
+        {canCreateTariff ? (
+          <TariffForm />
+        ) : (
+          <AdminSurfacePanel>
+            <div className="space-y-2">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary/72">
+                Read-Only Tariff Access
+              </p>
+              <h2 className="font-heading text-[1.8rem] leading-tight text-foreground">
+                This role can review tariff history but cannot change pricing rules.
+              </h2>
+              <p className="text-sm leading-7 text-muted-foreground">
+                Tariff creation and activation remain limited to managers and admins
+                because those changes affect downstream billing calculations.
+              </p>
+            </div>
+          </AdminSurfacePanel>
+        )}
+        <TariffList tariffs={tariffs} />
       </section>
     </AdminPageShell>
   );

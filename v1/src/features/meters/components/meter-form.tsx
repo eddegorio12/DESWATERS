@@ -6,6 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
+import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
 import { registerMeter } from "@/features/meters/actions";
 import {
   meterFormSchema,
@@ -46,18 +50,12 @@ export function MeterForm() {
   });
 
   return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-      <div className="space-y-2">
-        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Register Meter
-        </p>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-          Add a new service meter
-        </h2>
-        <p className="text-sm leading-6 text-muted-foreground">
-          Register the meter first, then assign it to a customer from the next panel.
-        </p>
-      </div>
+    <AdminSurfacePanel>
+      <AdminSurfaceHeader
+        eyebrow="Register Meter"
+        title="Add a new service meter"
+        description="Register the meter first, then assign it to a customer from the next panel."
+      />
 
       <form className="mt-6 space-y-5" onSubmit={onSubmit} noValidate>
         <div>
@@ -106,6 +104,6 @@ export function MeterForm() {
           {isPending ? "Registering meter..." : "Register meter"}
         </Button>
       </form>
-    </section>
+    </AdminSurfacePanel>
   );
 }

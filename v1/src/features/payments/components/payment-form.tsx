@@ -8,6 +8,10 @@ import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
+import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
 import { recordPayment } from "@/features/payments/actions";
 import {
   PAYMENT_METHODS,
@@ -147,19 +151,12 @@ export function PaymentForm({ bills }: PaymentFormProps) {
   });
 
   return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-      <div className="space-y-2">
-        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Cashier Entry
-        </p>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-          Record a settlement and issue an official receipt
-        </h2>
-        <p className="text-sm leading-6 text-muted-foreground">
-          Select an open bill, post a full or partial settlement, and issue a receipt from
-          the same workflow.
-        </p>
-      </div>
+    <AdminSurfacePanel>
+      <AdminSurfaceHeader
+        eyebrow="Cashier Entry"
+        title="Record a settlement and issue an official receipt"
+        description="Select an open bill, post a full or partial settlement, and issue a receipt from the same workflow."
+      />
 
       <form className="mt-6 space-y-5" onSubmit={onSubmit} noValidate>
         <div>
@@ -187,7 +184,7 @@ export function PaymentForm({ bills }: PaymentFormProps) {
         </div>
 
         {selectedBill ? (
-          <div className="grid gap-4 rounded-[1.4rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#f8fbfa,#eff7f5)] p-4 sm:grid-cols-3">
+          <div className="grid gap-4 rounded-[1.2rem] border border-border/65 bg-secondary/24 p-4 sm:grid-cols-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Customer
@@ -247,7 +244,7 @@ export function PaymentForm({ bills }: PaymentFormProps) {
         </div>
 
         {selectedBill ? (
-          <div className="grid gap-4 rounded-[1.4rem] border border-[#dbe9e5] bg-white p-4 sm:grid-cols-3">
+          <div className="grid gap-4 rounded-[1.2rem] border border-border/65 bg-background/85 p-4 sm:grid-cols-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Settlement mode
@@ -376,6 +373,6 @@ export function PaymentForm({ bills }: PaymentFormProps) {
           {isPending ? "Recording settlement..." : "Record payment and issue receipt"}
         </Button>
       </form>
-    </section>
+    </AdminSurfacePanel>
   );
 }

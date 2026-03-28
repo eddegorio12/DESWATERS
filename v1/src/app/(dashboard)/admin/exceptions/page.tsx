@@ -1,6 +1,9 @@
 import {
   BillStatus,
+  ComplaintCategory,
+  ComplaintStatus,
   CustomerStatus,
+  LeakReportStatus,
   PaymentStatus,
 } from "@prisma/client";
 
@@ -12,7 +15,10 @@ import {
   matchesSearch,
   type SearchParamValue,
 } from "@/features/admin/lib/list-filters";
-import { getModuleAccess } from "@/features/auth/lib/authorization";
+import {
+  canPerformCapability,
+  getModuleAccess,
+} from "@/features/auth/lib/authorization";
 import { ExceptionsBoard } from "@/features/exceptions/components/exceptions-board";
 import {
   buildOperationalExceptionAlerts,
@@ -23,6 +29,36 @@ import { prisma } from "@/lib/prisma";
 
 function getDaysAgo(days: number, now = new Date()) {
   return new Date(now.getTime() - days * 86_400_000);
+}
+
+function formatComplaintCategory(category: ComplaintCategory) {
+  switch (category) {
+    case ComplaintCategory.LEAK:
+      return "Leak";
+    case ComplaintCategory.NO_WATER:
+      return "No water";
+    case ComplaintCategory.LOW_PRESSURE:
+      return "Low pressure";
+    case ComplaintCategory.BILLING_DISPUTE:
+      return "Billing dispute";
+    case ComplaintCategory.METER_DAMAGE:
+      return "Meter damage";
+    default:
+      return "Other";
+  }
+}
+
+function formatLeakReportStatus(status: LeakReportStatus) {
+  switch (status) {
+    case LeakReportStatus.INVESTIGATING:
+      return "Investigating";
+    case LeakReportStatus.RESOLVED:
+      return "Resolved";
+    case LeakReportStatus.CLOSED_NO_LEAK:
+      return "Closed, no leak";
+    default:
+      return "Open";
+  }
 }
 
 type AdminExceptionsPageProps = {
@@ -41,7 +77,19 @@ export default async function AdminExceptionsPage({
   const now = new Date();
   await syncReceivableStatuses(now);
 
-  const [meters, disconnectionRiskBills, recentPayments, statusMismatchReadings] =
+  const [
+    meters,
+    disconnectionRiskBills,
+    recentPayments,
+    statusMismatchReadings,
+    technicians,
+    openComplaints,
+    fieldWorkOrders,
+    replacementMeters,
+    leakReports,
+    repairHistory,
+    meterReplacementHistory,
+  ] =
     await Promise.all([
       prisma.meter.findMany({
         where: {
@@ -175,6 +223,289 @@ export default async function AdminExceptionsPage({
           },
         },
       }),
+      prisma.user.findMany({
+        where: {
+          isActive: true,
+          role: "TECHNICIAN",
+        },
+        orderBy: [{ name: "asc" }],
+        select: {
+          id: true,
+          name: true,
+        },
+      }),
+      prisma.complaint.findMany({
+        where: {
+          status: ComplaintStatus.OPEN,
+        },
+        orderBy: [{ reportedAt: "desc" }],
+        select: {
+          id: true,
+          summary: true,
+          category: true,
+          reportedAt: true,
+          customer: {
+            select: {
+              name: true,
+            },
+          },
+          meter: {
+            select: {
+              meterNumber: true,
+            },
+          },
+          serviceRoute: {
+            select: {
+              code: true,
+              name: true,
+            },
+          },
+          serviceZone: {
+            select: {
+              name: true,
+            },
+          },
+          workOrders: {
+            where: {
+              status: {
+                in: ["OPEN", "ASSIGNED", "IN_PROGRESS"],
+              },
+            },
+            select: {
+              id: true,
+            },
+          },
+        },
+      }),
+      prisma.fieldWorkOrder.findMany({
+        orderBy: [
+          { status: "asc" },
+          { priority: "desc" },
+          { createdAt: "desc" },
+        ],
+        take: 12,
+        select: {
+          id: true,
+          title: true,
+          detail: true,
+          priority: true,
+          status: true,
+          scheduledFor: true,
+          acknowledgedAt: true,
+          completedAt: true,
+          resolutionNotes: true,
+          complaint: {
+            select: {
+              id: true,
+              summary: true,
+              customerId: true,
+              meterId: true,
+              serviceZoneId: true,
+              serviceRouteId: true,
+              customer: {
+                select: {
+                  name: true,
+                },
+              },
+              meter: {
+                select: {
+                  meterNumber: true,
+                },
+              },
+              serviceRoute: {
+                select: {
+                  code: true,
+                  name: true,
+                },
+              },
+              serviceZone: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+          createdBy: {
+            select: {
+              name: true,
+            },
+          },
+          assignedTo: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+          meterReplacementHistory: {
+            select: {
+              replacementDate: true,
+              finalReading: true,
+              replacementMeter: {
+                select: {
+                  meterNumber: true,
+                },
+              },
+            },
+          },
+          fieldProofs: {
+            orderBy: [{ createdAt: "desc" }],
+            select: {
+              id: true,
+              originalFilename: true,
+              contentType: true,
+              fileSizeBytes: true,
+              createdAt: true,
+              uploadedBy: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.meter.findMany({
+        where: {
+          status: "ACTIVE",
+        },
+        orderBy: [{ meterNumber: "asc" }],
+        select: {
+          id: true,
+          meterNumber: true,
+          customerId: true,
+          serviceZoneId: true,
+          serviceRouteId: true,
+        },
+      }),
+      prisma.leakReport.findMany({
+        orderBy: [{ createdAt: "desc" }],
+        take: 8,
+        select: {
+          id: true,
+          summary: true,
+          detail: true,
+          status: true,
+          resolvedAt: true,
+          resolutionNotes: true,
+          customer: {
+            select: {
+              name: true,
+            },
+          },
+          meter: {
+            select: {
+              meterNumber: true,
+            },
+          },
+          serviceRoute: {
+            select: {
+              code: true,
+              name: true,
+            },
+          },
+          serviceZone: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      }),
+      prisma.repairHistory.findMany({
+        orderBy: [{ completedAt: "desc" }],
+        take: 8,
+        select: {
+          id: true,
+          repairSummary: true,
+          repairDetail: true,
+          completedAt: true,
+          customer: {
+            select: {
+              name: true,
+            },
+          },
+          meter: {
+            select: {
+              meterNumber: true,
+            },
+          },
+          serviceRoute: {
+            select: {
+              code: true,
+              name: true,
+            },
+          },
+          serviceZone: {
+            select: {
+              name: true,
+            },
+          },
+          recordedBy: {
+            select: {
+              name: true,
+            },
+          },
+          workOrder: {
+            select: {
+              fieldProofs: {
+                orderBy: [{ createdAt: "desc" }],
+                select: {
+                  id: true,
+                  originalFilename: true,
+                  contentType: true,
+                  fileSizeBytes: true,
+                  createdAt: true,
+                  uploadedBy: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.meterReplacementHistory.findMany({
+        orderBy: [{ replacementDate: "desc" }],
+        take: 8,
+        select: {
+          id: true,
+          replacementDate: true,
+          finalReading: true,
+          reason: true,
+          customer: {
+            select: {
+              name: true,
+            },
+          },
+          replacedMeter: {
+            select: {
+              meterNumber: true,
+            },
+          },
+          replacementMeter: {
+            select: {
+              meterNumber: true,
+            },
+          },
+          serviceRoute: {
+            select: {
+              code: true,
+              name: true,
+            },
+          },
+          serviceZone: {
+            select: {
+              name: true,
+            },
+          },
+          recordedBy: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      }),
     ]);
 
   const alerts = buildOperationalExceptionAlerts({
@@ -222,6 +553,8 @@ export default async function AdminExceptionsPage({
       .map((alert) => alert.meterNumber)
       .filter((meterNumber): meterNumber is string => Boolean(meterNumber))
   ).size;
+  const canDispatch = canPerformCapability(access.user.role, "exceptions:dispatch");
+  const canUpdateWorkOrders = canPerformCapability(access.user.role, "workorders:update");
 
   return (
     <AdminPageShell
@@ -263,6 +596,103 @@ export default async function AdminExceptionsPage({
         query={query}
         severity={severity || "ALL"}
         rules={exceptionRuleCatalog}
+        currentUserId={access.user.id}
+        canDispatch={canDispatch}
+        canUpdateWorkOrders={canUpdateWorkOrders}
+        technicians={technicians}
+        replacementMeters={replacementMeters}
+        openComplaints={openComplaints
+          .filter((complaint) => complaint.workOrders.length === 0)
+          .map((complaint) => ({
+            id: complaint.id,
+            summary: complaint.summary,
+            categoryLabel: formatComplaintCategory(complaint.category),
+            routeLabel: `${complaint.serviceRoute.code} - ${complaint.serviceRoute.name} (${complaint.serviceZone.name})`,
+            reportedAt: complaint.reportedAt,
+            customerName: complaint.customer?.name ?? null,
+            meterNumber: complaint.meter?.meterNumber ?? null,
+          }))}
+        workOrders={fieldWorkOrders.map((workOrder) => ({
+          id: workOrder.id,
+          title: workOrder.title,
+          detail: workOrder.detail,
+          priority: workOrder.priority,
+          status: workOrder.status,
+          scheduledFor: workOrder.scheduledFor,
+          acknowledgedAt: workOrder.acknowledgedAt,
+          completedAt: workOrder.completedAt,
+          resolutionNotes: workOrder.resolutionNotes,
+          complaint: {
+            id: workOrder.complaint.id,
+            summary: workOrder.complaint.summary,
+            customerId: workOrder.complaint.customerId,
+            meterId: workOrder.complaint.meterId,
+            serviceZoneId: workOrder.complaint.serviceZoneId,
+            serviceRouteId: workOrder.complaint.serviceRouteId,
+            routeLabel: `${workOrder.complaint.serviceRoute.code} - ${workOrder.complaint.serviceRoute.name} (${workOrder.complaint.serviceZone.name})`,
+            customerName: workOrder.complaint.customer?.name ?? null,
+            meterNumber: workOrder.complaint.meter?.meterNumber ?? null,
+          },
+          createdBy: workOrder.createdBy,
+          assignedTo: workOrder.assignedTo,
+          meterReplacementHistory: workOrder.meterReplacementHistory
+            ? {
+                replacementDate: workOrder.meterReplacementHistory.replacementDate,
+                finalReading: workOrder.meterReplacementHistory.finalReading,
+                replacementMeterNumber:
+                  workOrder.meterReplacementHistory.replacementMeter.meterNumber,
+              }
+            : null,
+          fieldProofs: workOrder.fieldProofs.map((proof) => ({
+            id: proof.id,
+            originalFilename: proof.originalFilename,
+            contentType: proof.contentType,
+            fileSizeBytes: proof.fileSizeBytes,
+            createdAt: proof.createdAt,
+            uploadedByName: proof.uploadedBy.name,
+          })),
+        }))}
+        leakReports={leakReports.map((report) => ({
+          id: report.id,
+          summary: report.summary,
+          detail: report.detail,
+          status: report.status,
+          statusLabel: formatLeakReportStatus(report.status),
+          routeLabel: `${report.serviceRoute.code} - ${report.serviceRoute.name} (${report.serviceZone.name})`,
+          customerName: report.customer?.name ?? null,
+          meterNumber: report.meter?.meterNumber ?? null,
+          resolvedAt: report.resolvedAt,
+          resolutionNotes: report.resolutionNotes,
+        }))}
+        repairHistory={repairHistory.map((entry) => ({
+          id: entry.id,
+          repairSummary: entry.repairSummary,
+          repairDetail: entry.repairDetail,
+          completedAt: entry.completedAt,
+          routeLabel: `${entry.serviceRoute.code} - ${entry.serviceRoute.name} (${entry.serviceZone.name})`,
+          customerName: entry.customer?.name ?? null,
+          meterNumber: entry.meter?.meterNumber ?? null,
+          recordedByName: entry.recordedBy.name,
+          fieldProofs: entry.workOrder.fieldProofs.map((proof) => ({
+            id: proof.id,
+            originalFilename: proof.originalFilename,
+            contentType: proof.contentType,
+            fileSizeBytes: proof.fileSizeBytes,
+            createdAt: proof.createdAt,
+            uploadedByName: proof.uploadedBy.name,
+          })),
+        }))}
+        meterReplacementHistory={meterReplacementHistory.map((entry) => ({
+          id: entry.id,
+          replacementDate: entry.replacementDate,
+          finalReading: entry.finalReading,
+          reason: entry.reason,
+          customerName: entry.customer?.name ?? null,
+          replacedMeterNumber: entry.replacedMeter.meterNumber,
+          replacementMeterNumber: entry.replacementMeter.meterNumber,
+          routeLabel: `${entry.serviceRoute.code} - ${entry.serviceRoute.name} (${entry.serviceZone.name})`,
+          recordedByName: entry.recordedBy.name,
+        }))}
       />
     </AdminPageShell>
   );

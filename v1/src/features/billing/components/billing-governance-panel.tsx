@@ -15,6 +15,10 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { buttonVariants } from "@/components/ui/button-variants";
 import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
+import {
   closeBillingCycle,
   createBillPrintBatch,
   finalizeBillingCycle,
@@ -421,23 +425,18 @@ export function BillingGovernancePanel({
 
   if (!selectedCycle) {
     return (
-      <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Billing Governance
-        </p>
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-          No billing cycle has been created yet
-        </h2>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
-          Generate the first bill for a month to create its billing cycle, then return here to
-          close, finalize, regenerate, and track print distribution for that cycle.
-        </p>
-      </section>
+      <AdminSurfacePanel>
+        <AdminSurfaceHeader
+          eyebrow="Billing Governance"
+          title="No billing cycle has been created yet"
+          description="Generate the first bill for a month to create its billing cycle, then return here to close, finalize, regenerate, and track print distribution for that cycle."
+        />
+      </AdminSurfacePanel>
     );
   }
 
   return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
+    <AdminSurfacePanel>
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="space-y-2">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -454,7 +453,7 @@ export function BillingGovernancePanel({
         </div>
 
         <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-[1.25rem] border border-[#dbe9e5] bg-[#f8fbfa] px-4 py-3">
+          <div className="rounded-[1.1rem] border border-border/65 bg-secondary/24 px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6b8481]">
               Status
             </p>
@@ -466,19 +465,19 @@ export function BillingGovernancePanel({
               {billingCycleStatusLabels[selectedCycle.status]}
             </span>
           </div>
-          <div className="rounded-[1.25rem] border border-[#dbe9e5] bg-[#f8fbfa] px-4 py-3">
+          <div className="rounded-[1.1rem] border border-border/65 bg-background/85 px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6b8481]">
               Bills
             </p>
-            <p className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[#16373b]">
+            <p className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-foreground">
               {selectedCycle.bills.length}
             </p>
           </div>
-          <div className="rounded-[1.25rem] border border-[#dbe9e5] bg-[#f8fbfa] px-4 py-3">
+          <div className="rounded-[1.1rem] border border-border/65 bg-background/85 px-4 py-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6b8481]">
               Print Batches
             </p>
-            <p className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[#16373b]">
+            <p className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-foreground">
               {selectedCycle.printBatches.length}
             </p>
           </div>
@@ -487,7 +486,7 @@ export function BillingGovernancePanel({
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-6">
-          <div className="rounded-[1.5rem] border border-[#dbe9e5] bg-[#fbfdfc] p-5">
+          <div className="rounded-[1.25rem] border border-border/65 bg-white/76 p-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -506,7 +505,7 @@ export function BillingGovernancePanel({
               {checklistItems.map((item) => (
                 <label
                   key={item.key}
-                  className="flex items-start gap-3 rounded-[1.1rem] border border-[#dbe9e5] bg-white px-4 py-3"
+                  className="flex items-start gap-3 rounded-[1rem] border border-border/65 bg-background/90 px-4 py-3"
                 >
                   <input
                     type="checkbox"
@@ -519,7 +518,7 @@ export function BillingGovernancePanel({
                       }))
                     }
                   />
-                  <span className="text-sm text-[#234245]">{item.label}</span>
+                  <span className="text-sm text-foreground">{item.label}</span>
                 </label>
               ))}
             </div>
@@ -567,7 +566,7 @@ export function BillingGovernancePanel({
             </div>
           </div>
 
-          <div className="rounded-[1.5rem] border border-[#dbe9e5] bg-[#fbfdfc] p-5">
+          <div className="rounded-[1.25rem] border border-border/65 bg-white/76 p-5">
             <div className="grid gap-5 lg:grid-cols-2">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -632,7 +631,7 @@ export function BillingGovernancePanel({
             </div>
           </div>
 
-          <div className="rounded-[1.5rem] border border-[#dbe9e5] bg-[#fbfdfc] p-5">
+          <div className="rounded-[1.25rem] border border-border/65 bg-white/76 p-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -912,7 +911,7 @@ export function BillingGovernancePanel({
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-[1.5rem] border border-[#dbe9e5] bg-[#fbfdfc] p-5">
+          <div className="rounded-[1.25rem] border border-border/65 bg-white/76 p-5">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
               Cycle History
             </p>
@@ -920,7 +919,7 @@ export function BillingGovernancePanel({
               {cycles.map((cycle) => (
                 <div
                   key={cycle.id}
-                  className={`rounded-[1.1rem] border px-4 py-3 ${
+                  className={`rounded-[1rem] border px-4 py-3 ${
                     cycle.id === selectedCycle.id
                       ? "border-[#b9d7d0] bg-[#eef7f4]"
                       : "border-[#dbe9e5] bg-white"
@@ -946,14 +945,14 @@ export function BillingGovernancePanel({
             </div>
           </div>
 
-          <div className="rounded-[1.5rem] border border-[#dbe9e5] bg-[#fbfdfc] p-5">
+          <div className="rounded-[1.25rem] border border-border/65 bg-white/76 p-5">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
               Print Batches
             </p>
             <div className="mt-4 space-y-4">
               {selectedCycle.printBatches.length ? (
                 selectedCycle.printBatches.map((batch) => (
-                  <div key={batch.id} className="rounded-[1.1rem] border border-[#dbe9e5] bg-white p-4">
+                  <div key={batch.id} className="rounded-[1rem] border border-border/65 bg-background/90 p-4">
                     <div className="flex items-start justify-between gap-4">
                       <div>
                         <p className="font-medium text-[#16373b]">{batch.label}</p>
@@ -1097,14 +1096,14 @@ export function BillingGovernancePanel({
             </div>
           </div>
 
-          <div className="rounded-[1.5rem] border border-[#dbe9e5] bg-[#fbfdfc] p-5">
+          <div className="rounded-[1.25rem] border border-border/65 bg-white/76 p-5">
             <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
               Audit Trail
             </p>
             <div className="mt-4 space-y-3">
               {selectedCycle.events.length ? (
                 selectedCycle.events.map((event) => (
-                  <div key={event.id} className="rounded-[1rem] border border-[#dbe9e5] bg-white px-4 py-3">
+                  <div key={event.id} className="rounded-[1rem] border border-border/65 bg-background/90 px-4 py-3">
                     <div className="flex items-center justify-between gap-4">
                       <p className="text-sm font-medium text-[#16373b]">
                         {event.type.replaceAll("_", " ")}
@@ -1131,7 +1130,7 @@ export function BillingGovernancePanel({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-3 rounded-[1.25rem] border border-[#dbe9e5] bg-[#f8fbfa] px-4 py-4 text-sm text-muted-foreground sm:grid-cols-3">
+      <div className="mt-6 grid gap-3 rounded-[1.1rem] border border-border/65 bg-secondary/24 px-4 py-4 text-sm text-muted-foreground sm:grid-cols-3">
         <div>
           <span className="font-medium text-[#17373b]">Closed at:</span>{" "}
           {formatDateTime(selectedCycle.closedAt)}
@@ -1151,6 +1150,6 @@ export function BillingGovernancePanel({
           {errorMessage}
         </p>
       ) : null}
-    </section>
+    </AdminSurfacePanel>
   );
 }

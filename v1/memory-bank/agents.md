@@ -28,13 +28,26 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - The public repository surface is now presentation-ready enough for sharing, with real redacted screenshots and cleaner root-level documentation.
 - The current intended database runtime is **PostgreSQL via Prisma v7**.
 - EH1 through EH9 are complete.
+- The deferred EH9 field-service follow-on has now been tested and validated through complaint-driven field work orders on `/admin/exceptions`.
+- EH9 now also persists dedicated leak reports and repair-history records on top of that validated field-work-order flow.
+- EH9 now also persists tested and validated first-class meter replacement history from completed meter-linked work orders, with visible replacement review on `/admin/exceptions` and `/admin/meters`.
+- EH9 now also persists tested and validated protected field-proof image uploads tied to completed work orders, with proof review on `/admin/exceptions`.
 - EH10 is now complete through the printable consumer-notice workflow.
 - EH11 is now complete through tariff governance, admin security hardening, and the backup-readiness workspace.
+- EH11 now also includes protected recovery-bundle exports from `/admin/system-readiness/export`.
 - EH12 is now validated for the implemented route-operations and route-aware billing slice.
+- EH12 management analytics on `/admin/routes` have now been user-validated through billed-versus-collected cycle summaries, overdue-aging visibility, and disconnection-versus-reinstatement activity tied to the active route view.
+- EH12 now also includes first-class route-linked complaint intake and complaint hotspot visibility on `/admin/routes`.
 - EH13 is now fully validated and closed.
-- EH14 visual composition refinement is now in progress through the first shell/dashboard/marketing slice, and the next contribution after that should remain broader EH12 analytics, then dedicated admin-management audit logging.
+- EH14 visual composition refinement is now in progress through the first shell/dashboard/marketing slice, and the latest approved follow-on has now also extended EH12 with complaint-area visibility.
+- EH14.3 now implements the website-fundamentals pass through shared metadata, generated share previews, crawler coverage, and the `/contact` rollout path.
+- EH14.4 now extends the newer admin composition language to the summary-heavy staff access, system readiness, and tariff registry boards.
+- EH14.5 is now validated through skip-link support, focus-visible treatment, active-route semantics, semantic list cleanup, decorative-icon hiding, and reduced-motion-safe marketing reveal behavior.
+- Dedicated admin-management audit logging is now implemented through `AuthAdminManagementEvent` and the `/admin/staff-access` audit trail.
 - EH14.1 is now implemented as the dashboard-only enterprise-console refinement pass. Preserve that current DWDS dashboard concept and shared console primitives when extending adjacent admin surfaces; do not redesign the dashboard from scratch unless the user explicitly changes scope.
-- EH14.2 is now implemented as the landing-page proof pass. Preserve that sharper homepage narrative when refining adjacent marketing routes: one operational promise, screenshot-led workflow proof, early readiness/trust signals, tighter CTA vocabulary, and explicit staff-facing positioning over broad feature-grid enumeration.
+- EH14.2 is now validated as the landing-page proof pass. Preserve that sharper homepage narrative when refining adjacent marketing routes: one operational promise, screenshot-led workflow proof, early readiness/trust signals, tighter CTA vocabulary, and explicit staff-facing positioning over broad feature-grid enumeration.
+- The next public-site contribution inside EH14 should now be explicit accessibility verification on top of that stronger website baseline, not a repeat metadata/crawler pass.
+- The next protected-surface contribution inside EH14 should be any remaining secondary admin boards that still visibly lag behind the newer panel rhythm, not another dashboard redesign.
 - The concrete EH13 order is: meters first, then routes, then collections/exceptions, then follow-up, then responsive hardening, then shared status-priority treatment, then the final consistency sweep.
 
 ## 3. Enhancement Backlog Handling
@@ -51,10 +64,18 @@ When the requested work is UI/UX-oriented:
 - Keep UX changes modular and reusable; do not collapse feature boundaries with page-specific one-off patterns unless there is a strong reason.
 - Prefer composition refinements that reduce card sprawl, nested panel density, and equal-weight tile grids before proposing new top-level dashboards or workflow domains.
 - Reserve cards for actionable or stateful content; lighter-weight groupings should usually be lists, rows, dividers, or section structures instead of more bordered tiles.
+- When the work touches the marketing site, also treat metadata, share previews, canonical handling, CTA clarity, and accessibility as required product work rather than optional polish.
 
-When the requested work is roadmap or planning oriented:
-- Recommend EH13 completion before deeper EH12 analytics expansion, dedicated admin audit logging, or later deferred EH9/EH11 refinements unless the user explicitly reprioritizes.
+- When the requested work is roadmap or planning oriented:
+- Recommend the active EH14 composition rollout plus the now-implemented EH12 complaint-area visibility baseline before later deferred EH9/EH11 refinements unless the user explicitly reprioritizes.
+- If the user explicitly asks to continue the former deferred-next-step lane, treat EH9 field-work-order validation plus leak/repair persistence, meter-replacement history, field-proof upload, and the now-implemented optional `SUPER_ADMIN` 2FA as complete before proposing later EH11 security refinements.
 - Use the recorded EH13 task IDs (`EH13.2a` through `EH13.5`) when breaking down or sequencing the current usability lane.
+
+## 7. GitHub and MCP Guidance
+- A special skill is not required just to inspect or edit the local repository.
+- Use installed skills only when the task itself matches the skill domain, such as `ui-ux-pro-max` for design-heavy review or refinement.
+- GitHub MCP/app access is optional but preferred for remote GitHub work such as reviewing issues, pull requests, comments, labels, branches, or repo metadata.
+- If MCP is unavailable, continue with local-repo work and document any GitHub-hosted actions that could not be completed from local context alone.
 
 ## 4. Architectural Coding Standards
 - **Modularity over monoliths:** Break features into focused files and domain directories immediately.

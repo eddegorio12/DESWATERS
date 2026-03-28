@@ -23,6 +23,8 @@ export type StaffCapability =
   | "admins:manage"
   | "admins:unlock"
   | "routes:manage"
+  | "exceptions:dispatch"
+  | "workorders:update"
   | "customers:create"
   | "meters:register"
   | "meters:assign"
@@ -73,6 +75,8 @@ const capabilityAccess: Record<StaffCapability, readonly Role[]> = {
   "admins:manage": [Role.SUPER_ADMIN],
   "admins:unlock": [Role.SUPER_ADMIN],
   "routes:manage": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
+  "exceptions:dispatch": [Role.SUPER_ADMIN, Role.ADMIN],
+  "workorders:update": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
   "customers:create": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
   "meters:register": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
   "meters:assign": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
@@ -116,6 +120,8 @@ const capabilityLabels: Record<StaffCapability, string> = {
   "admins:manage": "manage admin accounts",
   "admins:unlock": "clear admin lockouts",
   "routes:manage": "manage route operations",
+  "exceptions:dispatch": "dispatch field work orders",
+  "workorders:update": "update field work orders",
   "customers:create": "create customer records",
   "meters:register": "register meters",
   "meters:assign": "assign meters",
@@ -166,6 +172,11 @@ export type CurrentStaffUser = {
   email: string;
   name: string;
   mustChangePassword: boolean;
+  twoFactorEnabled: boolean;
+  twoFactorPendingSecretCiphertext: string | null;
+  twoFactorEnabledAt: Date | null;
+  twoFactorLastVerifiedAt: Date | null;
+  twoFactorRecoveryCodeHashes: string[];
   role: Role;
   isActive: boolean;
   failedSignInCount: number;
@@ -194,6 +205,11 @@ export async function getCurrentStaffUser() {
       email: true,
       name: true,
       mustChangePassword: true,
+      twoFactorEnabled: true,
+      twoFactorPendingSecretCiphertext: true,
+      twoFactorEnabledAt: true,
+      twoFactorLastVerifiedAt: true,
+      twoFactorRecoveryCodeHashes: true,
       role: true,
       isActive: true,
       failedSignInCount: true,

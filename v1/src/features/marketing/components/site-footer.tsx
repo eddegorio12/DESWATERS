@@ -2,8 +2,11 @@ import Link from "next/link";
 
 import { BrandLockup } from "@/features/marketing/components/brand-lockup";
 import { footerLinks } from "@/features/marketing/lib/site-content";
+import { getContactEmail } from "@/features/marketing/lib/site-config";
 
 export function SiteFooter() {
+  const contactEmail = getContactEmail();
+
   return (
     <footer className="mx-auto mt-10 w-full max-w-7xl px-5 pb-8 sm:px-8">
       <div className="dwds-section overflow-hidden px-6 py-8 sm:px-8">
@@ -19,13 +22,22 @@ export function SiteFooter() {
               DWDS centralizes customer records, meter operations, billing, cashiering,
               and collections review in one controlled operating system for utility teams.
             </p>
+            <p className="mt-4 text-sm leading-6 text-muted-foreground">
+              Public rollout requests:{" "}
+              <Link href="/contact" className="font-medium text-primary hover:text-primary/80">
+                {contactEmail}
+              </Link>
+            </p>
           </div>
-          <nav className="flex flex-wrap gap-x-5 gap-y-3 text-sm text-muted-foreground lg:justify-end">
+          <nav
+            aria-label="Footer"
+            className="flex flex-wrap gap-x-5 gap-y-3 text-sm text-muted-foreground lg:justify-end"
+          >
             {footerLinks.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="rounded-full px-1 py-1 transition-colors duration-200 hover:text-foreground"
+                className="rounded-full px-1 py-1 transition-colors duration-200 hover:text-foreground focus-visible:text-foreground"
               >
                 {item.label}
               </Link>

@@ -10,18 +10,21 @@ import {
 } from "lucide-react";
 
 import { PageHero } from "@/features/marketing/components/page-hero";
+import { MarketingConversionPanel } from "@/features/marketing/components/marketing-conversion-panel";
 import { SectionHeading } from "@/features/marketing/components/section-heading";
+import { createMarketingMetadata } from "@/features/marketing/lib/metadata";
 import {
   moduleHighlights,
   platformPillars,
   reportingHighlights,
 } from "@/features/marketing/lib/site-content";
 
-export const metadata: Metadata = {
-  title: "Platform | DEGORIO WATER DISTRIBUTION SERVICES",
+export const metadata: Metadata = createMarketingMetadata({
+  title: "Platform",
   description:
-    "A closer look at the DEGORIO WATER DISTRIBUTION SERVICES platform architecture, modular workflow design, and utility operations coverage.",
-};
+    "A closer look at the DWDS platform architecture, modular workflow design, and utility operations coverage.",
+  pathname: "/platform",
+});
 
 const pillarIcons = [Layers3, ShieldCheck, FolderKanban];
 const sectionIcons = [FileSpreadsheet, HandCoins, BarChart3];
@@ -55,7 +58,7 @@ export default function PlatformPage() {
               <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="flex min-w-0 items-start gap-4">
                   <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                    <Icon className="size-5" />
+                    <Icon aria-hidden="true" className="size-5" />
                   </div>
                   <div className="min-w-0">
                     <h2 className="font-heading text-2xl text-foreground">
@@ -110,7 +113,10 @@ export default function PlatformPage() {
                 key={item}
                 className="flex gap-3 rounded-[1.4rem] border border-white/12 bg-white/6 px-4 py-4 text-sm leading-6 text-primary-foreground/80"
               >
-                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-[#8ce1d5]" />
+                <ShieldCheck
+                  aria-hidden="true"
+                  className="mt-0.5 size-4 shrink-0 text-[#8ce1d5]"
+                />
                 <span>{item}</span>
               </div>
             ))}
@@ -132,7 +138,7 @@ export default function PlatformPage() {
               <article key={item.title} className="px-5 py-5">
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div className="flex min-w-0 items-start gap-4">
-                    <Icon className="mt-1 size-5 shrink-0 text-primary" />
+                    <Icon aria-hidden="true" className="mt-1 size-5 shrink-0 text-primary" />
                     <div className="min-w-0">
                       <h3 className="font-heading text-2xl text-foreground">{item.title}</h3>
                       <p className="mt-3 text-sm leading-6 text-muted-foreground">
@@ -147,6 +153,11 @@ export default function PlatformPage() {
           })}
         </div>
       </section>
+
+      <MarketingConversionPanel
+        title="Use the platform overview, then move into one rollout conversation."
+        description="The public site should lead to one next step: confirm fit, hosting shape, and day-one staff workflows through a rollout review."
+      />
     </div>
   );
 }

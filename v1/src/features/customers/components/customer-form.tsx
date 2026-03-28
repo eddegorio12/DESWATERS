@@ -7,6 +7,10 @@ import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
+import {
   createCustomer,
 } from "@/features/customers/actions";
 import {
@@ -48,19 +52,12 @@ export function CustomerForm() {
   });
 
   return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-      <div className="space-y-2">
-        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          New Customer
-        </p>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-          Create a residential account
-        </h2>
-        <p className="text-sm leading-6 text-muted-foreground">
-          Required: customer name and service address. Contact number and email stay
-          optional. Next step after save: assign a meter from the meter module.
-        </p>
-      </div>
+    <AdminSurfacePanel>
+      <AdminSurfaceHeader
+        eyebrow="New Customer"
+        title="Create a residential account"
+        description="Required: customer name and service address. Contact number and email stay optional. Next step after save: assign a meter from the meter module."
+      />
 
       <form className="mt-6 space-y-5" onSubmit={onSubmit} noValidate>
         <div>
@@ -141,6 +138,6 @@ export function CustomerForm() {
           {isPending ? "Saving customer..." : "Create customer"}
         </Button>
       </form>
-    </section>
+    </AdminSurfacePanel>
   );
 }

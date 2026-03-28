@@ -56,6 +56,12 @@ model User {
   name      String
   passwordHash String
   mustChangePassword Boolean @default(false)
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecretCiphertext String?
+  twoFactorPendingSecretCiphertext String?
+  twoFactorRecoveryCodeHashes String[] @default([])
+  twoFactorEnabledAt DateTime?
+  twoFactorLastVerifiedAt DateTime?
   role      Role     @default(VIEWER)
   isActive  Boolean  @default(true)
   failedSignInCount Int @default(0)
@@ -71,6 +77,8 @@ model User {
   customerStatusUpdates Customer[] @relation("CustomerStatusUpdatedBy")
   triggeredNotifications NotificationLog[] @relation("TriggeredNotifications")
   loginAttempts AdminLoginAttempt[] @relation("AdminLoginAttemptUser")
+  adminManagementEvents AuthAdminManagementEvent[] @relation("AdminManagementEventActor")
+  adminManagementTargets AuthAdminManagementEvent[] @relation("AdminManagementEventTarget")
   backupSnapshotsCreated BackupSnapshot[] @relation("BackupSnapshotCreatedBy")
   finalizedBillingCycles BillingCycle[] @relation("BillingCycleFinalizedBy")
   reopenedBillingCycles BillingCycle[] @relation("BillingCycleReopenedBy")
@@ -83,6 +91,16 @@ model User {
   returnedPrintBatches BillPrintBatch[] @relation("BillPrintBatchReturnedBy")
   failedDeliveryPrintBatches BillPrintBatch[] @relation("BillPrintBatchFailedBy")
   staffRouteAssignments StaffRouteAssignment[]
+  reportedComplaints Complaint[] @relation("ComplaintReportedBy")
+  resolvedComplaints Complaint[] @relation("ComplaintResolvedBy")
+  createdLeakReports LeakReport[] @relation("LeakReportCreatedBy")
+  resolvedLeakReports LeakReport[] @relation("LeakReportResolvedBy")
+  createdFieldWorkOrders FieldWorkOrder[] @relation("FieldWorkOrderCreatedBy")
+  assignedFieldWorkOrders FieldWorkOrder[] @relation("FieldWorkOrderAssignedTo")
+  completedFieldWorkOrders FieldWorkOrder[] @relation("FieldWorkOrderCompletedBy")
+  uploadedFieldWorkProofs FieldWorkProof[] @relation("FieldWorkProofUploadedBy")
+  recordedRepairHistory RepairHistory[] @relation("RepairHistoryRecordedBy")
+  recordedMeterReplacements MeterReplacementHistory[] @relation("MeterReplacementRecordedBy")
   finalizedBills Bill[] @relation("BillFinalizedBy")
   printedBills Bill[] @relation("BillPrintedBy")
   distributedBills Bill[] @relation("BillDistributedBy")
@@ -121,6 +139,10 @@ model Customer {
   releasedMeterTransfers MeterHolderTransfer[] @relation("MeterHolderTransferFromCustomer")
   bills         Bill[]
   notifications NotificationLog[]
+  complaints    Complaint[]
+  leakReports   LeakReport[]
+  repairHistory RepairHistory[]
+  meterReplacementHistory MeterReplacementHistory[]
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -148,6 +170,11 @@ model Meter {
   
   readings      Reading[]
   holderTransfers MeterHolderTransfer[]
+  complaints      Complaint[]
+  leakReports     LeakReport[]
+  repairHistory   RepairHistory[]
+  replacedMeterHistory MeterReplacementHistory[] @relation("MeterReplacementHistoryFrom")
+  installedReplacementHistory MeterReplacementHistory[] @relation("MeterReplacementHistoryTo")
   
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -508,6 +535,36 @@ enum AdminLoginAttemptStatus {
   LOCKED_OUT
 }
 
+model AuthAdminManagementEvent {
+  id            String                    @id @default(uuid())
+  type          AuthAdminManagementEventType
+  actorId       String
+  actor         User                      @relation("AdminManagementEventActor", fields: [actorId], references: [id])
+  targetUserId  String?
+  targetUser    User?                     @relation("AdminManagementEventTarget", fields: [targetUserId], references: [id])
+  actorEmail    String
+  targetEmail   String
+  detail        String
+  occurredAt    DateTime                  @default(now())
+  createdAt     DateTime                  @default(now())
+
+  @@index([actorId, occurredAt(sort: Desc)])
+  @@index([targetUserId, occurredAt(sort: Desc)])
+  @@index([type, occurredAt(sort: Desc)])
+}
+
+enum AuthAdminManagementEventType {
+  ADMIN_CREATED
+  ROLE_CHANGED
+  ACCOUNT_DEACTIVATED
+  ACCOUNT_REACTIVATED
+  LOCKOUT_CLEARED
+  TEMPORARY_PASSWORD_SET
+  OWN_PASSWORD_CHANGED
+  TWO_FACTOR_ENABLED
+  TWO_FACTOR_DISABLED
+}
+
 model BackupSnapshot {
   id               String               @id @default(uuid())
   snapshotMonth    String
@@ -540,6 +597,10 @@ model ServiceZone {
   description String?
   routes      ServiceRoute[]
   meters      Meter[]
+  complaints  Complaint[]
+  leakReports LeakReport[]
+  repairHistory RepairHistory[]
+  meterReplacementHistory MeterReplacementHistory[]
   printBatches BillPrintBatch[]
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
@@ -555,6 +616,10 @@ model ServiceRoute {
   zoneId       String
   zone         ServiceZone            @relation(fields: [zoneId], references: [id])
   meters       Meter[]
+  complaints   Complaint[]
+  leakReports  LeakReport[]
+  repairHistory RepairHistory[]
+  meterReplacementHistory MeterReplacementHistory[]
   assignments  StaffRouteAssignment[]
   printBatches BillPrintBatch[]
   createdAt    DateTime               @default(now())
@@ -586,6 +651,215 @@ model StaffRouteAssignment {
 enum RouteResponsibility {
   METER_READING
   BILL_DISTRIBUTION
+}
+
+model Complaint {
+  id             String          @id @default(uuid())
+  summary        String
+  detail         String?
+  category       ComplaintCategory
+  status         ComplaintStatus @default(OPEN)
+  reportedAt     DateTime        @default(now())
+  createdById    String
+  createdBy      User            @relation("ComplaintReportedBy", fields: [createdById], references: [id])
+  resolvedById   String?
+  resolvedBy     User?           @relation("ComplaintResolvedBy", fields: [resolvedById], references: [id])
+  resolvedAt     DateTime?
+  customerId     String?
+  customer       Customer?       @relation(fields: [customerId], references: [id])
+  meterId        String?
+  meter          Meter?          @relation(fields: [meterId], references: [id])
+  serviceZoneId  String
+  serviceZone    ServiceZone     @relation(fields: [serviceZoneId], references: [id])
+  serviceRouteId String
+  serviceRoute   ServiceRoute    @relation(fields: [serviceRouteId], references: [id])
+  leakReport     LeakReport?
+  workOrders     FieldWorkOrder[]
+  repairHistory  RepairHistory[]
+  meterReplacementHistory MeterReplacementHistory[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@index([serviceRouteId, reportedAt(sort: Desc)])
+  @@index([serviceZoneId, reportedAt(sort: Desc)])
+  @@index([status, reportedAt(sort: Desc)])
+  @@index([category, reportedAt(sort: Desc)])
+  @@index([customerId, reportedAt(sort: Desc)])
+  @@index([meterId, reportedAt(sort: Desc)])
+}
+
+enum ComplaintCategory {
+  LEAK
+  NO_WATER
+  LOW_PRESSURE
+  BILLING_DISPUTE
+  METER_DAMAGE
+  OTHER
+}
+
+enum ComplaintStatus {
+  OPEN
+  RESOLVED
+}
+
+model LeakReport {
+  id              String           @id @default(uuid())
+  complaintId     String           @unique
+  complaint       Complaint        @relation(fields: [complaintId], references: [id])
+  summary         String
+  detail          String?
+  status          LeakReportStatus @default(OPEN)
+  createdById     String
+  createdBy       User             @relation("LeakReportCreatedBy", fields: [createdById], references: [id])
+  resolvedById    String?
+  resolvedBy      User?            @relation("LeakReportResolvedBy", fields: [resolvedById], references: [id])
+  resolvedAt      DateTime?
+  resolutionNotes String?
+  customerId      String?
+  customer        Customer?        @relation(fields: [customerId], references: [id])
+  meterId         String?
+  meter           Meter?           @relation(fields: [meterId], references: [id])
+  serviceZoneId   String
+  serviceZone     ServiceZone      @relation(fields: [serviceZoneId], references: [id])
+  serviceRouteId  String
+  serviceRoute    ServiceRoute     @relation(fields: [serviceRouteId], references: [id])
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([status, createdAt(sort: Desc)])
+  @@index([serviceRouteId, createdAt(sort: Desc)])
+  @@index([serviceZoneId, createdAt(sort: Desc)])
+  @@index([meterId, createdAt(sort: Desc)])
+  @@index([customerId, createdAt(sort: Desc)])
+}
+
+enum LeakReportStatus {
+  OPEN
+  INVESTIGATING
+  RESOLVED
+  CLOSED_NO_LEAK
+}
+
+model FieldWorkOrder {
+  id              String            @id @default(uuid())
+  complaintId     String
+  complaint       Complaint         @relation(fields: [complaintId], references: [id])
+  title           String
+  detail          String?
+  priority        WorkOrderPriority @default(MEDIUM)
+  status          WorkOrderStatus   @default(OPEN)
+  createdById     String
+  createdBy       User              @relation("FieldWorkOrderCreatedBy", fields: [createdById], references: [id])
+  assignedToId    String?
+  assignedTo      User?             @relation("FieldWorkOrderAssignedTo", fields: [assignedToId], references: [id])
+  scheduledFor    DateTime?
+  acknowledgedAt  DateTime?
+  completedById   String?
+  completedBy     User?             @relation("FieldWorkOrderCompletedBy", fields: [completedById], references: [id])
+  completedAt     DateTime?
+  resolutionNotes String?
+  fieldProofs     FieldWorkProof[]
+  repairHistory   RepairHistory?
+  meterReplacementHistory MeterReplacementHistory?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([complaintId, createdAt(sort: Desc)])
+  @@index([assignedToId, status, createdAt(sort: Desc)])
+  @@index([status, priority, createdAt(sort: Desc)])
+}
+
+model FieldWorkProof {
+  id               String         @id @default(uuid())
+  workOrderId      String
+  workOrder        FieldWorkOrder @relation(fields: [workOrderId], references: [id])
+  originalFilename String
+  storagePath      String         @unique
+  contentType      String
+  fileSizeBytes    Int
+  uploadedById     String
+  uploadedBy       User           @relation("FieldWorkProofUploadedBy", fields: [uploadedById], references: [id])
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@index([workOrderId, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+}
+
+model RepairHistory {
+  id             String       @id @default(uuid())
+  workOrderId    String       @unique
+  workOrder      FieldWorkOrder @relation(fields: [workOrderId], references: [id])
+  complaintId    String
+  complaint      Complaint    @relation(fields: [complaintId], references: [id])
+  repairSummary  String
+  repairDetail   String?
+  recordedById   String
+  recordedBy     User         @relation("RepairHistoryRecordedBy", fields: [recordedById], references: [id])
+  customerId     String?
+  customer       Customer?    @relation(fields: [customerId], references: [id])
+  meterId        String?
+  meter          Meter?       @relation(fields: [meterId], references: [id])
+  serviceZoneId  String
+  serviceZone    ServiceZone  @relation(fields: [serviceZoneId], references: [id])
+  serviceRouteId String
+  serviceRoute   ServiceRoute @relation(fields: [serviceRouteId], references: [id])
+  completedAt    DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([completedAt(sort: Desc)])
+  @@index([meterId, completedAt(sort: Desc)])
+  @@index([customerId, completedAt(sort: Desc)])
+  @@index([serviceRouteId, completedAt(sort: Desc)])
+  @@index([serviceZoneId, completedAt(sort: Desc)])
+}
+
+model MeterReplacementHistory {
+  id                String         @id @default(uuid())
+  workOrderId       String?        @unique
+  workOrder         FieldWorkOrder? @relation(fields: [workOrderId], references: [id])
+  complaintId       String?
+  complaint         Complaint?     @relation(fields: [complaintId], references: [id])
+  replacedMeterId   String
+  replacedMeter     Meter          @relation("MeterReplacementHistoryFrom", fields: [replacedMeterId], references: [id])
+  replacementMeterId String
+  replacementMeter  Meter          @relation("MeterReplacementHistoryTo", fields: [replacementMeterId], references: [id])
+  recordedById      String
+  recordedBy        User           @relation("MeterReplacementRecordedBy", fields: [recordedById], references: [id])
+  customerId        String?
+  customer          Customer?      @relation(fields: [customerId], references: [id])
+  serviceZoneId     String
+  serviceZone       ServiceZone    @relation(fields: [serviceZoneId], references: [id])
+  serviceRouteId    String
+  serviceRoute      ServiceRoute   @relation(fields: [serviceRouteId], references: [id])
+  finalReading      Float?
+  replacementDate   DateTime
+  reason            String?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([replacementDate(sort: Desc)])
+  @@index([replacedMeterId, replacementDate(sort: Desc)])
+  @@index([replacementMeterId, replacementDate(sort: Desc)])
+  @@index([customerId, replacementDate(sort: Desc)])
+  @@index([serviceRouteId, replacementDate(sort: Desc)])
+  @@index([serviceZoneId, replacementDate(sort: Desc)])
+}
+
+enum WorkOrderPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum WorkOrderStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
 }
 
 // Payments applied to Bills

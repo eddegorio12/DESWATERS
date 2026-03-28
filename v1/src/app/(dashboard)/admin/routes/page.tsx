@@ -1,4 +1,12 @@
-import { BillStatus, PaymentStatus, RouteResponsibility } from "@prisma/client";
+import {
+  BillStatus,
+  ComplaintCategory,
+  ComplaintStatus,
+  NotificationChannel,
+  NotificationTemplate,
+  PaymentStatus,
+  RouteResponsibility,
+} from "@prisma/client";
 
 import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
@@ -12,11 +20,19 @@ import {
   canPerformCapability,
   getModuleAccess,
 } from "@/features/auth/lib/authorization";
-import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { RouteOperationsManager } from "@/features/routes/components/route-operations-manager";
+import { RouteComplaintPanel } from "@/features/routes/components/route-complaint-panel";
 import { RouteScoreboard } from "@/features/routes/components/route-scoreboard";
-import { average, percentage, roundMetric } from "@/features/routes/lib/route-analytics";
+import {
+  average,
+  clamp,
+  formatTrendLabel,
+  getDaysPastDue,
+  getRecentMonthKeys,
+  percentage,
+  roundMetric,
+} from "@/features/routes/lib/route-analytics";
 import { prisma } from "@/lib/prisma";
 
 type AdminRoutesPageProps = {
@@ -28,8 +44,23 @@ type RouteFocus =
   | "NEEDS_READER"
   | "NEEDS_DISTRIBUTOR"
   | "UNMAPPED"
+  | "COMPLAINTS"
   | "OVERDUE"
   | "READY";
+
+function getTopComplaintCategory(categories: ComplaintCategory[]) {
+  if (!categories.length) {
+    return null;
+  }
+
+  const counts = new Map<ComplaintCategory, number>();
+
+  for (const category of categories) {
+    counts.set(category, (counts.get(category) ?? 0) + 1);
+  }
+
+  return [...counts.entries()].sort((left, right) => right[1] - left[1])[0]?.[0] ?? null;
+}
 
 export default async function AdminRoutesPage({ searchParams }: AdminRoutesPageProps) {
   const access = await getModuleAccess("routeOperations");
@@ -40,7 +71,18 @@ export default async function AdminRoutesPage({ searchParams }: AdminRoutesPageP
 
   await syncReceivableStatuses();
 
-  const [zones, routes, openBills, staffOptions, meters, filters] = await Promise.all([
+  const [
+    zones,
+    routes,
+    openBills,
+    staffOptions,
+    meters,
+    allRouteBills,
+    routeNotifications,
+    routeComplaints,
+    filters,
+  ] =
+    await Promise.all([
     prisma.serviceZone.findMany({
       orderBy: [{ name: "asc" }],
       select: {
@@ -109,6 +151,7 @@ export default async function AdminRoutesPage({ searchParams }: AdminRoutesPageP
       select: {
         id: true,
         billingPeriod: true,
+        dueDate: true,
         totalCharges: true,
         status: true,
         customer: {
@@ -174,7 +217,126 @@ export default async function AdminRoutesPage({ searchParams }: AdminRoutesPageP
         },
         serviceRoute: {
           select: {
+            id: true,
             name: true,
+          },
+        },
+      },
+    }),
+    prisma.bill.findMany({
+      where: {
+        reading: {
+          meter: {
+            serviceRouteId: {
+              not: null,
+            },
+          },
+        },
+      },
+      orderBy: [{ billingCycle: { periodKey: "desc" } }, { createdAt: "desc" }],
+      select: {
+        id: true,
+        billingPeriod: true,
+        dueDate: true,
+        totalCharges: true,
+        status: true,
+        customer: {
+          select: {
+            accountNumber: true,
+          },
+        },
+        billingCycle: {
+          select: {
+            periodKey: true,
+            billingPeriodLabel: true,
+          },
+        },
+        reading: {
+          select: {
+            meter: {
+              select: {
+                serviceRouteId: true,
+              },
+            },
+          },
+        },
+        payments: {
+          where: {
+            status: PaymentStatus.COMPLETED,
+          },
+          select: {
+            amount: true,
+          },
+        },
+      },
+    }),
+    prisma.notificationLog.findMany({
+      where: {
+        channel: NotificationChannel.PRINT,
+        template: {
+          in: [NotificationTemplate.DISCONNECTION, NotificationTemplate.REINSTATEMENT],
+        },
+      },
+      orderBy: [{ createdAt: "desc" }],
+      select: {
+        id: true,
+        template: true,
+        createdAt: true,
+        bill: {
+          select: {
+            reading: {
+              select: {
+                meter: {
+                  select: {
+                    serviceRouteId: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        customer: {
+          select: {
+            meters: {
+              select: {
+                serviceRouteId: true,
+              },
+            },
+          },
+        },
+      },
+    }),
+    prisma.complaint.findMany({
+      orderBy: [{ reportedAt: "desc" }],
+      select: {
+        id: true,
+        status: true,
+        category: true,
+        summary: true,
+        detail: true,
+        reportedAt: true,
+        serviceZoneId: true,
+        serviceRouteId: true,
+        serviceZone: {
+          select: {
+            name: true,
+          },
+        },
+        serviceRoute: {
+          select: {
+            name: true,
+            code: true,
+          },
+        },
+        meter: {
+          select: {
+            meterNumber: true,
+          },
+        },
+        customer: {
+          select: {
+            name: true,
+            accountNumber: true,
           },
         },
       },
@@ -189,6 +351,8 @@ export default async function AdminRoutesPage({ searchParams }: AdminRoutesPageP
   const routeMetrics = routes.map((route) => {
     const routeBills = openBills.filter((bill) => bill.reading.meter.serviceRoute?.id === route.id);
     const overdueBills = routeBills.filter((bill) => bill.status === BillStatus.OVERDUE);
+    const complaints = routeComplaints.filter((complaint) => complaint.serviceRouteId === route.id);
+    const openComplaints = complaints.filter((complaint) => complaint.status === ComplaintStatus.OPEN);
     const outstandingBalance = roundMetric(
       routeBills.reduce((sum, bill) => {
         const paid = bill.payments.reduce((paymentSum, payment) => paymentSum + payment.amount, 0);
@@ -215,6 +379,9 @@ export default async function AdminRoutesPage({ searchParams }: AdminRoutesPageP
           .map((meter) => meter.readings[0]?.consumption ?? null)
           .filter((value): value is number => value !== null)
       ),
+      openComplaintCount: openComplaints.length,
+      complaintCount: complaints.length,
+      topComplaintCategory: getTopComplaintCategory(complaints.map((complaint) => complaint.category)),
       overdueCount: overdueBills.length,
       outstandingBalance,
       collectionEfficiency: percentage(totalCollected, totalBilled),
@@ -238,13 +405,15 @@ export default async function AdminRoutesPage({ searchParams }: AdminRoutesPageP
           ? route.readerNames.length === 0
           : focus === "NEEDS_DISTRIBUTOR"
             ? route.distributorNames.length === 0
-            : focus === "UNMAPPED"
+        : focus === "UNMAPPED"
               ? route.meterCount === 0
-              : focus === "OVERDUE"
-                ? route.overdueCount > 0
-                : route.readerNames.length > 0 &&
-                  route.distributorNames.length > 0 &&
-                  route.meterCount > 0;
+              : focus === "COMPLAINTS"
+                ? route.openComplaintCount > 0
+                : focus === "OVERDUE"
+                  ? route.overdueCount > 0
+                  : route.readerNames.length > 0 &&
+                    route.distributorNames.length > 0 &&
+                    route.meterCount > 0;
 
     return (
       matchesFocus &&
@@ -287,6 +456,16 @@ export default async function AdminRoutesPage({ searchParams }: AdminRoutesPageP
       name: zone.name,
       routeCount: zone._count.routes,
       meterCount: zone._count.meters,
+      openComplaintCount: routeComplaints.filter(
+        (complaint) =>
+          complaint.serviceZoneId === zone.id && complaint.status === ComplaintStatus.OPEN
+      ).length,
+      complaintCount: routeComplaints.filter((complaint) => complaint.serviceZoneId === zone.id).length,
+      topComplaintCategory: getTopComplaintCategory(
+        routeComplaints
+          .filter((complaint) => complaint.serviceZoneId === zone.id)
+          .map((complaint) => complaint.category)
+      ),
       overdueCount: zoneBills.filter((bill) => bill.status === BillStatus.OVERDUE).length,
       outstandingBalance,
       averageConsumption: average(
@@ -302,6 +481,212 @@ export default async function AdminRoutesPage({ searchParams }: AdminRoutesPageP
   const filteredZoneMetrics = zoneMetrics
     .filter((zone) => filteredRouteMetrics.some((route) => route.zoneName === zone.name))
     .sort((left, right) => right.outstandingBalance - left.outstandingBalance);
+  const recentPeriodKeys = getRecentMonthKeys(6);
+  const recentLossWindow = new Set(recentPeriodKeys.slice(-3));
+  const billingTrend = recentPeriodKeys
+    .map((periodKey) => {
+      const periodBills = allRouteBills.filter((bill) => {
+        const routeId = bill.reading.meter.serviceRouteId;
+        const billPeriodKey =
+          bill.billingCycle?.periodKey ??
+          `${bill.dueDate.getFullYear()}-${`${bill.dueDate.getMonth() + 1}`.padStart(2, "0")}`;
+
+        return routeId ? visibleRouteIds.has(routeId) && billPeriodKey === periodKey : false;
+      });
+
+      const billedAmount = roundMetric(
+        periodBills.reduce((sum, bill) => sum + bill.totalCharges, 0)
+      );
+      const collectedAmount = roundMetric(
+        periodBills.reduce(
+          (sum, bill) =>
+            sum + bill.payments.reduce((paymentSum, payment) => paymentSum + payment.amount, 0),
+          0
+        )
+      );
+      const outstandingBalance = roundMetric(
+        periodBills.reduce((sum, bill) => {
+          const paid = bill.payments.reduce((paymentSum, payment) => paymentSum + payment.amount, 0);
+          return sum + Math.max(0, bill.totalCharges - paid);
+        }, 0)
+      );
+
+      return {
+        periodLabel: formatTrendLabel(periodKey),
+        billedAmount,
+        collectedAmount,
+        outstandingBalance,
+        collectionEfficiency: percentage(collectedAmount, billedAmount),
+        overdueCount: periodBills.filter((bill) => bill.status === BillStatus.OVERDUE).length,
+      };
+    })
+    .filter(
+      (period) =>
+        period.billedAmount > 0 || period.collectedAmount > 0 || period.outstandingBalance > 0
+    );
+
+  const lossWatchlist = filteredRouteMetrics
+    .map((route) => {
+      const recentRouteBills = allRouteBills.filter((bill) => {
+        const billPeriodKey =
+          bill.billingCycle?.periodKey ??
+          `${bill.dueDate.getFullYear()}-${`${bill.dueDate.getMonth() + 1}`.padStart(2, "0")}`;
+
+        return bill.reading.meter.serviceRouteId === route.id && recentLossWindow.has(billPeriodKey);
+      });
+
+      const recentBilledAmount = roundMetric(
+        recentRouteBills.reduce((sum, bill) => sum + bill.totalCharges, 0)
+      );
+      const recentCollectedAmount = roundMetric(
+        recentRouteBills.reduce(
+          (sum, bill) =>
+            sum + bill.payments.reduce((paymentSum, payment) => paymentSum + payment.amount, 0),
+          0
+        )
+      );
+      const recentGapAmount = roundMetric(
+        Math.max(0, recentBilledAmount - recentCollectedAmount)
+      );
+      const recentCollectionEfficiency = percentage(recentCollectedAmount, recentBilledAmount);
+      const gapRatio = recentBilledAmount > 0 ? recentGapAmount / recentBilledAmount : 0;
+      const routeRiskScore = roundMetric(
+        clamp(gapRatio * 55 + Math.min(route.overdueCount, 8) * 4.5, 0, 100)
+      );
+
+      return {
+        id: route.id,
+        routeName: route.name,
+        routeCode: route.code,
+        zoneName: route.zoneName,
+        recentBilledAmount,
+        recentCollectedAmount,
+        recentGapAmount,
+        recentCollectionEfficiency,
+        openOutstandingBalance: route.outstandingBalance,
+        overdueCount: route.overdueCount,
+        routeRiskScore,
+      };
+    })
+    .filter(
+      (route) =>
+        route.recentBilledAmount > 0 || route.openOutstandingBalance > 0 || route.overdueCount > 0
+    )
+    .sort((left, right) => {
+      if (right.routeRiskScore !== left.routeRiskScore) {
+        return right.routeRiskScore - left.routeRiskScore;
+      }
+
+      if (right.recentGapAmount !== left.recentGapAmount) {
+        return right.recentGapAmount - left.recentGapAmount;
+      }
+
+      return right.openOutstandingBalance - left.openOutstandingBalance;
+    })
+    .slice(0, 6);
+
+  const complaintWatchlist = filteredRouteMetrics
+    .map((route) => {
+      const complaints = routeComplaints.filter((complaint) => complaint.serviceRouteId === route.id);
+      const openComplaints = complaints.filter((complaint) => complaint.status === ComplaintStatus.OPEN);
+      const complaintRiskScore = roundMetric(
+        clamp(openComplaints.length * 20 + complaints.length * 5, 0, 100)
+      );
+
+      return {
+        id: route.id,
+        routeName: route.name,
+        routeCode: route.code,
+        zoneName: route.zoneName,
+        openComplaintCount: openComplaints.length,
+        complaintCount: complaints.length,
+        topComplaintCategory: getTopComplaintCategory(
+          complaints.map((complaint) => complaint.category)
+        ),
+        latestReportedAt: complaints[0]?.reportedAt ?? null,
+        complaintRiskScore,
+      };
+    })
+    .filter((route) => route.complaintCount > 0)
+    .sort((left, right) => {
+      if (right.complaintRiskScore !== left.complaintRiskScore) {
+        return right.complaintRiskScore - left.complaintRiskScore;
+      }
+
+      if (right.openComplaintCount !== left.openComplaintCount) {
+        return right.openComplaintCount - left.openComplaintCount;
+      }
+
+      return right.complaintCount - left.complaintCount;
+    })
+    .slice(0, 6);
+
+  const overdueAging = [
+    {
+      label: "Current or not yet due",
+      matches: (daysPastDue: number) => daysPastDue <= 0,
+      priority: "ready" as const,
+    },
+    {
+      label: "1-30 days overdue",
+      matches: (daysPastDue: number) => daysPastDue >= 1 && daysPastDue <= 30,
+      priority: "pending" as const,
+    },
+    {
+      label: "31-60 days overdue",
+      matches: (daysPastDue: number) => daysPastDue >= 31 && daysPastDue <= 60,
+      priority: "attention" as const,
+    },
+    {
+      label: "61+ days overdue",
+      matches: (daysPastDue: number) => daysPastDue >= 61,
+      priority: "overdue" as const,
+    },
+  ].map((bucket) => {
+    const bucketBills = openBills.filter((bill) => {
+      const routeId = bill.reading.meter.serviceRoute?.id;
+      const paid = bill.payments.reduce((sum, payment) => sum + payment.amount, 0);
+      const outstanding = Math.max(0, bill.totalCharges - paid);
+
+      if (!routeId || !visibleRouteIds.has(routeId) || outstanding <= 0) {
+        return false;
+      }
+
+      return bucket.matches(getDaysPastDue(bill.dueDate));
+    });
+
+    return {
+      label: bucket.label,
+      customerCount: new Set(bucketBills.map((bill) => bill.customer.accountNumber)).size,
+      billCount: bucketBills.length,
+      balance: roundMetric(
+        bucketBills.reduce((sum, bill) => {
+          const paid = bill.payments.reduce((paymentSum, payment) => paymentSum + payment.amount, 0);
+          return sum + Math.max(0, bill.totalCharges - paid);
+        }, 0)
+      ),
+      priority: bucket.priority,
+    };
+  });
+
+  const serviceActionTrend = recentPeriodKeys.map((periodKey) => {
+    const periodEvents = routeNotifications.filter((event) => {
+      const routeId =
+        event.bill?.reading.meter.serviceRouteId ??
+        event.customer.meters.find((meter) => meter.serviceRouteId)?.serviceRouteId ??
+        null;
+      const eventPeriodKey = `${event.createdAt.getFullYear()}-${`${event.createdAt.getMonth() + 1}`.padStart(2, "0")}`;
+
+      return routeId ? visibleRouteIds.has(routeId) && eventPeriodKey === periodKey : false;
+    });
+
+    return {
+      periodLabel: formatTrendLabel(periodKey),
+      disconnections: periodEvents.filter((event) => event.template === "DISCONNECTION").length,
+      reinstatements: periodEvents.filter((event) => event.template === "REINSTATEMENT").length,
+    };
+  });
+
   const overdueAccounts = openBills
     .filter(
       (bill) =>
@@ -327,11 +712,30 @@ export default async function AdminRoutesPage({ searchParams }: AdminRoutesPageP
         status: bill.status,
       };
     });
+  const recentComplaints = routeComplaints
+    .filter((complaint) => visibleRouteIds.has(complaint.serviceRouteId))
+    .slice(0, 8)
+    .map((complaint) => ({
+      id: complaint.id,
+      summary: complaint.summary,
+      category: complaint.category,
+      status: complaint.status,
+      reportedAt: complaint.reportedAt,
+      routeName: complaint.serviceRoute.name,
+      routeCode: complaint.serviceRoute.code,
+      zoneName: complaint.serviceZone.name,
+      meterNumber: complaint.meter?.meterNumber ?? null,
+      customerName: complaint.customer?.name ?? null,
+      accountNumber: complaint.customer?.accountNumber ?? null,
+    }));
   const unroutedMeterCount = meters.filter((meter) => !meter.serviceRoute).length;
-
-  const topDelinquentZones = [...zoneMetrics]
-    .sort((left, right) => right.outstandingBalance - left.outstandingBalance)
-    .slice(0, 3);
+  const openComplaintCount = routeComplaints.filter(
+    (complaint) =>
+      complaint.status === ComplaintStatus.OPEN && visibleRouteIds.has(complaint.serviceRouteId)
+  ).length;
+  const topComplaintZone = [...zoneMetrics]
+    .sort((left, right) => right.openComplaintCount - left.openComplaintCount)
+    .find((zone) => zone.openComplaintCount > 0) ?? null;
 
   return (
     <AdminPageShell
@@ -366,11 +770,11 @@ export default async function AdminRoutesPage({ searchParams }: AdminRoutesPageP
           accent: "amber",
         },
         {
-          label: "Top delinquent zone",
-          value: topDelinquentZones[0]?.name ?? "No zone yet",
-          detail: topDelinquentZones[0]
-            ? `${formatCurrency(topDelinquentZones[0].outstandingBalance)} outstanding`
-            : "Create route coverage to start ranking zone pressure",
+          label: "Open complaints",
+          value: openComplaintCount.toString(),
+          detail: topComplaintZone
+            ? `${topComplaintZone.name} currently carries ${topComplaintZone.openComplaintCount} open complaint${topComplaintZone.openComplaintCount === 1 ? "" : "s"}`
+            : "Log route-linked complaints here to start ranking area pressure",
           accent: "rose",
         },
       ]}
@@ -393,6 +797,24 @@ export default async function AdminRoutesPage({ searchParams }: AdminRoutesPageP
           id: meter.id,
           meterNumber: meter.meterNumber,
           customerName: meter.customer?.name ?? null,
+          currentRouteId: meter.serviceRoute?.id ?? null,
+          currentRouteName: meter.serviceRoute?.name ?? null,
+        }))}
+      />
+
+      <RouteComplaintPanel
+        canManageRoutes={canManageRoutes}
+        routes={routes.map((route) => ({
+          id: route.id,
+          name: route.name,
+          code: route.code,
+          zoneName: route.zone.name,
+        }))}
+        meterOptions={meters.map((meter) => ({
+          id: meter.id,
+          meterNumber: meter.meterNumber,
+          customerName: meter.customer?.name ?? null,
+          currentRouteId: meter.serviceRoute?.id ?? null,
           currentRouteName: meter.serviceRoute?.name ?? null,
         }))}
       />
@@ -404,7 +826,13 @@ export default async function AdminRoutesPage({ searchParams }: AdminRoutesPageP
         focus={focus || "ALL"}
         unroutedMeterCount={unroutedMeterCount}
         zoneMetrics={filteredZoneMetrics}
+        lossWatchlist={lossWatchlist}
+        complaintWatchlist={complaintWatchlist}
         overdueAccounts={overdueAccounts}
+        recentComplaints={recentComplaints}
+        billingTrend={billingTrend}
+        overdueAging={overdueAging}
+        serviceActionTrend={serviceActionTrend}
       />
     </AdminPageShell>
   );

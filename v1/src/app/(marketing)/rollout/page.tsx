@@ -9,14 +9,17 @@ import {
 } from "lucide-react";
 
 import { PageHero } from "@/features/marketing/components/page-hero";
+import { MarketingConversionPanel } from "@/features/marketing/components/marketing-conversion-panel";
 import { SectionHeading } from "@/features/marketing/components/section-heading";
+import { createMarketingMetadata } from "@/features/marketing/lib/metadata";
 import { futureExpansion, rolloutPhases } from "@/features/marketing/lib/site-content";
 
-export const metadata: Metadata = {
-  title: "Rollout | DEGORIO WATER DISTRIBUTION SERVICES",
+export const metadata: Metadata = createMarketingMetadata({
+  title: "Rollout",
   description:
-    "Understand the current DEGORIO WATER DISTRIBUTION SERVICES release, the phased rollout path, and what the platform is designed to support next.",
-};
+    "Understand the current DWDS release, the phased rollout path, and what the platform is designed to support next.",
+  pathname: "/rollout",
+});
 
 const futureIcons = [Smartphone, Zap, MessageSquareMore, Building2];
 
@@ -78,7 +81,7 @@ export default function RolloutPage() {
                   key={item.title}
                   className="rounded-[1.5rem] border border-white/12 bg-white/6 p-5"
                 >
-                  <Icon className="size-5 text-[#8ce1d5]" />
+                  <Icon aria-hidden="true" className="size-5 text-[#8ce1d5]" />
                   <h3 className="mt-4 font-heading text-2xl">{item.title}</h3>
                   <p className="mt-2 text-sm leading-6 text-primary-foreground/78">
                     {item.description}
@@ -105,13 +108,21 @@ export default function RolloutPage() {
                 key={item}
                 className="flex gap-3 rounded-[1.4rem] border border-border/70 bg-secondary/35 px-4 py-4 text-sm leading-6 text-muted-foreground"
               >
-                <ArrowUpRight className="mt-0.5 size-4 shrink-0 text-primary" />
+                <ArrowUpRight
+                  aria-hidden="true"
+                  className="mt-0.5 size-4 shrink-0 text-primary"
+                />
                 <span>{item}</span>
               </div>
             ))}
           </div>
         </article>
       </section>
+
+      <MarketingConversionPanel
+        title="Ready to turn the rollout path into a real implementation conversation?"
+        description="Use the public rollout request path for deployment fit, first-admin bootstrap planning, and the initial module sequence."
+      />
     </div>
   );
 }

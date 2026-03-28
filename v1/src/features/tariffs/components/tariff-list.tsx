@@ -1,5 +1,9 @@
 import { TariffAuditEventType } from "@prisma/client";
 
+import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
 import { StatusPill } from "@/features/admin/components/status-pill";
 
 type TariffListProps = {
@@ -55,102 +59,94 @@ export function TariffList({ tariffs }: TariffListProps) {
   const now = new Date();
 
   return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Tariff Registry
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Saved billing configurations
-          </h2>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {tariffs.length} tariff{tariffs.length === 1 ? "" : "s"} configured
-        </p>
-      </div>
+    <AdminSurfacePanel>
+      <AdminSurfaceHeader
+        eyebrow="Tariff Registry"
+        title="Saved billing configurations"
+        aside={`${tariffs.length} tariff${tariffs.length === 1 ? "" : "s"} configured`}
+      />
 
       <div className="mt-6 space-y-4">
         {tariffs.length ? (
           tariffs.map((tariff) => (
             <article
               key={tariff.id}
-              className="rounded-[1.5rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#fbfdfc,#f4f8f7)] p-5 shadow-[0_18px_40px_-38px_rgba(16,63,67,0.4)]"
+              className="overflow-hidden rounded-[1.5rem] border border-border/70 bg-white/78"
             >
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h3 className="text-lg font-semibold text-foreground">{tariff.name}</h3>
-                    <StatusPill
-                      priority={
-                        tariff.effectiveFrom <= now &&
+              <div className="px-5 py-5">
+                <div className="flex flex-col gap-5 2xl:flex-row 2xl:items-start 2xl:justify-between">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h3 className="text-lg font-semibold text-foreground">{tariff.name}</h3>
+                      <StatusPill
+                        priority={
+                          tariff.effectiveFrom <= now &&
+                          (!tariff.effectiveTo || tariff.effectiveTo >= now)
+                            ? "ready"
+                            : tariff.effectiveFrom > now
+                              ? "pending"
+                              : "readonly"
+                        }
+                      >
+                        {tariff.effectiveFrom <= now &&
                         (!tariff.effectiveTo || tariff.effectiveTo >= now)
-                          ? "ready"
+                          ? "Currently effective"
                           : tariff.effectiveFrom > now
-                            ? "pending"
-                            : "readonly"
-                      }
-                    >
-                      {tariff.effectiveFrom <= now &&
-                      (!tariff.effectiveTo || tariff.effectiveTo >= now)
-                        ? "Currently effective"
-                        : tariff.effectiveFrom > now
-                          ? "Scheduled"
-                          : "Retired"}
-                    </StatusPill>
-                    <StatusPill priority="readonly">
-                      Version {tariff.version}
-                    </StatusPill>
+                            ? "Scheduled"
+                            : "Retired"}
+                      </StatusPill>
+                      <StatusPill priority="readonly">Version {tariff.version}</StatusPill>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Effective {formatDate(tariff.effectiveFrom)}
+                      {tariff.effectiveTo ? ` to ${formatDate(tariff.effectiveTo)}` : " onward"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Saved {tariff.createdAt.toLocaleDateString()} by {tariff.createdBy?.name ?? "Unknown staff"}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Effective {formatDate(tariff.effectiveFrom)}
-                    {tariff.effectiveTo ? ` to ${formatDate(tariff.effectiveTo)}` : " onward"}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Saved {tariff.createdAt.toLocaleDateString()} by {tariff.createdBy?.name ?? "Unknown staff"}
-                  </p>
+
+                  <dl className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3 2xl:w-[34rem] 2xl:grid-cols-2">
+                    <div className="rounded-[1.15rem] border border-border/65 bg-secondary/24 px-4 py-3">
+                      <dt className="text-muted-foreground">Minimum charge</dt>
+                      <dd className="mt-1 font-semibold text-foreground">
+                        {formatCurrency(tariff.minimumCharge)}
+                      </dd>
+                    </div>
+                    <div className="rounded-[1.15rem] border border-border/65 bg-secondary/24 px-4 py-3">
+                      <dt className="text-muted-foreground">Minimum usage</dt>
+                      <dd className="mt-1 font-semibold text-foreground">
+                        {tariff.minimumUsage} cu.m
+                      </dd>
+                    </div>
+                    <div className="rounded-[1.15rem] border border-border/65 bg-secondary/24 px-4 py-3">
+                      <dt className="text-muted-foreground">Installation fee</dt>
+                      <dd className="mt-1 font-semibold text-foreground">
+                        {formatCurrency(tariff.installationFee)}
+                      </dd>
+                    </div>
+                    <div className="rounded-[1.15rem] border border-border/65 bg-secondary/24 px-4 py-3">
+                      <dt className="text-muted-foreground">Penalty rate</dt>
+                      <dd className="mt-1 font-semibold text-foreground">
+                        {(tariff.penaltyRate * 100).toFixed(2)}%
+                      </dd>
+                    </div>
+                    <div className="rounded-[1.15rem] border border-border/65 bg-secondary/24 px-4 py-3 sm:col-span-2 lg:col-span-3 2xl:col-span-2">
+                      <dt className="text-muted-foreground">Reconnection fee</dt>
+                      <dd className="mt-1 font-semibold text-foreground">
+                        {formatCurrency(tariff.reconnectionFee)}
+                      </dd>
+                    </div>
+                  </dl>
                 </div>
 
-                <dl className="grid gap-3 text-sm sm:grid-cols-5">
-                  <div className="rounded-[1.2rem] bg-white px-4 py-3">
-                    <dt className="text-muted-foreground">Minimum charge</dt>
-                    <dd className="mt-1 font-semibold text-foreground">
-                      {formatCurrency(tariff.minimumCharge)}
-                    </dd>
-                  </div>
-                  <div className="rounded-[1.2rem] bg-white px-4 py-3">
-                    <dt className="text-muted-foreground">Minimum usage</dt>
-                    <dd className="mt-1 font-semibold text-foreground">
-                      {tariff.minimumUsage} cu.m
-                    </dd>
-                  </div>
-                  <div className="rounded-[1.2rem] bg-white px-4 py-3">
-                    <dt className="text-muted-foreground">Installation fee</dt>
-                    <dd className="mt-1 font-semibold text-foreground">
-                      {formatCurrency(tariff.installationFee)}
-                    </dd>
-                  </div>
-                  <div className="rounded-[1.2rem] bg-white px-4 py-3">
-                    <dt className="text-muted-foreground">Penalty rate</dt>
-                    <dd className="mt-1 font-semibold text-foreground">
-                      {(tariff.penaltyRate * 100).toFixed(2)}%
-                    </dd>
-                  </div>
-                  <div className="rounded-[1.2rem] bg-white px-4 py-3">
-                    <dt className="text-muted-foreground">Reconnection fee</dt>
-                    <dd className="mt-1 font-semibold text-foreground">
-                      {formatCurrency(tariff.reconnectionFee)}
-                    </dd>
-                  </div>
-                </dl>
+                <div className="mt-4 rounded-[1.2rem] border border-border/65 bg-background/85 px-4 py-3 text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">Change reason:</span>{" "}
+                  {tariff.changeReason ?? "No change note recorded."}
+                </div>
               </div>
 
-              <div className="mt-4 rounded-[1.2rem] border border-[#dbe9e5] bg-white px-4 py-3 text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">Change reason:</span>{" "}
-                {tariff.changeReason ?? "No change note recorded."}
-              </div>
-
-              <div className="mt-5 overflow-hidden rounded-[1.4rem] border border-[#dbe9e5]">
+              <div className="overflow-hidden border-t border-border/70">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-border text-left">
                     <thead className="bg-secondary/55">
@@ -179,7 +175,7 @@ export function TariffList({ tariffs }: TariffListProps) {
                 </div>
               </div>
 
-              <div className="mt-5 rounded-[1.4rem] border border-[#dbe9e5] bg-white p-4">
+              <div className="border-t border-border/70 px-5 py-5">
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                   Audit trail
                 </p>
@@ -188,7 +184,7 @@ export function TariffList({ tariffs }: TariffListProps) {
                     tariff.auditEvents.map((event) => (
                       <article
                         key={event.id}
-                        className="rounded-[1rem] border border-border/80 bg-secondary/20 px-4 py-3 text-sm"
+                        className="rounded-[1rem] border border-border/65 bg-secondary/24 px-4 py-3 text-sm"
                       >
                         <p className="font-medium text-foreground">
                           {event.type === TariffAuditEventType.CREATED
@@ -218,6 +214,6 @@ export function TariffList({ tariffs }: TariffListProps) {
           </div>
         )}
       </div>
-    </section>
+    </AdminSurfacePanel>
   );
 }

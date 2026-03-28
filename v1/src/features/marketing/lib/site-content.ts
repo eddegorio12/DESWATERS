@@ -7,6 +7,7 @@ export const navigationItems = [
 
 export const footerLinks = [
   ...navigationItems,
+  { href: "/contact", label: "Plan rollout" },
   { href: "/sign-in", label: "Admin Access" },
 ];
 
@@ -266,4 +267,10 @@ export const futureExpansion = [
     description:
       "Extend reporting with more advanced operational summaries once the core transaction data is consistently flowing.",
   },
+] as const;
+
+export const conversionTrustSignals = [
+  "Internal staff authentication with role-aware access boundaries.",
+  "Printable bills, receipts, and notices linked to live operational records.",
+  "PostgreSQL-first deployment path with managed-hosting readiness already defined.",
 ] as const;

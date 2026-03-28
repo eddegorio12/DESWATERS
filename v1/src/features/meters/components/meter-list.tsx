@@ -35,6 +35,15 @@ type MeterListProps = {
         name: string;
       };
     }[];
+    replacedMeterHistory: {
+      id: string;
+      replacementDate: Date;
+      finalReading: number | null;
+      reason: string | null;
+      replacementMeter: {
+        meterNumber: string;
+      };
+    }[];
   }[];
   totalCount: number;
   query: string;
@@ -85,7 +94,7 @@ export function MeterList({ meters, totalCount, query, registry }: MeterListProp
       hasActiveFilters={hasActiveFilters}
     >
       <ResponsiveDataTable
-        columns={["Meter", "Install date", "Customer", "Route coverage", "Status", "Holder history"]}
+        columns={["Meter", "Install date", "Customer", "Route coverage", "Status", "History"]}
         colSpan={6}
         hasRows={meters.length > 0}
         emptyMessage={
@@ -148,7 +157,7 @@ export function MeterList({ meters, totalCount, query, registry }: MeterListProp
                   Holder history
                 </dt>
                 <dd className="mt-2 text-xs text-muted-foreground">
-                  {meter.holderTransfers.length ? (
+                  {meter.holderTransfers.length || meter.replacedMeterHistory.length ? (
                     <div className="space-y-3">
                       {meter.holderTransfers.map((transfer) => (
                         <div
@@ -176,9 +185,28 @@ export function MeterList({ meters, totalCount, query, registry }: MeterListProp
                           ) : null}
                         </div>
                       ))}
+                      {meter.replacedMeterHistory.map((entry) => (
+                        <div
+                          key={entry.id}
+                          className="rounded-2xl border border-border/70 bg-amber-50 px-3 py-2"
+                        >
+                          <div className="font-medium text-foreground">
+                            Replaced by meter {entry.replacementMeter.meterNumber}
+                          </div>
+                          <div className="mt-1">
+                            {entry.replacementDate.toLocaleDateString()}
+                            {entry.finalReading !== null
+                              ? ` - Final reading ${entry.finalReading}`
+                              : ""}
+                          </div>
+                          {entry.reason ? (
+                            <div className="mt-1 text-muted-foreground">{entry.reason}</div>
+                          ) : null}
+                        </div>
+                      ))}
                     </div>
                   ) : (
-                    <span className="text-muted-foreground">No holder history yet</span>
+                    <span className="text-muted-foreground">No holder or replacement history yet</span>
                   )}
                 </dd>
               </div>
@@ -224,7 +252,7 @@ export function MeterList({ meters, totalCount, query, registry }: MeterListProp
               </StatusPill>
             </td>
             <td className="px-4 py-4 text-xs text-muted-foreground">
-              {meter.holderTransfers.length ? (
+              {meter.holderTransfers.length || meter.replacedMeterHistory.length ? (
                 <div className="space-y-3">
                   {meter.holderTransfers.map((transfer) => (
                     <div
@@ -252,9 +280,28 @@ export function MeterList({ meters, totalCount, query, registry }: MeterListProp
                       ) : null}
                     </div>
                   ))}
+                  {meter.replacedMeterHistory.map((entry) => (
+                    <div
+                      key={entry.id}
+                      className="rounded-2xl border border-border/70 bg-amber-50 px-3 py-2"
+                    >
+                      <div className="font-medium text-foreground">
+                        Replaced by meter {entry.replacementMeter.meterNumber}
+                      </div>
+                      <div className="mt-1">
+                        {entry.replacementDate.toLocaleDateString()}
+                        {entry.finalReading !== null
+                          ? ` - Final reading ${entry.finalReading}`
+                          : ""}
+                      </div>
+                      {entry.reason ? (
+                        <div className="mt-1 text-muted-foreground">{entry.reason}</div>
+                      ) : null}
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <span className="text-muted-foreground">No holder history yet</span>
+                <span className="text-muted-foreground">No holder or replacement history yet</span>
               )}
             </td>
           </tr>

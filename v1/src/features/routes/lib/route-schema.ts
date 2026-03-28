@@ -1,4 +1,4 @@
-import { RouteResponsibility } from "@prisma/client";
+import { ComplaintCategory, RouteResponsibility } from "@prisma/client";
 import { z } from "zod";
 
 export const serviceZoneSchema = z.object({
@@ -55,7 +55,32 @@ export const meterRouteAssignmentSchema = z.object({
   serviceRouteId: z.uuid("Select a valid route."),
 });
 
+export const routeComplaintSchema = z.object({
+  serviceRouteId: z.uuid("Select a valid route."),
+  meterId: z
+    .string()
+    .trim()
+    .optional()
+    .or(z.literal(""))
+    .transform((value) => value || undefined)
+    .refine((value) => !value || z.uuid().safeParse(value).success, "Select a valid meter."),
+  category: z.nativeEnum(ComplaintCategory),
+  summary: z
+    .string()
+    .trim()
+    .min(5, "Complaint summary must be at least 5 characters.")
+    .max(160, "Complaint summary must be 160 characters or fewer."),
+  detail: z
+    .string()
+    .trim()
+    .max(500, "Complaint detail must be 500 characters or fewer.")
+    .optional()
+    .or(z.literal(""))
+    .transform((value) => value || undefined),
+});
+
 export type ServiceZoneInput = z.input<typeof serviceZoneSchema>;
 export type ServiceRouteInput = z.input<typeof serviceRouteSchema>;
 export type StaffRouteAssignmentInput = z.input<typeof staffRouteAssignmentSchema>;
 export type MeterRouteAssignmentInput = z.input<typeof meterRouteAssignmentSchema>;
+export type RouteComplaintInput = z.input<typeof routeComplaintSchema>;

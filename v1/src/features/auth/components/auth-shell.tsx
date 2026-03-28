@@ -35,7 +35,8 @@ export function AuthShell({ title, description, children }: AuthShellProps) {
             <div className="rounded-[1.5rem] border border-white/12 bg-white/8 p-5">
               <p className="text-sm font-medium text-white">Admin-only access</p>
               <p className="mt-2 text-sm leading-6 text-white/70">
-                Email and password login only. New admins are created by a SUPER_ADMIN inside DWDS.
+                Internal admins sign in here. SUPER_ADMIN accounts can also require an authenticator
+                code after optional two-factor setup inside DWDS.
               </p>
             </div>
           </div>

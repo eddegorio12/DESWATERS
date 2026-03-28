@@ -9,14 +9,17 @@ import {
 } from "lucide-react";
 
 import { PageHero } from "@/features/marketing/components/page-hero";
+import { MarketingConversionPanel } from "@/features/marketing/components/marketing-conversion-panel";
 import { SectionHeading } from "@/features/marketing/components/section-heading";
+import { createMarketingMetadata } from "@/features/marketing/lib/metadata";
 import { operatorViews, workflowSteps } from "@/features/marketing/lib/site-content";
 
-export const metadata: Metadata = {
-  title: "Workflows | DEGORIO WATER DISTRIBUTION SERVICES",
+export const metadata: Metadata = createMarketingMetadata({
+  title: "Workflows",
   description:
-    "See how DEGORIO WATER DISTRIBUTION SERVICES handles utility workflows from customer setup through reading approval, billing, payment entry, and daily review.",
-};
+    "See how DWDS handles utility workflows from customer setup through reading approval, billing, payment entry, and daily review.",
+  pathname: "/workflows",
+});
 
 const stepIcons = [Fingerprint, ClipboardCheck, CheckCircle2, FileClock, Wallet];
 
@@ -56,7 +59,7 @@ export default function WorkflowsPage() {
                 className="dwds-panel p-6"
               >
                 <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                  <Icon className="size-5" />
+                  <Icon aria-hidden="true" className="size-5" />
                 </div>
                 <p className="mt-5 text-sm font-semibold uppercase tracking-[0.18em] text-primary/70">
                   Step {index + 1}
@@ -114,6 +117,11 @@ export default function WorkflowsPage() {
           </div>
         </article>
       </section>
+
+      <MarketingConversionPanel
+        title="If the workflow matches your operating day, move directly to rollout planning."
+        description="DWDS keeps the product promise narrow: staff-facing utility work, role-aware controls, and one implementation path instead of scattered public actions."
+      />
     </div>
   );
 }

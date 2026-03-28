@@ -1,5 +1,9 @@
 import type { ReadingStatus } from "@prisma/client";
 
+import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
 import { StatusPill } from "@/features/admin/components/status-pill";
 import { DeleteReadingButton } from "@/features/readings/components/delete-reading-button";
 
@@ -47,22 +51,14 @@ export function ReadingList({
   currentUserId,
 }: ReadingListProps) {
   return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Reading History
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Recent encoding activity
-          </h2>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {readings.length} reading{readings.length === 1 ? "" : "s"} recorded
-        </p>
-      </div>
+    <AdminSurfacePanel>
+      <AdminSurfaceHeader
+        eyebrow="Reading History"
+        title="Recent encoding activity"
+        aside={`${readings.length} reading${readings.length === 1 ? "" : "s"} recorded`}
+      />
 
-      <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
+      <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-border/70">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border text-left">
             <thead className="bg-secondary/55">
@@ -145,6 +141,6 @@ export function ReadingList({
           </table>
         </div>
       </div>
-    </section>
+    </AdminSurfacePanel>
   );
 }

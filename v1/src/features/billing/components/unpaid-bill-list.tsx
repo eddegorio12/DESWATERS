@@ -3,6 +3,10 @@ import Link from "next/link";
 import type { BillDistributionStatus, BillLifecycleStatus, BillStatus } from "@prisma/client";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
 import { StatusPill } from "@/features/admin/components/status-pill";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 import { cn } from "@/lib/utils";
@@ -59,22 +63,14 @@ function getDistributionPriority(status: BillDistributionStatus) {
 
 export function UnpaidBillList({ bills }: UnpaidBillListProps) {
   return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Open Bills
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Unpaid billing records
-          </h2>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          {bills.length} bill{bills.length === 1 ? "" : "s"} awaiting payment
-        </p>
-      </div>
+    <AdminSurfacePanel>
+      <AdminSurfaceHeader
+        eyebrow="Open Bills"
+        title="Keep unsettled billing records visible for cashier, print, and follow-up work."
+        aside={`${bills.length} bill${bills.length === 1 ? "" : "s"} awaiting payment`}
+      />
 
-      <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]">
+      <div className="mt-6 overflow-hidden rounded-[1.4rem] border border-border/70 bg-white/76">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-border text-left">
             <thead className="bg-secondary/55">
@@ -165,6 +161,6 @@ export function UnpaidBillList({ bills }: UnpaidBillListProps) {
           </table>
         </div>
       </div>
-    </section>
+    </AdminSurfacePanel>
   );
 }

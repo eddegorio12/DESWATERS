@@ -14,15 +14,17 @@ import {
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { PageHero } from "@/features/marketing/components/page-hero";
+import { createMarketingMetadata } from "@/features/marketing/lib/metadata";
 import { ScrollAnimate } from "@/features/marketing/components/scroll-animate";
 import { SectionHeading } from "@/features/marketing/components/section-heading";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "DEGORIO WATER DISTRIBUTION SERVICES | Water Utility Operations Platform",
+export const metadata: Metadata = createMarketingMetadata({
+  title: "Water Utility Operations Platform",
   description:
-    "DEGORIO WATER DISTRIBUTION SERVICES gives utility operators one staff-facing control surface for reading approval, billing governance, collections, and overdue follow-up.",
-};
+    "DWDS gives utility operators one staff-facing control surface for reading approval, billing governance, collections, and overdue follow-up.",
+  pathname: "/",
+});
 
 const heroHighlights = [
   "Staff-facing utility workspace with protected internal access",
@@ -147,7 +149,7 @@ export default function HomePage() {
         title="Run the utility operating day from reading approval to collections closeout."
         description="DWDS is a staff-facing control surface for customer records, meter operations, billing governance, cashier posting, receivables follow-up, and deployment-ready reporting."
         primaryAction={{ href: "/platform", label: "View platform" }}
-        secondaryAction={{ href: "/rollout", label: "Plan rollout" }}
+        secondaryAction={{ href: "/contact", label: "Plan rollout" }}
       >
         <article className="dwds-section overflow-hidden p-4">
           <div className="rounded-[1.7rem] border border-border/70 bg-[linear-gradient(180deg,rgba(224,239,249,0.94),rgba(247,250,253,0.76))] p-3">
@@ -164,17 +166,20 @@ export default function HomePage() {
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary/70">
               What this platform delivers
             </p>
-            <div className="mt-4 space-y-3">
+            <ul className="mt-4 space-y-3">
               {heroHighlights.map((item) => (
-                <div
+                <li
                   key={item}
                   className="flex items-start gap-3 text-sm leading-6 text-muted-foreground"
                 >
-                  <BadgeCheck className="mt-1 size-4 shrink-0 text-primary" />
+                  <BadgeCheck
+                    aria-hidden="true"
+                    className="mt-1 size-4 shrink-0 text-primary"
+                  />
                   <span>{item}</span>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         </article>
       </PageHero>
@@ -313,13 +318,18 @@ export default function HomePage() {
           title="Six connected modules, one operating platform."
           description="Every module shares the same data backbone — customer records, meter state, reading history, and billing lifecycle flow between surfaces without re-entry."
         />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {coreModules.map((mod, i) => (
-            <ScrollAnimate key={mod.title} delay={i * 80} direction="up">
-              <div className="group relative cursor-pointer overflow-hidden rounded-[1.4rem] border border-border/70 bg-white/65 p-6 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:bg-white/90 hover:shadow-[0_20px_60px_-30px_rgba(15,35,62,0.25)]">
+            <ScrollAnimate
+              key={mod.title}
+              delay={i * 80}
+              direction="up"
+              className="h-full"
+            >
+              <li className="group relative h-full overflow-hidden rounded-[1.4rem] border border-border/70 bg-white/65 p-6 backdrop-blur transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:bg-white/90 hover:shadow-[0_20px_60px_-30px_rgba(15,35,62,0.25)]">
                 <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(20,82,122,0.04),rgba(16,147,141,0.04))] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                 <div className="mb-4 inline-flex items-center justify-center rounded-xl border border-primary/10 bg-primary/6 p-3 transition-colors duration-300 group-hover:border-primary/20 group-hover:bg-primary/10">
-                  <mod.icon className="size-5 text-primary" />
+                  <mod.icon aria-hidden="true" className="size-5 text-primary" />
                 </div>
                 <h3 className="font-heading text-lg text-foreground">
                   {mod.title}
@@ -327,10 +337,10 @@ export default function HomePage() {
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {mod.description}
                 </p>
-              </div>
+              </li>
             </ScrollAnimate>
           ))}
-        </div>
+        </ul>
       </section>
 
       {/* ─── Final CTA ─────────────────────────────────────────── */}
@@ -374,7 +384,7 @@ export default function HomePage() {
                   View platform
                 </Link>
                 <Link
-                  href="/rollout"
+                  href="/contact"
                   className={cn(
                     buttonVariants({
                       variant: "outline",

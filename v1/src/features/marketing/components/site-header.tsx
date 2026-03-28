@@ -29,10 +29,11 @@ export async function SiteHeader() {
             <div className="flex lg:justify-end">
               <Link
                 href={dashboardHref}
+                aria-label={dashboardLabel}
                 className={cn(
                   buttonVariants({
                     className:
-                      "h-10 rounded-full bg-[linear-gradient(135deg,#163154,#15527a_56%,#10938d)] px-4 text-sm text-white shadow-[0_18px_40px_-28px_rgba(15,35,62,0.75)] hover:brightness-105 sm:px-5",
+                      "h-10 rounded-full bg-[linear-gradient(135deg,#163154,#15527a_56%,#10938d)] px-4 text-sm text-white shadow-[0_18px_40px_-28px_rgba(15,35,62,0.75)] hover:brightness-105 focus-visible:brightness-105 sm:px-5",
                   })
                 )}
               >

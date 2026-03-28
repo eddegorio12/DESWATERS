@@ -20,6 +20,8 @@ export default async function AdminStaffAccessPage() {
       email: true,
       role: true,
       isActive: true,
+      twoFactorEnabled: true,
+      twoFactorEnabledAt: true,
       failedSignInCount: true,
       lockedUntil: true,
       lastLoginAt: true,
@@ -39,6 +41,30 @@ export default async function AdminStaffAccessPage() {
       userAgent: true,
       attemptedAt: true,
       user: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  const recentAdminManagementEvents = await prisma.authAdminManagementEvent.findMany({
+    orderBy: [{ occurredAt: "desc" }],
+    take: 12,
+    select: {
+      id: true,
+      type: true,
+      detail: true,
+      actorEmail: true,
+      targetEmail: true,
+      occurredAt: true,
+      actor: {
+        select: {
+          name: true,
+          role: true,
+        },
+      },
+      targetUser: {
         select: {
           name: true,
         },
@@ -79,9 +105,21 @@ export default async function AdminStaffAccessPage() {
           detail: "Accounts currently blocked by failed-login lockout",
           accent: "violet",
         },
+        {
+          label: "2FA Enabled",
+          value: admins
+            .filter((user) => user.role === "SUPER_ADMIN" && user.twoFactorEnabled)
+            .length.toString(),
+          detail: "SUPER_ADMIN accounts currently protected by authenticator sign-in",
+          accent: "teal",
+        },
       ]}
     >
-      <StaffAccessBoard admins={admins} recentLoginAttempts={recentLoginAttempts} />
+      <StaffAccessBoard
+        admins={admins}
+        recentLoginAttempts={recentLoginAttempts}
+        recentAdminManagementEvents={recentAdminManagementEvents}
+      />
     </AdminPageShell>
   );
 }

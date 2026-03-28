@@ -6,10 +6,12 @@ import { revalidatePath } from "next/cache";
 import { requireStaffCapability } from "@/features/auth/lib/authorization";
 import {
   meterRouteAssignmentSchema,
+  routeComplaintSchema,
   serviceRouteSchema,
   serviceZoneSchema,
   staffRouteAssignmentSchema,
   type MeterRouteAssignmentInput,
+  type RouteComplaintInput,
   type ServiceRouteInput,
   type ServiceZoneInput,
   type StaffRouteAssignmentInput,
@@ -216,6 +218,94 @@ export async function assignMeterRoute(values: MeterRouteAssignmentInput) {
       serviceRouteId: route.id,
       serviceZoneId: route.zoneId,
     },
+  });
+
+  revalidateRoutePaths();
+}
+
+export async function createRouteComplaint(values: RouteComplaintInput) {
+  const actor = await requireStaffCapability("routes:manage");
+
+  const parsedValues = routeComplaintSchema.safeParse(values);
+
+  if (!parsedValues.success) {
+    throw new Error(parsedValues.error.issues[0]?.message || "Invalid complaint data.");
+  }
+
+  const route = await prisma.serviceRoute.findUnique({
+    where: {
+      id: parsedValues.data.serviceRouteId,
+    },
+    select: {
+      id: true,
+      zoneId: true,
+    },
+  });
+
+  if (!route) {
+    throw new Error("The selected route no longer exists.");
+  }
+
+  let meterData:
+    | {
+        id: string;
+        customerId: string | null;
+        serviceRouteId: string | null;
+      }
+    | null = null;
+
+  if (parsedValues.data.meterId) {
+    meterData = await prisma.meter.findUnique({
+      where: {
+        id: parsedValues.data.meterId,
+      },
+      select: {
+        id: true,
+        customerId: true,
+        serviceRouteId: true,
+      },
+    });
+
+    if (!meterData) {
+      throw new Error("The selected meter no longer exists.");
+    }
+
+    if (meterData.serviceRouteId !== route.id) {
+      throw new Error("The selected meter is not mapped to the chosen route.");
+    }
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const complaint = await tx.complaint.create({
+      data: {
+        summary: parsedValues.data.summary,
+        detail: parsedValues.data.detail,
+        category: parsedValues.data.category,
+        createdById: actor.id,
+        customerId: meterData?.customerId ?? null,
+        meterId: meterData?.id ?? null,
+        serviceZoneId: route.zoneId,
+        serviceRouteId: route.id,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    if (parsedValues.data.category === "LEAK") {
+      await tx.leakReport.create({
+        data: {
+          complaintId: complaint.id,
+          summary: parsedValues.data.summary,
+          detail: parsedValues.data.detail,
+          createdById: actor.id,
+          customerId: meterData?.customerId ?? null,
+          meterId: meterData?.id ?? null,
+          serviceZoneId: route.zoneId,
+          serviceRouteId: route.id,
+        },
+      });
+    }
   });
 
   revalidateRoutePaths();

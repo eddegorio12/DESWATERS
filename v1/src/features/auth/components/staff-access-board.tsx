@@ -1,6 +1,10 @@
-import { AdminLoginAttemptStatus, Role } from "@prisma/client";
+import { AdminLoginAttemptStatus, AuthAdminManagementEventType, Role } from "@prisma/client";
 
 import { StatusPill } from "@/features/admin/components/status-pill";
+import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
 import {
   clearAdminLockout,
   createAdminAccount,
@@ -16,6 +20,8 @@ type AdminManagementUser = {
   email: string;
   role: Role;
   isActive: boolean;
+  twoFactorEnabled: boolean;
+  twoFactorEnabledAt: Date | null;
   failedSignInCount: number;
   lockedUntil: Date | null;
   lastLoginAt: Date | null;
@@ -31,6 +37,22 @@ type RecentLoginAttempt = {
   userAgent: string | null;
   attemptedAt: Date;
   user: {
+    name: string;
+  } | null;
+};
+
+type RecentAdminManagementEvent = {
+  id: string;
+  type: AuthAdminManagementEventType;
+  detail: string;
+  actorEmail: string;
+  targetEmail: string;
+  occurredAt: Date;
+  actor: {
+    name: string;
+    role: Role;
+  };
+  targetUser: {
     name: string;
   } | null;
 };
@@ -91,31 +113,72 @@ function getLoginAttemptPriority(status: AdminLoginAttemptStatus) {
   return "readonly" as const;
 }
 
+function formatAdminManagementEventType(type: AuthAdminManagementEventType) {
+  switch (type) {
+    case AuthAdminManagementEventType.ADMIN_CREATED:
+      return "Admin created";
+    case AuthAdminManagementEventType.ROLE_CHANGED:
+      return "Role changed";
+    case AuthAdminManagementEventType.ACCOUNT_DEACTIVATED:
+      return "Account deactivated";
+    case AuthAdminManagementEventType.ACCOUNT_REACTIVATED:
+      return "Account reactivated";
+    case AuthAdminManagementEventType.LOCKOUT_CLEARED:
+      return "Lockout cleared";
+    case AuthAdminManagementEventType.TEMPORARY_PASSWORD_SET:
+      return "Temp password set";
+    case AuthAdminManagementEventType.OWN_PASSWORD_CHANGED:
+      return "Own password changed";
+    case AuthAdminManagementEventType.TWO_FACTOR_ENABLED:
+      return "2FA enabled";
+    case AuthAdminManagementEventType.TWO_FACTOR_DISABLED:
+      return "2FA disabled";
+    default:
+      return "Admin event";
+  }
+}
+
+function getAdminManagementEventPriority(type: AuthAdminManagementEventType) {
+  if (
+    type === AuthAdminManagementEventType.ACCOUNT_DEACTIVATED ||
+    type === AuthAdminManagementEventType.LOCKOUT_CLEARED ||
+    type === AuthAdminManagementEventType.TEMPORARY_PASSWORD_SET ||
+    type === AuthAdminManagementEventType.TWO_FACTOR_DISABLED
+  ) {
+    return "attention" as const;
+  }
+
+  if (
+    type === AuthAdminManagementEventType.ADMIN_CREATED ||
+    type === AuthAdminManagementEventType.ACCOUNT_REACTIVATED ||
+    type === AuthAdminManagementEventType.TWO_FACTOR_ENABLED
+  ) {
+    return "ready" as const;
+  }
+
+  return "readonly" as const;
+}
+
 export function StaffAccessBoard({
   admins,
   recentLoginAttempts,
+  recentAdminManagementEvents,
 }: {
   admins: AdminManagementUser[];
   recentLoginAttempts: RecentLoginAttempt[];
+  recentAdminManagementEvents: RecentAdminManagementEvent[];
 }) {
   return (
     <div className="grid gap-6">
       <div className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
-      <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Create Admin
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Add a new internal admin account
-          </h2>
-          <p className="text-sm leading-6 text-muted-foreground">
-            This page is SUPER_ADMIN-only. Set a temporary password here, then hand it to
-            the admin securely outside the app.
-          </p>
-        </div>
+        <AdminSurfacePanel>
+          <AdminSurfaceHeader
+            eyebrow="Create Admin"
+            title="Add a new internal admin account"
+            description="This page is SUPER_ADMIN-only. Set a temporary password here, then hand it to the admin securely outside the app."
+          />
 
-        <form action={createAdminAccount} className="mt-6 space-y-5">
+          <form action={createAdminAccount} className="mt-6 space-y-5">
           <div>
             <label className="text-sm font-medium text-foreground" htmlFor="name">
               Name
@@ -186,58 +249,88 @@ export function StaffAccessBoard({
           >
             Create admin
           </button>
-        </form>
-      </section>
+          </form>
+        </AdminSurfacePanel>
 
-      <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Admin Directory
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Manage existing admin accounts
-          </h2>
-        </div>
+        <AdminSurfacePanel>
+          <AdminSurfaceHeader
+            eyebrow="Admin Directory"
+            title="Manage existing admin accounts"
+            aside={`${admins.length} account${admins.length === 1 ? "" : "s"}`}
+          />
 
-        <div className="mt-6 grid gap-4">
+          <div className="mt-6 divide-y divide-border/70 overflow-hidden rounded-[1.5rem] border border-border/70 bg-white/76">
           {admins.map((admin) => (
             <article
               key={admin.id}
-              className="rounded-[1.5rem] border border-border/80 bg-secondary/20 p-5"
+              className="px-5 py-5"
             >
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div className="space-y-2">
-                  <p className="text-lg font-semibold text-foreground">{admin.name}</p>
-                  <p className="text-sm text-muted-foreground">{admin.email}</p>
-                  <div className="flex flex-wrap gap-2 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                    <StatusPill priority="ready" className="uppercase tracking-[0.18em]">
-                      {roleDisplayName[admin.role]}
-                    </StatusPill>
-                    <StatusPill
-                      priority={getAdminStatePriority(admin)}
-                      className="uppercase tracking-[0.18em]"
-                    >
-                      {admin.isActive ? "Active" : "Inactive"}
-                    </StatusPill>
-                    {admin.lockedUntil && admin.lockedUntil > new Date() ? (
-                      <StatusPill priority="attention" className="uppercase tracking-[0.18em]">
-                        Locked until {formatDate(admin.lockedUntil)}
+              <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <p className="text-lg font-semibold text-foreground">{admin.name}</p>
+                      <StatusPill priority="ready" className="uppercase tracking-[0.18em]">
+                        {roleDisplayName[admin.role]}
                       </StatusPill>
-                    ) : null}
+                      <StatusPill
+                        priority={getAdminStatePriority(admin)}
+                        className="uppercase tracking-[0.18em]"
+                      >
+                        {admin.isActive ? "Active" : "Inactive"}
+                      </StatusPill>
+                      {admin.lockedUntil && admin.lockedUntil > new Date() ? (
+                        <StatusPill priority="attention" className="uppercase tracking-[0.18em]">
+                          Locked until {formatDate(admin.lockedUntil)}
+                        </StatusPill>
+                      ) : null}
+                      {admin.role === Role.SUPER_ADMIN ? (
+                        <StatusPill
+                          priority={admin.twoFactorEnabled ? "ready" : "readonly"}
+                          className="uppercase tracking-[0.18em]"
+                        >
+                          {admin.twoFactorEnabled ? "2FA enabled" : "2FA off"}
+                        </StatusPill>
+                      ) : null}
+                    </div>
+                    <p className="text-sm text-muted-foreground">{admin.email}</p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Last login: {formatDate(admin.lastLoginAt)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Failed attempts: {admin.failedSignInCount}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Created: {formatDate(admin.createdAt)}
-                  </p>
+
+                  <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-4">
+                    <div className="rounded-[1.15rem] border border-border/65 bg-secondary/26 px-4 py-3">
+                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
+                        Last login
+                      </p>
+                      <p className="mt-2 text-sm text-foreground">{formatDate(admin.lastLoginAt)}</p>
+                    </div>
+                    <div className="rounded-[1.15rem] border border-border/65 bg-secondary/26 px-4 py-3">
+                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
+                        Failed attempts
+                      </p>
+                      <p className="mt-2 text-sm text-foreground">{admin.failedSignInCount}</p>
+                    </div>
+                    <div className="rounded-[1.15rem] border border-border/65 bg-secondary/26 px-4 py-3">
+                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
+                        Created
+                      </p>
+                      <p className="mt-2 text-sm text-foreground">{formatDate(admin.createdAt)}</p>
+                    </div>
+                    <div className="rounded-[1.15rem] border border-border/65 bg-secondary/26 px-4 py-3">
+                      <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
+                        2FA enabled
+                      </p>
+                      <p className="mt-2 text-sm text-foreground">
+                        {admin.twoFactorEnabledAt ? formatDate(admin.twoFactorEnabledAt) : "Not enabled"}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="grid gap-3 sm:grid-cols-[minmax(0,220px)_minmax(0,220px)_minmax(0,220px)_auto]">
-                  <form action={updateAdminRole} className="grid gap-2">
+                <div className="grid gap-3 xl:grid-cols-[minmax(0,240px)_minmax(0,240px)]">
+                  <form
+                    action={updateAdminRole}
+                    className="grid gap-2 rounded-[1.2rem] border border-border/65 bg-background/85 p-4"
+                  >
                     <input type="hidden" name="userId" value={admin.id} />
                     <label className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                       Change role
@@ -261,7 +354,10 @@ export function StaffAccessBoard({
                     </button>
                   </form>
 
-                  <form action={setAdminTemporaryPassword} className="grid gap-2">
+                  <form
+                    action={setAdminTemporaryPassword}
+                    className="grid gap-2 rounded-[1.2rem] border border-border/65 bg-background/85 p-4"
+                  >
                     <input type="hidden" name="userId" value={admin.id} />
                     <label className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                       Set temp password
@@ -282,7 +378,10 @@ export function StaffAccessBoard({
                     </button>
                   </form>
 
-                  <form action={toggleAdminActiveState} className="flex items-end">
+                </div>
+
+                <div className="flex flex-col gap-3 border-t border-border/70 pt-3 sm:flex-row sm:flex-wrap">
+                  <form action={toggleAdminActiveState}>
                     <input type="hidden" name="userId" value={admin.id} />
                     <button
                       type="submit"
@@ -292,7 +391,7 @@ export function StaffAccessBoard({
                     </button>
                   </form>
 
-                  <form action={clearAdminLockout} className="flex items-end">
+                  <form action={clearAdminLockout}>
                     <input type="hidden" name="userId" value={admin.id} />
                     <button
                       type="submit"
@@ -305,25 +404,19 @@ export function StaffAccessBoard({
               </div>
             </article>
           ))}
-        </div>
-      </section>
+          </div>
+        </AdminSurfacePanel>
       </div>
 
-      <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Login History
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Recent sign-in activity
-          </h2>
-          <p className="text-sm leading-6 text-muted-foreground">
-            Review recent successes, failures, and lockouts with the IP and device details
-            captured during each sign-in attempt.
-          </p>
-        </div>
+      <AdminSurfacePanel>
+        <AdminSurfaceHeader
+          eyebrow="Login History"
+          title="Recent sign-in activity"
+          description="Review recent successes, failures, and lockouts with the IP and device details captured during each sign-in attempt."
+          aside={`${recentLoginAttempts.length} sampled attempt${recentLoginAttempts.length === 1 ? "" : "s"}`}
+        />
 
-        <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-[#dbe9e5]">
+        <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-border/70">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border text-left">
               <thead className="bg-secondary/55">
@@ -380,7 +473,68 @@ export function StaffAccessBoard({
             </table>
           </div>
         </div>
-      </section>
+      </AdminSurfacePanel>
+
+      <AdminSurfacePanel>
+        <AdminSurfaceHeader
+          eyebrow="Audit Trail"
+          title="Recent admin-management changes"
+          description="Every account create, role update, activation change, lockout reset, and temporary-password reset now writes to a dedicated admin-management audit log."
+          aside={`${recentAdminManagementEvents.length} recorded event${recentAdminManagementEvents.length === 1 ? "" : "s"}`}
+        />
+
+        <div className="mt-6 space-y-3">
+          {recentAdminManagementEvents.length ? (
+            recentAdminManagementEvents.map((event) => (
+              <article
+                key={event.id}
+                className="rounded-[1.2rem] border border-border/70 bg-white/82 px-5 py-4"
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="space-y-2">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <p className="text-sm font-semibold text-foreground">
+                        {formatAdminManagementEventType(event.type)}
+                      </p>
+                      <StatusPill priority={getAdminManagementEventPriority(event.type)}>
+                        {formatAdminManagementEventType(event.type)}
+                      </StatusPill>
+                    </div>
+                    <p className="text-sm text-muted-foreground">{event.detail}</p>
+                  </div>
+
+                  <p className="text-xs text-muted-foreground">{formatDate(event.occurredAt)}</p>
+                </div>
+
+                <div className="mt-4 grid gap-3 text-sm text-muted-foreground md:grid-cols-2">
+                  <div className="rounded-[1rem] border border-border/65 bg-secondary/22 px-4 py-3">
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
+                      Actor
+                    </p>
+                    <p className="mt-2 text-sm text-foreground">{event.actor.name}</p>
+                    <p className="mt-1 text-xs">
+                      {roleDisplayName[event.actor.role]} • {event.actorEmail}
+                    </p>
+                  </div>
+                  <div className="rounded-[1rem] border border-border/65 bg-secondary/22 px-4 py-3">
+                    <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
+                      Target
+                    </p>
+                    <p className="mt-2 text-sm text-foreground">
+                      {event.targetUser?.name ?? event.targetEmail}
+                    </p>
+                    <p className="mt-1 text-xs">{event.targetEmail}</p>
+                  </div>
+                </div>
+              </article>
+            ))
+          ) : (
+            <div className="rounded-[1.2rem] border border-dashed border-border/80 bg-background/70 px-5 py-8 text-sm text-muted-foreground">
+              Admin-management audit events will appear here after the next account change.
+            </div>
+          )}
+        </div>
+      </AdminSurfacePanel>
     </div>
   );
 }

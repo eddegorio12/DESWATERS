@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import Link from "next/link";
+import QRCode from "qrcode";
 import {
   Activity,
   BanknoteArrowDown,
@@ -27,6 +28,7 @@ import {
 } from "@/features/admin/components/dashboard-console";
 import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { ChangePasswordPanel } from "@/features/auth/components/change-password-panel";
+import { SuperAdminTwoFactorPanel } from "@/features/auth/components/super-admin-two-factor-panel";
 import {
   canPerformCapability,
   getAccessibleAdminModules,
@@ -35,6 +37,11 @@ import {
   roleSummaries,
   type AdminModule,
 } from "@/features/auth/lib/authorization";
+import {
+  createOtpAuthUri,
+  decryptTwoFactorSecret,
+  formatTwoFactorSecret,
+} from "@/features/auth/lib/two-factor";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { BrandLockup } from "@/features/marketing/components/brand-lockup";
@@ -328,6 +335,31 @@ export default async function AdminDashboardPage() {
     },
   ].filter((item) => accessibleModules.has(item.module));
   const roleCapabilities = getRoleCapabilities(localUser.role);
+  const pendingTwoFactorSetup = localUser.twoFactorPendingSecretCiphertext
+    ? await (async () => {
+        const pendingSecret = decryptTwoFactorSecret(
+          localUser.twoFactorPendingSecretCiphertext!
+        );
+        const otpAuthUri = createOtpAuthUri({
+          email: localUser.email,
+          secret: pendingSecret,
+        });
+
+        return {
+          secret: formatTwoFactorSecret(pendingSecret),
+          otpAuthUri,
+          qrDataUrl: await QRCode.toDataURL(otpAuthUri, {
+            errorCorrectionLevel: "M",
+            margin: 1,
+            width: 240,
+          }),
+        };
+      })()
+    : null;
+  const dateFormatter = new Intl.DateTimeFormat("en-PH", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 
   return (
     <section className="bg-transparent">
@@ -506,6 +538,22 @@ export default async function AdminDashboardPage() {
         </section>
 
         <ChangePasswordPanel />
+        {localUser.role === "SUPER_ADMIN" ? (
+          <SuperAdminTwoFactorPanel
+            email={localUser.email}
+            isEnabled={localUser.twoFactorEnabled}
+            enabledAt={
+              localUser.twoFactorEnabledAt ? dateFormatter.format(localUser.twoFactorEnabledAt) : null
+            }
+            lastVerifiedAt={
+              localUser.twoFactorLastVerifiedAt
+                ? dateFormatter.format(localUser.twoFactorLastVerifiedAt)
+                : null
+            }
+            recoveryCodeCount={localUser.twoFactorRecoveryCodeHashes.length}
+            pendingSetup={pendingTwoFactorSetup}
+          />
+        ) : null}
       </div>
     </section>
   );

@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
+import {
   assignMeterRoute,
   assignStaffRoute,
   createServiceRoute,
@@ -94,23 +98,16 @@ export function RouteOperationsManager({
 
   return (
     <section className="grid gap-6 xl:grid-cols-2">
-      <article className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Coverage Setup
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Define zones and service routes
-          </h2>
-          <p className="text-sm leading-6 text-muted-foreground">
-            Build the field map first so reading ownership, print grouping, and analytics all use
-            the same route records.
-          </p>
-        </div>
+      <AdminSurfacePanel>
+        <AdminSurfaceHeader
+          eyebrow="Coverage Setup"
+          title="Define zones and service routes"
+          description="Build the field map first so reading ownership, print grouping, and analytics all use the same route records."
+        />
 
         <div className="mt-6 grid gap-5 xl:grid-cols-2">
           <form
-            className="space-y-4 rounded-[1.4rem] border border-[#dbe9e5] bg-[#fbfdfc] p-4"
+            className="space-y-4 border-t border-border/60 pt-4"
             onSubmit={(event) => {
               event.preventDefault();
               runAction(
@@ -186,7 +183,7 @@ export function RouteOperationsManager({
           </form>
 
           <form
-            className="space-y-4 rounded-[1.4rem] border border-[#dbe9e5] bg-[#fbfdfc] p-4"
+            className="space-y-4 border-t border-border/60 pt-4"
             onSubmit={(event) => {
               event.preventDefault();
               runAction(
@@ -272,25 +269,18 @@ export function RouteOperationsManager({
             </Button>
           </form>
         </div>
-      </article>
+      </AdminSurfacePanel>
 
-      <article className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Ownership
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Assign staff and meter coverage
-          </h2>
-          <p className="text-sm leading-6 text-muted-foreground">
-            Route ownership determines who should read the meter path and who should handle bill
-            distribution for that same field area.
-          </p>
-        </div>
+      <AdminSurfacePanel>
+        <AdminSurfaceHeader
+          eyebrow="Ownership"
+          title="Assign staff and meter coverage"
+          description="Route ownership determines who should read the meter path and who should handle bill distribution for that same field area."
+        />
 
         <div className="mt-6 grid gap-5 xl:grid-cols-2">
           <form
-            className="space-y-4 rounded-[1.4rem] border border-[#dbe9e5] bg-[#fbfdfc] p-4"
+            className="space-y-4 border-t border-border/60 pt-4"
             onSubmit={(event) => {
               event.preventDefault();
               runAction(async () => {
@@ -385,7 +375,7 @@ export function RouteOperationsManager({
           </form>
 
           <form
-            className="space-y-4 rounded-[1.4rem] border border-[#dbe9e5] bg-[#fbfdfc] p-4"
+            className="space-y-4 border-t border-border/60 pt-4"
             onSubmit={(event) => {
               event.preventDefault();
               runAction(async () => {
@@ -474,7 +464,7 @@ export function RouteOperationsManager({
             {serverError}
           </p>
         ) : null}
-      </article>
+      </AdminSurfacePanel>
     </section>
   );
 }

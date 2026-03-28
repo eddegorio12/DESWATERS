@@ -3,6 +3,10 @@ import { MeterStatus, RouteResponsibility } from "@prisma/client";
 import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
+import {
   getSearchParamText,
   matchesSearch,
   type SearchParamValue,
@@ -258,20 +262,13 @@ export default async function AdminReadingsPage({ searchParams }: ReadingsPagePr
           <ReadingForm meters={meterOptions} />
         </section>
       ) : (
-        <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-          <div className="space-y-2">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-              Read-Only Entry
-            </p>
-            <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-              This role cannot encode new readings.
-            </h2>
-            <p className="text-sm leading-6 text-muted-foreground">
-              Meter reading entry remains limited to field readers, managers, and admins.
-              You can still review pending submissions and recent reading history here.
-            </p>
-          </div>
-        </section>
+        <AdminSurfacePanel>
+          <AdminSurfaceHeader
+            eyebrow="Read-Only Entry"
+            title="This role cannot encode new readings."
+            description="Meter reading entry remains limited to field readers, managers, and admins. You can still review pending submissions and recent reading history here."
+          />
+        </AdminSurfacePanel>
       )}
 
       <PendingReadingApprovals

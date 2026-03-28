@@ -98,6 +98,7 @@ Current progress:
 - The local migration, seeded super-admin path, and sign-in verification have now been completed successfully.
 - Password management is now minimally covered through self-service password change and SUPER_ADMIN temporary-password reset actions.
 - Temporary-password enforcement is now active through Auth.js session flags, route protection, and server-side authorization checks.
+- Admin-account management actions now also persist first-class audit events through `AuthAdminManagementEvent`, and `/admin/staff-access` now exposes a dedicated audit trail for account creation, role changes, activation changes, lockout clearing, and password-reset activity.
 
 Implemented role access expectations:
 - `SUPER_ADMIN`: full access across all protected admin modules plus admin management.
@@ -188,7 +189,7 @@ Current progress:
 - The public marketing surface now includes reusable DWDS brand assets plus screenshot-style product previews aligned to the implemented dashboard, billing, and follow-up modules.
 - Home, platform, workflows, and rollout pages now use deployment-ready copy that distinguishes live operational scope from future consumer-facing expansion.
 - The shared DWDS logo lockup now uses transparent PNG brand assets across the navbar, footer, auth shell, and dashboard hero, with branded browser/app icons under `src/app/`.
-- EH6 has been user-validated and is now closed. Do not begin EH7 unless the user explicitly approves that tooling work.
+- EH6 has been user-validated and is now closed. The next public-site work should build on EH14.2 through website fundamentals, conversion clarity, and trust/accessibility proof rather than reopening basic branding work.
 
 ### EH7: Tooling & Design Workflow Recovery
 **Priority:** Low
@@ -262,14 +263,17 @@ Recommended implementation order:
 1. Define exception rules and alert severity model.
 2. Add complaint, work-order, and service-history schema support.
 3. Build protected exception-monitoring and field-service routes.
-4. Add optional photo upload path only when storage is explicitly enabled.
+4. Add protected field-proof image upload support tied to completed work orders.
 5. Validate alert accuracy against seeded abnormal cases and recent billing/payment flows.
 
 Current progress:
 - `/admin/exceptions` now exists as the first EH9 operational slice, with protected access for admin, billing, cashier, and technician roles plus server-side alert severity modeling.
 - The initial rule set now scans live records for missing readings, abnormal consumption spikes or drops, possible leak patterns, duplicate-payment posting patterns, near-disconnection receivables, and service-status mismatches.
 - EH9 has now been user-validated for this implemented exception-monitoring slice.
-- Complaint ticketing, technician assignment, work-order lifecycle tracking, repair history, leak-report records, and optional photo upload support remain deferred until explicitly approved as a future expansion pass.
+- Complaint intake now also feeds a tested and validated field-service follow-on: `/admin/exceptions` can dispatch complaint-driven work orders with technician assignment, scheduled visits, progress updates, completion logging, and complaint auto-resolution.
+- EH9 now also persists user-validated dedicated `LeakReport` records for leak-category complaints and durable `RepairHistory` records whenever field work completes, so leak tracking and completed repair review no longer depend only on mutable queue state.
+- EH9 now also adds tested and validated first-class `MeterReplacementHistory` records tied to completed meter-linked work orders, including replaced-to-installed meter linkage, optional final-reading capture, automatic old-meter `REPLACED` state handling, and visible replacement history on `/admin/exceptions` plus `/admin/meters`.
+- EH9 now also adds tested and validated `FieldWorkProof` uploads for completed work orders, with protected local storage, protected file serving on `/admin/exceptions/proofs/[proofId]`, and proof review on both active work orders and completed repair history.
 
 ### EH10: Consumer Communication & Notice Management
 **Priority:** Medium
@@ -329,8 +333,9 @@ Current progress:
 - Auth.js credentials sign-in now records login attempts, captures IP and user-agent metadata when available, enforces failed-login lockout, and uses a shorter session lifetime.
 - `/admin/staff-access` now shows lockout state plus recent login history, and `SUPER_ADMIN` can clear a locked account.
 - `/admin/system-readiness` now exposes backup snapshot logging, environment-readiness checks, and an in-app restore checklist.
-- EH11 has now been user-validated and is closed.
-- Optional `SUPER_ADMIN` 2FA, automated backup/export downloads, and deeper restore automation remain pending only as later EH11 refinements if explicitly approved.
+- `/admin/system-readiness/export` now provides protected CSV and JSON recovery exports covering the current snapshot register, recent login outcomes, environment-readiness flags, and restore checklist.
+- EH11 has now been user-validated and is closed for its core scope, with the export/download refinement now also implemented and validated.
+- Optional `SUPER_ADMIN` 2FA is now implemented through protected dashboard setup, encrypted TOTP secret storage, one-time recovery codes, sign-in enforcement, and visible staff-access audit state. Deeper restore automation remains a later EH11 refinement only if explicitly approved.
 
 ### EH12: Route Operations & Management Analytics
 **Priority:** Medium
@@ -360,7 +365,8 @@ Current progress:
 - Route-grouped and zone-grouped print batches now persist linked route/zone IDs when all selected bills belong to a single mapped route or zone.
 - Billing print and distribution tracking now auto-filters bill selection by grouping, derives default batch labels from the chosen scope, and can auto-fill the assigned distributor from route ownership.
 - EH12 has now been user-validated for this implemented route-operations slice.
-- Broader management dashboards for billed-versus-collected trends, top-loss/high-complaint areas, and disconnection-to-reconnection trends remain pending.
+- `/admin/routes` now also exposes a user-validated management-analytics slice with billed-versus-collected cycle rows, overdue-aging balance buckets, and disconnection-versus-reinstatement activity that all honor the active route filter/search view.
+- `/admin/routes` now also includes a first-class complaint intake panel plus complaint hotspot visibility built from route-linked complaint records instead of inferred proxies.
 
 ### EH13: Workflow Usability & Operator Efficiency
 **Priority:** High
@@ -398,35 +404,62 @@ Current progress:
 - `EH13.3a` is now complete as a narrow-screen audit recorded in `memory-bank/eh13.3a-narrow-screen-audit.md`.
 - That audit identifies five immediate responsive targets for `EH13.3b`: compact mobile navigation, shared dense-table card fallbacks, tighter dashboard/page hero shells, normalized follow-up action rows, and route-operations density relief on narrower viewports.
 - `EH13.3b` is now validated.
-- `EH13.4` is now implemented through a shared semantic status-priority layer for pending, overdue, read-only, ready, success, and attention-required states across the active EH13 surfaces plus adjacent admin workflow boards.
-- `EH13.5` is now implemented as the final consistency sweep for explicit filter-action wording, roadmap-copy cleanup on live admin pages, and stronger next-step empty states across adjacent admin boards.
-- EH13 has now been fully validated and closed as a complete usability lane before post-EH13 roadmap work begins.
-- EH12 management analytics, dedicated admin-management audit logging, and later deferred EH9/EH11 refinements should remain sequenced behind this active EH13 completion pass unless the user explicitly reprioritizes.
-
-Recommended task sequence:
-1. `EH13.2a` Meters list-surface upgrade. Completed.
-2. `EH13.2b` Routes workspace scanability pass. Validated.
-3. `EH13.2c` Collections and exceptions consistency pass. Validated.
-4. `EH13.2d` Follow-up workspace priority pass. Validated.
-5. `EH13.3a` Narrow-screen audit across dashboard, navigation, queues, and table-heavy modules. Completed and validated.
-6. `EH13.3b` Responsive fallback patterns for dense tables and action-heavy surfaces. Implemented and validated.
-7. `EH13.4` Shared visual priority system for pending, overdue, read-only, ready, success, and attention-required states. Implemented.
-8. `EH13.5` Final usability sweep for copy, filter vocabulary, empty states, and next-step cues. Implemented.
-
-## Current Next Recommendation
-
-EH13 is now closed. Continue the focused EH14 visual-composition rollout across the remaining marketing and admin summary surfaces, then resume the roadmap with broader EH12 management analytics, then dedicated admin-management audit logging.
-
-Target outcomes:
-1. Reduce card overuse and nested panel density on the most visible admin and marketing surfaces.
-2. Preserve the implemented EH8 through EH13 workflows while making the product feel more deliberate and less template-driven.
-3. Resume broader EH12 management analytics on top of that more stable visual baseline.
-4. Add dedicated admin-management audit logging without reopening the completed EH13 workflow-usability lane.
-5. Keep deployment hardening and Supabase/Vercel setup on the release path while treating composition refinement, analytics, and audit logging as the current product-facing follow-up work.
 
 ### EH14: Visual Composition & Anti-Template Refinement
 **Priority:** High
 **Status:** In progress
+**Depends on:** EH13 complete; benefits from EH6 already being stable
+
+Scope:
+1. Reduce repeated card-on-card composition across key admin and marketing surfaces.
+2. Strengthen hierarchy through lighter section framing, row/list composition, and clearer dashboard-console primitives.
+3. Refine the public website so it feels deployment-ready, not template-assembled.
+4. Add website fundamentals on top of the refined marketing direction: metadata, sitemap/robots, social previews, clearer CTA conversion, trust proof, and accessibility verification.
+
+Exit criteria:
+- The most visible admin and marketing surfaces no longer depend on equal-weight card grids for basic hierarchy.
+- The homepage and secondary marketing routes communicate one clear staff-facing story with stronger public trust signals.
+- Public routes are technically ready for sharing and indexing through complete metadata and crawler-facing basics.
+
+Recommended implementation order:
+1. Complete the public-site fundamentals pass after EH14.2: canonical/social metadata, sitemap/robots, share previews, and CTA wiring.
+2. Roll the lighter composition language across remaining marketing routes.
+3. Extend the same composition discipline to adjacent admin summary and directory surfaces.
+4. Re-run public-route smoke checks plus accessibility and reduced-motion verification.
+
+Current progress:
+- EH14 is now in progress through shared composition primitives, protected-shell cleanup, dashboard-console refinement, and homepage proof-led refinement.
+- EH14.1 is now implemented for the admin dashboard and protected shell.
+- EH14.2 is now validated for the homepage.
+- EH14.3 is now implemented as the public-site fundamentals pass: shared metadata helpers, canonical and social coverage, generated Open Graph and Twitter previews, `robots` plus `sitemap` routes, a dedicated `/contact` rollout path, and stronger trust/conversion panels on the remaining marketing pages.
+- EH14.4 now extends the newer composition language to the remaining summary-heavy admin boards: `/admin/staff-access`, `/admin/system-readiness`, and `/admin/tariffs`.
+- EH14.5 now validates the public accessibility verification sweep through skip-link support, shared keyboard-focus visibility, navigation `aria-current` state, semantic list cleanup, decorative-icon hiding, and reduced-motion-safe marketing reveal behavior.
+- `EH13.4` is now implemented through a shared semantic status-priority layer for pending, overdue, read-only, ready, success, and attention-required states across the active EH13 surfaces plus adjacent admin workflow boards.
+- `EH13.5` is now implemented as the final consistency sweep for explicit filter-action wording, roadmap-copy cleanup on live admin pages, and stronger next-step empty states across adjacent admin boards.
+- EH13 has now been fully validated and closed as a complete usability lane before post-EH13 roadmap work begins.
+- The follow-on EH14 protected-surface review now also reaches `/admin/customers`, `/admin/meters`, and `/admin/routes`, where creation, assignment, transfer, and route-side support panels now inherit the same lighter admin-surface framing used on the already-updated secondary boards.
+- The next EH14-adjacent target is now broader EH12 management analytics on top of that stabilized protected-surface baseline.
+- EH12 management analytics and later deferred EH9/EH11 refinements should remain sequenced behind the active EH14 rollout unless the user explicitly reprioritizes.
+
+Recommended task sequence:
+1. `EH14.1` Admin dashboard console refinement. Implemented.
+2. `EH14.2` Landing-page proof-led refinement. Validated.
+3. `EH14.3` Website fundamentals: metadata, crawler routes, share previews, and public rollout conversion path. Implemented.
+4. `EH14.4` Summary-heavy admin-board composition rollout. Implemented.
+5. `EH14.5` Public accessibility verification sweep. Validated.
+
+## Current Next Recommendation
+
+Continue the roadmap from the validated EH12 management analytics slice, with dedicated admin-management audit logging now in place on top of the stabilized EH14 protected-surface baseline.
+
+Target outcomes:
+1. Reduce card overuse and nested panel density on the most visible admin and marketing surfaces.
+2. Preserve the implemented EH8 through EH13 workflows while making the product feel more deliberate and less template-driven.
+3. Keep deployment hardening and Supabase/Vercel setup on the release path while treating composition refinement, analytics, and audit logging as the current product-facing follow-up work.
+
+### EH14: Visual Composition & Anti-Template Refinement
+**Priority:** High
+**Status:** Validated
 **Depends on:** EH13 complete
 
 Scope:
@@ -465,9 +498,7 @@ Current rollout status:
 Post-EH13 sequencing:
 1. Run EH14 visual composition and anti-template refinement.
 2. Resume EH12 with broader management analytics.
-3. Add dedicated admin-management audit logging.
-4. Revisit later EH11 refinements such as optional `SUPER_ADMIN` 2FA and automated backup/export support only if still needed.
-5. Revisit later EH9 field-service expansion only if operations explicitly prioritizes it.
+3. Revisit only later EH11 security refinements beyond the now-implemented optional `SUPER_ADMIN` 2FA if product priorities reopen that lane.
 
 Current progress:
 - Shared composition primitives now distinguish lighter-weight sections from full `dwds-panel` cards so summary and navigation content do not always inherit the same heavy treatment.
@@ -475,7 +506,7 @@ Current progress:
 - `/admin/dashboard` now emphasizes one primary workflow board, one compact KPI strip, and one denser module directory instead of multiple competing card grids.
 - The public home and platform pages plus the shared product-showcase component now use editorial row/split-layout patterns instead of repeating equal-weight tile sections.
 - `EH14.1` is now implemented through shared `DashboardMetricCard`, `DashboardPanel`, `ActionRow`, and `SectionHeader` primitives plus a tighter `SidebarNavItem` treatment for the protected shell and admin dashboard.
-- `EH14.2` is now implemented on the homepage itself: the hero now carries one sharper operational promise, the page introduces an early deployment-readiness trust strip, workflow proof is screenshot-led, CTA language now repeats a tighter platform-versus-rollout pair, and the homepage no longer depends on several equal-weight feature-card sections.
+- `EH14.2` is now validated on the homepage itself: the hero now carries one sharper operational promise, the page introduces an early deployment-readiness trust strip, workflow proof is screenshot-led, CTA language now repeats a tighter platform-versus-rollout pair, and the homepage no longer depends on several equal-weight feature-card sections.
 - Remaining EH14 work should now continue across the other marketing pages and any secondary admin summary surfaces that still overuse nested bordered tiles.
 
 ### EH14.1: Admin Dashboard Console Refinement
@@ -551,6 +582,117 @@ Current progress:
 - The homepage now introduces an early readiness strip for internal auth posture, billing governance, managed-Postgres deployment fit, and printable-output coverage.
 - Product proof now leans on three large screenshot-led workflow sections covering meter-to-bill control, daily billing-plus-collections oversight, and overdue or route-aware operational follow-through.
 - The prior equal-weight module, product-view, reporting, and brand-principle blocks have been collapsed into a denser editorial structure so the homepage reads less like a feature catalog.
+
+### EH14.3: Website Fundamentals & Public Conversion Path
+**Priority:** Highest within EH14 after EH14.2 validation
+**Status:** Implemented
+**Depends on:** EH14.2 validated
+
+Scope:
+1. Add canonical and social metadata support across the public routes.
+2. Add crawler-facing `robots` and `sitemap` coverage.
+3. Generate a share-ready Open Graph and Twitter preview inside the app.
+4. Establish one clear public rollout/contact path instead of leaving CTA flow purely informational.
+5. Add stronger trust and deployment-readiness framing to the secondary marketing pages.
+
+Exit criteria:
+- Public routes expose canonical, Open Graph, and Twitter metadata through shared configuration.
+- The app serves `robots.txt`, `sitemap.xml`, and a reusable share image route.
+- Public CTA flow leads to one rollout/contact route instead of scattered page-only navigation.
+- Secondary marketing pages reinforce trust, governance, and deployment readiness rather than stopping at feature description.
+
+Current progress:
+- `src/features/marketing/lib/site-config.ts` and `metadata.ts` now centralize the site URL, public contact email, canonical handling, and social metadata generation.
+- `src/app/opengraph-image.tsx`, `src/app/twitter-image.tsx`, `src/app/robots.ts`, and `src/app/sitemap.ts` now provide share-preview generation plus crawler coverage from the app.
+- `/contact` now exists as the public rollout-contact route, and the homepage plus secondary marketing pages now drive users toward that single implementation-oriented path.
+- Secondary marketing pages now close with repeated trust-and-conversion panels so public messaging stays closer to deployment readiness than to generic brochure copy.
+
+### EH14.4: Summary-Heavy Admin Surface Rollout
+**Priority:** High within EH14 after EH14.3
+**Status:** Implemented
+**Depends on:** EH14.1 and the active shared composition primitives
+
+Scope:
+1. Extend the newer divider-led admin composition language to the remaining summary-heavy protected boards.
+2. Reduce repeated bordered-card stacking on staff access, system readiness, and tariff registry surfaces.
+3. Reuse shared admin-surface primitives instead of introducing another one-off styling branch.
+
+Exit criteria:
+- `staff-access`, `system-readiness`, and `tariffs` read as part of the same EH14 admin language as the dashboard and shared shell.
+- Summary and management content rely less on nested cards and more on divider-led grouping, compact stat blocks, and denser row composition.
+- The updated surfaces still pass lint/build and do not change any underlying server-authoritative workflows.
+
+Current progress:
+- `src/features/admin/components/admin-surface-panel.tsx` now defines the shared lighter-weight panel and section-header treatment for these protected admin boards.
+- `src/features/auth/components/staff-access-board.tsx` now uses divider-led directory rows, denser account summaries, and less repeated panel framing.
+- `src/features/system-readiness/components/system-readiness-board.tsx` now uses the same shared treatment across snapshot logging, environment readiness, restore guidance, history, and recent sign-in signal.
+- `src/features/tariffs/components/tariff-list.tsx` plus `/admin/tariffs` now use the same composition baseline for the tariff registry and read-only access state.
+
+### EH14.5: Public Accessibility Verification Sweep
+**Priority:** High within EH14 after EH14.4
+**Status:** Validated
+**Depends on:** EH14.3 public-site baseline
+
+Scope:
+1. Verify keyboard traversal and visible focus on the public marketing routes.
+2. Add a skip link and other structural navigation affordances where needed.
+3. Ensure reduced-motion users do not start with hidden or delayed marketing content.
+4. Tighten public navigation semantics such as active-page indication.
+
+Exit criteria:
+- Keyboard users can skip directly to main content and retain visible focus treatment across public navigation and CTA controls.
+- Marketing reveal components do not leave content hidden when `prefers-reduced-motion` is enabled.
+- Public navigation exposes stronger semantic current-page state.
+
+Current progress:
+- `src/features/marketing/components/marketing-shell.tsx` now exposes a skip link plus a stable `main` target.
+- `src/app/globals.css` now adds shared visible focus treatment for links, buttons, fields, and summary controls.
+- `src/features/marketing/components/site-nav.tsx` now exposes `aria-current="page"` for the active public route and stronger focus-visible treatment.
+- `src/features/marketing/components/scroll-animate.tsx` now initializes visible state safely for reduced-motion users so content is not hidden by the reveal helper.
+- Public marketing content now removes false click affordances from non-interactive homepage summary cards, exposes a labeled footer navigation landmark, and uses more semantic list structure for checklist-style content.
+- Decorative Lucide icons used in public marketing copy are now explicitly hidden from assistive technology where they do not add meaning.
+- Manual QA across `/`, `/platform`, `/workflows`, `/rollout`, and `/contact` has now passed for keyboard traversal, skip-link behavior, visible focus, active-route semantics, and reduced-motion handling.
+
+### EH14 Follow-On Protected Surface Review
+**Priority:** High after EH14.5 validation
+**Status:** In progress
+**Depends on:** EH14.4 and EH14.5 validated
+
+Scope:
+1. Review remaining protected admin boards that still lean on older equal-weight summary-card stacks.
+2. Move the clearest lagging surfaces onto the shared `AdminSurfacePanel` and divider-led composition language.
+3. Keep queue-heavy workflow areas intact while reducing unnecessary nested framing on supporting summary sections.
+
+Current progress:
+- `/admin/collections` now refactors its filter, collections summary, and receivables summary surfaces away from repeated standalone cards into shared admin-surface panels with denser stat rows and grouped follow-up mix treatment.
+- `/admin/exceptions` now refactors its detection-policy and severity-overview sections into the same lighter-weight protected-surface language so the alert queue remains the dominant task object.
+- `/admin/readings` now moves its field-entry panel, recent-history panel, and read-only fallback onto the same shared admin-surface framing so the page no longer mixes newer queues with older standalone summary cards.
+- `/admin/payments` now moves its cashier-entry panel and settlement-preview blocks onto that same lighter-weight composition baseline while preserving the existing payment-history list behavior.
+- `/admin/customers`, `/admin/meters`, and `/admin/routes` now also use the same EH14 protected-surface framing for creation, assignment, transfer, and route-side support sections instead of the older equal-weight panel stack.
+- `/admin/billing` now also uses that shared EH14 protected-surface language for cycle-governance support sections and open-bill review so the main billing queue no longer sits beside older heavy summary cards.
+- `/admin/follow-up` now also uses the same lighter-weight protected-surface framing for the action ladder, communication log, and service-action boards while keeping the bill-level urgency queue as the dominant task object.
+- Targeted linting for the touched collections, exceptions, readings, and payments components has completed successfully.
+
+### EH12 Follow-On Analytics: Loss-Risk Watchlist
+**Priority:** High after the current validated route analytics baseline
+**Status:** Implemented
+**Depends on:** current EH12 route analytics baseline already in repo
+
+Scope:
+1. Add a route-level watchlist for the largest recent billed-versus-collected gaps.
+2. Keep the feature explicitly framed as a revenue-loss proxy rather than a physical-loss or complaint model.
+3. Reuse existing route, bill, and payment records so the feature does not imply unsupported source-production or complaint analytics.
+
+Exit criteria:
+- `/admin/routes` exposes a clearly labeled route watchlist for recent collection-gap pressure.
+- The UI states that the metric is a proxy built from recent billed-versus-collected data plus overdue exposure.
+- Complaint-area visibility remains deferred until the repo has an approved complaint data model.
+
+Current progress:
+- `src/app/(dashboard)/admin/routes/page.tsx` now derives a route loss-risk watchlist from the last three billing months of billed-versus-collected gap plus current overdue exposure.
+- `src/features/routes/components/route-scoreboard.tsx` now surfaces that watchlist as a dedicated management panel and explicitly labels it as a revenue-loss proxy.
+- The supporting helper layer in `src/features/routes/lib/route-analytics.ts` now includes a shared clamp helper used by the route-risk score calculation.
+- Complaint-area visibility is no longer deferred: Prisma now includes a first-class `Complaint` model, `/admin/routes` can log route-linked complaints, and the route scoreboard now ranks complaint hotspots alongside the existing loss-risk proxy.
 
 ## Backlog Intake Rule
 Any new future work should be added here as a named enhancement phase with:

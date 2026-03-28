@@ -6,6 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
+import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
 import { assignMeterToCustomer } from "@/features/meters/actions";
 import {
   meterAssignmentSchema,
@@ -66,19 +70,12 @@ export function MeterAssignmentForm({
   });
 
   return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-      <div className="space-y-2">
-        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Assign Meter
-        </p>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-          Link an unassigned meter to a customer
-        </h2>
-        <p className="text-sm leading-6 text-muted-foreground">
-          Only meters without a customer appear here. Assigned meters immediately surface in
-          the customer registry.
-        </p>
-      </div>
+    <AdminSurfacePanel>
+      <AdminSurfaceHeader
+        eyebrow="Assign Meter"
+        title="Link an unassigned meter to a customer"
+        description="Only meters without a customer appear here. Assigned meters immediately surface in the customer registry."
+      />
 
       <form className="mt-6 space-y-5" onSubmit={onSubmit} noValidate>
         <div>
@@ -152,6 +149,6 @@ export function MeterAssignmentForm({
           {isPending ? "Assigning meter..." : "Assign meter"}
         </Button>
       </form>
-    </section>
+    </AdminSurfacePanel>
   );
 }

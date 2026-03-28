@@ -62,3 +62,6 @@ __pycache__/
 
 # local sample/reference uploads
 public/codebase.png
+
+# local protected upload storage
+/storage/

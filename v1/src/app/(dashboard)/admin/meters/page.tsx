@@ -71,6 +71,21 @@ export default async function AdminMetersPage({ searchParams }: MeterPageProps) 
             },
           },
         },
+        replacedMeterHistory: {
+          orderBy: [{ replacementDate: "desc" }],
+          take: 3,
+          select: {
+            id: true,
+            replacementDate: true,
+            finalReading: true,
+            reason: true,
+            replacementMeter: {
+              select: {
+                meterNumber: true,
+              },
+            },
+          },
+        },
       },
     }),
     prisma.customer.findMany({
@@ -84,6 +99,7 @@ export default async function AdminMetersPage({ searchParams }: MeterPageProps) 
     prisma.meter.findMany({
       where: {
         customerId: null,
+        status: "ACTIVE",
       },
       orderBy: [{ createdAt: "desc" }],
       select: {
@@ -128,6 +144,10 @@ export default async function AdminMetersPage({ searchParams }: MeterPageProps) 
             transfer.toCustomer.accountNumber,
             transfer.reason,
           ]),
+          ...meter.replacedMeterHistory.flatMap((entry) => [
+            entry.replacementMeter.meterNumber,
+            entry.reason,
+          ]),
         ],
         query
       )
@@ -138,7 +158,7 @@ export default async function AdminMetersPage({ searchParams }: MeterPageProps) 
   const activeMeterCount = meters.filter((meter) => meter.status === "ACTIVE").length;
   const routedMeterCount = meters.filter((meter) => meter.serviceRoute).length;
   const assignedMeters = meters.flatMap((meter) =>
-    meter.customer
+    meter.customer && meter.status === "ACTIVE"
       ? [
           {
             id: meter.id,

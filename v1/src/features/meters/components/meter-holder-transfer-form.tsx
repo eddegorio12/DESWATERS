@@ -6,6 +6,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
+import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
 import { transferMeterHolder } from "@/features/meters/actions";
 import {
   meterHolderTransferSchema,
@@ -85,19 +89,12 @@ export function MeterHolderTransferForm({
   });
 
   return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-      <div className="space-y-2">
-        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Replace Holder
-        </p>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-          Transfer a meter to a new account holder
-        </h2>
-        <p className="text-sm leading-6 text-muted-foreground">
-          Keep the service meter in place, move future billing to the replacement account, and
-          capture the turnover reading for audit purposes.
-        </p>
-      </div>
+    <AdminSurfacePanel>
+      <AdminSurfaceHeader
+        eyebrow="Replace Holder"
+        title="Transfer a meter to a new account holder"
+        description="Keep the service meter in place, move future billing to the replacement account, and capture the turnover reading for audit purposes."
+      />
 
       <form className="mt-6 space-y-5" onSubmit={onSubmit} noValidate>
         <div>
@@ -225,6 +222,6 @@ export function MeterHolderTransferForm({
           {isPending ? "Replacing holder..." : "Replace holder"}
         </Button>
       </form>
-    </section>
+    </AdminSurfacePanel>
   );
 }

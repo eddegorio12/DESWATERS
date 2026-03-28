@@ -5,6 +5,10 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { buttonVariants } from "@/components/ui/button-variants";
+import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
 import { RecordListSection } from "@/features/admin/components/record-list-section";
 import { StatusPill } from "@/features/admin/components/status-pill";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
@@ -269,42 +273,35 @@ export function FollowUpBoard({
         </p>
       ) : null}
 
-      <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-          <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary/72">
-              Action Ladder
-            </p>
-            <h2 className="mt-2 font-heading text-2xl text-foreground sm:text-3xl">
-              Escalate overdue balances by urgency, then handle service status separately.
-            </h2>
-            <p className="mt-3 text-sm leading-6 text-muted-foreground sm:leading-7">
-              Review bills by urgency first, then use the service-action panel for
-              disconnection or reinstatement once the account reaches the right stage.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <article className="rounded-[1.4rem] border border-border/80 bg-secondary/35 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Ready for disconnection
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-foreground">
-                {focusCounts.READY_FOR_DISCONNECTION}
-              </p>
-            </article>
-            <article className="rounded-[1.4rem] border border-border/80 bg-secondary/35 px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                Disconnected hold
-              </p>
-              <p className="mt-2 text-2xl font-semibold text-foreground">
-                {focusCounts.DISCONNECTED_HOLD}
-              </p>
-            </article>
-          </div>
-        </div>
+      <AdminSurfacePanel>
+        <AdminSurfaceHeader
+          eyebrow="Action Ladder"
+          title="Escalate overdue balances by urgency, then handle service status separately."
+          description="Review bills by urgency first, then use the service-action panel for disconnection or reinstatement once the account reaches the right stage."
+          aside={
+            <div className="grid gap-3 sm:grid-cols-2">
+              <article className="rounded-[1.1rem] border border-border/65 bg-secondary/24 px-4 py-3">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
+                  Ready for disconnection
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">
+                  {focusCounts.READY_FOR_DISCONNECTION}
+                </p>
+              </article>
+              <article className="rounded-[1.1rem] border border-border/65 bg-background/85 px-4 py-3">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
+                  Disconnected hold
+                </p>
+                <p className="mt-2 text-2xl font-semibold text-foreground">
+                  {focusCounts.DISCONNECTED_HOLD}
+                </p>
+              </article>
+            </div>
+          }
+        />
 
         <div className="mt-6 grid gap-4 md:grid-cols-3 xl:grid-cols-4">
-          <article className="rounded-[1.5rem] border border-[#dbe9e5] bg-white p-5">
+          <article className="rounded-[1.2rem] border border-border/65 bg-white/76 p-5">
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Needs reminder
@@ -315,7 +312,7 @@ export function FollowUpBoard({
               Overdue bills still at the first follow-up stage.
             </p>
           </article>
-          <article className="rounded-[1.5rem] border border-[#dbe9e5] bg-white p-5">
+          <article className="rounded-[1.2rem] border border-border/65 bg-white/76 p-5">
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Needs final notice
@@ -326,7 +323,7 @@ export function FollowUpBoard({
               Reminder already logged, so escalation is the next bill-level move.
             </p>
           </article>
-          <article className="rounded-[1.5rem] border border-[#dbe9e5] bg-white p-5">
+          <article className="rounded-[1.2rem] border border-border/65 bg-white/76 p-5">
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Ready for disconnection
@@ -337,7 +334,7 @@ export function FollowUpBoard({
               Final notice or disconnection review is already on record.
             </p>
           </article>
-          <article className="rounded-[1.5rem] border border-[#dbe9e5] bg-white p-5">
+          <article className="rounded-[1.2rem] border border-border/65 bg-white/76 p-5">
             <div className="flex items-center justify-between gap-3">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 Service action panel
@@ -349,27 +346,20 @@ export function FollowUpBoard({
             </p>
           </article>
         </div>
-      </section>
+      </AdminSurfacePanel>
 
       <section className="grid gap-4 xl:grid-cols-2">
         {serviceActions.filter((customer) => customer.canDisconnect).length ? (
-          <div className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  Service Enforcement
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-                  Customers ready for disconnection
-                </h2>
-              </div>
-              <StatusPill priority="overdue">
-                {
-                  serviceActions.filter((customer) => customer.canDisconnect).length
-                }{" "}
-                ready
-              </StatusPill>
-            </div>
+          <AdminSurfacePanel>
+            <AdminSurfaceHeader
+              eyebrow="Service Enforcement"
+              title="Customers ready for disconnection"
+              aside={
+                <StatusPill priority="overdue">
+                  {serviceActions.filter((customer) => customer.canDisconnect).length} ready
+                </StatusPill>
+              }
+            />
 
             <div className="mt-5 grid gap-4">
               {serviceActions
@@ -377,7 +367,7 @@ export function FollowUpBoard({
                 .map((customer) => (
                   <article
                     key={customer.id}
-                    className="rounded-[1.5rem] border border-[#dbe9e5] bg-background p-5"
+                    className="rounded-[1.25rem] border border-border/65 bg-white/76 p-5"
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
@@ -427,27 +417,20 @@ export function FollowUpBoard({
                   </article>
                 ))}
             </div>
-          </div>
+          </AdminSurfacePanel>
         ) : null}
 
         {serviceActions.filter((customer) => customer.canReinstate).length ? (
-          <div className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                  Reinstatement Review
-                </p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-foreground">
-                  Customers cleared for reconnection
-                </h2>
-              </div>
-              <StatusPill priority="success">
-                {
-                  serviceActions.filter((customer) => customer.canReinstate).length
-                }{" "}
-                ready
-              </StatusPill>
-            </div>
+          <AdminSurfacePanel>
+            <AdminSurfaceHeader
+              eyebrow="Reinstatement Review"
+              title="Customers cleared for reconnection"
+              aside={
+                <StatusPill priority="success">
+                  {serviceActions.filter((customer) => customer.canReinstate).length} ready
+                </StatusPill>
+              }
+            />
 
             <div className="mt-5 grid gap-4">
               {serviceActions
@@ -455,7 +438,7 @@ export function FollowUpBoard({
                 .map((customer) => (
                   <article
                     key={customer.id}
-                    className="rounded-[1.5rem] border border-[#dbe9e5] bg-background p-5"
+                    className="rounded-[1.25rem] border border-border/65 bg-white/76 p-5"
                   >
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
@@ -503,7 +486,7 @@ export function FollowUpBoard({
                   </article>
                 ))}
             </div>
-          </div>
+          </AdminSurfacePanel>
         ) : null}
       </section>
 

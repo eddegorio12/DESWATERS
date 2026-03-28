@@ -1,6 +1,12 @@
+import Link from "next/link";
+
 import { BackupSnapshotStatus } from "@prisma/client";
 
 import { StatusPill } from "@/features/admin/components/status-pill";
+import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
 import { logBackupSnapshot } from "@/features/system-readiness/actions";
 
 type BackupSnapshotRow = {
@@ -81,20 +87,13 @@ export function SystemReadinessBoard({
 }) {
   return (
     <div className="grid gap-6">
-      <section className="grid gap-6 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
-        <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-          <div className="space-y-2">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-              Snapshot Log
-            </p>
-            <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-              Record monthly backup exports
-            </h2>
-            <p className="text-sm leading-6 text-muted-foreground">
-              Managed PostgreSQL backups remain the primary recovery layer. Use this log to
-              record monthly exports and restore-test checkpoints inside DWDS.
-            </p>
-          </div>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
+        <AdminSurfacePanel>
+          <AdminSurfaceHeader
+            eyebrow="Snapshot Log"
+            title="Record monthly backup exports"
+            description="Managed PostgreSQL backups remain the primary recovery layer. Use this log to record monthly exports and restore-test checkpoints inside DWDS."
+          />
 
           <form action={logBackupSnapshot} className="mt-6 space-y-5">
             <div>
@@ -193,18 +192,42 @@ export function SystemReadinessBoard({
               Save snapshot log
             </button>
           </form>
-        </section>
+        </AdminSurfacePanel>
 
-        <section className="grid gap-6">
-          <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-            <div className="space-y-2">
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                Environment Readiness
-              </p>
-              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                Production recovery prerequisites
-              </h2>
+        <div className="grid gap-6">
+          <AdminSurfacePanel>
+            <AdminSurfaceHeader
+              eyebrow="Recovery Export"
+              title="Download the latest readiness bundle"
+              description="Use the protected export route to hand off the current snapshot log, recent sign-in outcomes, and environment-readiness state without rebuilding the report manually."
+            />
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href="/admin/system-readiness/export"
+                className="inline-flex h-11 items-center rounded-2xl bg-primary px-5 text-sm font-medium text-primary-foreground"
+              >
+                Download CSV export
+              </Link>
+              <Link
+                href="/admin/system-readiness/export?format=json"
+                className="inline-flex h-11 items-center rounded-2xl border border-border bg-white px-5 text-sm font-medium text-foreground"
+              >
+                Download JSON export
+              </Link>
             </div>
+
+            <p className="mt-4 text-sm text-muted-foreground">
+              The export includes the logged backup snapshot register, recent login outcomes, current
+              environment readiness flags, and the in-app restore checklist.
+            </p>
+          </AdminSurfacePanel>
+
+          <AdminSurfacePanel>
+            <AdminSurfaceHeader
+              eyebrow="Environment Readiness"
+              title="Production recovery prerequisites"
+            />
 
             <div className="mt-6 grid gap-4 md:grid-cols-3">
               {[
@@ -214,7 +237,7 @@ export function SystemReadinessBoard({
               ].map((item) => (
                 <article
                   key={item.label}
-                  className="rounded-[1.4rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#fbfdfc,#f4f8f7)] p-4"
+                  className="rounded-[1.2rem] border border-border/65 bg-secondary/24 p-4"
                 >
                   <p className="text-sm font-semibold text-foreground">{item.label}</p>
                   <p className="mt-2 text-sm text-muted-foreground">
@@ -228,17 +251,13 @@ export function SystemReadinessBoard({
                 </article>
               ))}
             </div>
-          </section>
+          </AdminSurfacePanel>
 
-          <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-            <div className="space-y-2">
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                Restore Procedure
-              </p>
-              <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-                Minimum recovery checklist
-              </h2>
-            </div>
+          <AdminSurfacePanel>
+            <AdminSurfaceHeader
+              eyebrow="Restore Procedure"
+              title="Minimum recovery checklist"
+            />
 
             <ol className="mt-6 space-y-3 text-sm leading-6 text-muted-foreground">
               <li>1. Confirm the latest managed Supabase backup and the latest logged monthly snapshot reference.</li>
@@ -247,21 +266,18 @@ export function SystemReadinessBoard({
               <li>4. Verify `/sign-in`, `/admin/dashboard`, `/admin/billing`, and `/admin/payments` before reopening staff access.</li>
               <li>5. Record the recovery result and any data-gap notes back into this workspace.</li>
             </ol>
-          </section>
-        </section>
-      </section>
-
-      <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Snapshot History
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Logged backup exports
-          </h2>
+          </AdminSurfacePanel>
         </div>
+      </div>
 
-        <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-[#dbe9e5]">
+      <AdminSurfacePanel>
+        <AdminSurfaceHeader
+          eyebrow="Snapshot History"
+          title="Logged backup exports"
+          aside={`${backupSnapshots.length} logged snapshot${backupSnapshots.length === 1 ? "" : "s"}`}
+        />
+
+        <div className="mt-6 overflow-hidden rounded-[1.5rem] border border-border/70">
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-border text-left">
               <thead className="bg-secondary/55">
@@ -315,23 +331,20 @@ export function SystemReadinessBoard({
             </table>
           </div>
         </div>
-      </section>
+      </AdminSurfacePanel>
 
-      <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-            Security Signal
-          </p>
-          <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-            Latest sign-in outcomes
-          </h2>
-        </div>
+      <AdminSurfacePanel>
+        <AdminSurfaceHeader
+          eyebrow="Security Signal"
+          title="Latest sign-in outcomes"
+          aside={`${recentLoginAttempts.length} recent event${recentLoginAttempts.length === 1 ? "" : "s"}`}
+        />
 
         <div className="mt-6 grid gap-3 md:grid-cols-3">
           {recentLoginAttempts.map((attempt) => (
             <article
               key={attempt.id}
-              className="rounded-[1.4rem] border border-[#dbe9e5] bg-[linear-gradient(180deg,#fbfdfc,#f4f8f7)] p-4"
+              className="rounded-[1.2rem] border border-border/65 bg-secondary/24 p-4"
             >
               <p className="text-sm font-semibold text-foreground">{attempt.email}</p>
               <div className="mt-2">
@@ -343,7 +356,7 @@ export function SystemReadinessBoard({
             </article>
           ))}
         </div>
-      </section>
+      </AdminSurfacePanel>
     </div>
   );
 }
