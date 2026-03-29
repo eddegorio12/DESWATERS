@@ -1,0 +1,127 @@
+# Feature Specs
+
+## EH15: Staff AI Assistant & Knowledge Retrieval
+
+### Goal
+Add a protected, staff-facing AI assistant that helps DWDS operators understand workflows, locate the correct module, clarify policy, and answer role-appropriate operational questions without taking actions on their behalf.
+
+### Product Position
+- This is an internal staff assistant, not a public chatbot.
+- The assistant should reduce operator confusion, shorten onboarding time, and improve consistency of workflow decisions.
+- The assistant should behave as a read-only guide in its first production slice.
+
+### Recommended V1 Scope
+- Dedicated protected route: `/admin/assistant`
+- Available to all signed-in staff accounts
+- Role-aware answers only
+- Documentation-first RAG
+- Narrow live-record lookup only when the user explicitly asks about a specific record and their role already permits access
+- Mandatory answer citations
+- Per-user saved chat history
+- No mutations, approvals, posting, or workflow transitions
+
+### Current Implemented Baseline
+- `/admin/assistant` is live as a protected internal workspace.
+- Retrieval now persists `memory-bank` and workflow-guide content into assistant knowledge-document and chunk tables with source metadata, role scope, hashes, and ingestion-run tracking.
+- Assistant searches now run against that stored corpus rather than rebuilding the retrieval set only in memory for each request.
+- Each submitted assistant question now creates or extends a user-owned conversation thread with saved user and assistant messages plus citation metadata.
+- The UI now exposes recent saved threads and stored-corpus sync state in the protected assistant workspace.
+
+### Supported Question Types
+- “How do I do this in DWDS?”
+- “Which module should I use for this task?”
+- “Why is this record showing this status?”
+- “What does this follow-up state mean?”
+- “What is the policy for this billing, route, or field workflow?”
+- “What should I check next?”
+
+### Disallowed V1 Behavior
+- No silent actions
+- No server mutations
+- No bill generation, payment posting, follow-up updates, or admin-account changes through chat
+- No disclosure of secrets, passwords, recovery codes, `.env` values, or hidden security internals
+- No answers outside the signed-in user’s role scope
+- No pretending to know when retrieval is weak or ambiguous
+
+### Answer Contract
+Each answer should:
+1. answer the question directly
+2. explain the basis briefly
+3. cite the supporting sources used
+4. acknowledge uncertainty when sources are incomplete or conflicting
+5. point the user to the correct DWDS module or next step when appropriate
+
+### Recommended RAG Sources For V1
+- `memory-bank/` planning and workflow documents
+- in-app workflow and policy copy from feature modules
+- curated server-authoritative workflow summaries added in-app where needed
+
+### Deferred Sources
+- Broad open-ended querying across all transactional records
+- Unbounded access to customer, billing, payment, route, complaint, and security datasets
+- Uploaded manual files outside the repository
+
+### Narrow Live-Data Policy For V1
+Live-data lookup is allowed only when all of the following are true:
+- the user asks about a specific record or clearly scoped operational context
+- the record belongs to a module the user may already access
+- the answer stays explanatory and read-only
+- the returned context is minimized to what is needed for the explanation
+
+### Retrieval Architecture Recommendation
+- Hybrid retrieval
+- PostgreSQL + `pgvector`
+- Section-aware chunking with metadata
+- Retrieval filtering by role, domain, route/module, and source type
+- Reranking before final prompt assembly
+
+### Suggested Chunk Metadata
+- `source_path`
+- `source_type`
+- `section_title`
+- `feature_domain`
+- `route_scope`
+- `role_scope`
+- `updated_at`
+
+### Model Recommendation
+- Default primary model: `openrouter/free` through OpenRouter
+- Default fallback path: `stepfun/step-3.5-flash:free`, then `nvidia/nemotron-3-super-120b-a12b:free`
+- Keep the model chain configurable so the feature does not hard-fail when one free model is unavailable
+
+### UI Recommendation
+- One dedicated assistant page in the protected admin area
+- Prompt input
+- Answer area
+- Visible citations
+- Related module/action links
+- Suggested starter prompts for common staff questions
+- Conversation history for the signed-in user only
+
+### Trust & Safety Rules
+- Never expose secrets or `.env` values
+- Never reveal raw security-sensitive material such as TOTP secrets or recovery codes
+- Never answer outside the current user’s authorized module scope
+- Never treat planning documents as permission to reveal hidden production data
+- Refuse or narrow the answer when the request exceeds role access
+
+### Observability
+- Log prompt metadata, retrieved sources, cited sources, model used, latency, and failure state
+- Do not log secrets or hidden chain-of-thought
+
+### Validation Baseline
+Before the assistant is treated as validated, test:
+- workflow clarification questions
+- role-boundary refusal questions
+- ambiguous or low-context questions
+- narrow live-record explanation questions
+
+### Recommended Delivery Order
+1. Add `EH15` to the roadmap and architecture docs
+2. Create the protected `/admin/assistant` route shell
+3. Add retrieval tables and `pgvector` support
+4. Build documentation ingestion and chunking
+5. Implement hybrid retrieval plus reranking
+6. Add role-aware response guards
+7. Add narrow live-record explanation helpers
+8. Run a fixed validation question set

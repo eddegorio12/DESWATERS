@@ -407,7 +407,7 @@ Current progress:
 
 ### EH14: Visual Composition & Anti-Template Refinement
 **Priority:** High
-**Status:** In progress
+**Status:** Complete
 **Depends on:** EH13 complete; benefits from EH6 already being stable
 
 Scope:
@@ -671,7 +671,57 @@ Current progress:
 - `/admin/customers`, `/admin/meters`, and `/admin/routes` now also use the same EH14 protected-surface framing for creation, assignment, transfer, and route-side support sections instead of the older equal-weight panel stack.
 - `/admin/billing` now also uses that shared EH14 protected-surface language for cycle-governance support sections and open-bill review so the main billing queue no longer sits beside older heavy summary cards.
 - `/admin/follow-up` now also uses the same lighter-weight protected-surface framing for the action ladder, communication log, and service-action boards while keeping the bill-level urgency queue as the dominant task object.
+- The billing open-bill review and follow-up communication log now also use the shared responsive table fallback with stacked mobile cards, and that narrower-screen EH14 follow-on is now user-validated.
+- The dashboard support area now also uses the same protected-surface language for self-service password changes and SUPER_ADMIN two-factor setup, so the account-security controls no longer fall back to the older standalone panel treatment.
+- That dashboard account-security slice has now been user-validated.
+- The protected printable bill, notice, and receipt routes now also share one reusable print-surface shell for the hero and paper container so document-facing admin pages no longer maintain parallel one-off framing logic.
+- The EH14 protected-surface follow-on is now fully validated and should be treated as closed rather than as an active in-progress sweep.
 - Targeted linting for the touched collections, exceptions, readings, and payments components has completed successfully.
+
+### EH15: Staff AI Assistant & Knowledge Retrieval
+**Priority:** High after the current validated EH14 protected-surface baseline
+**Status:** In progress
+**Depends on:** EH2 role boundaries, EH14 protected admin baseline, PostgreSQL runtime stability
+
+Scope:
+1. Add a protected `/admin/assistant` route for signed-in staff.
+2. Implement documentation-first RAG against the `memory-bank` and curated in-app workflow guidance.
+3. Keep answers role-aware and read-only in the initial slice.
+4. Add narrow live-record explanation lookups only for explicitly requested records within the user’s existing module access.
+5. Add citations, uncertainty handling, and per-user chat history.
+6. Use OpenRouter with `openrouter/free` as the default primary route plus a configurable fallback model chain.
+7. Store retrieval data inside the current PostgreSQL stack, preferably with `pgvector`, instead of adding a separate vector service.
+
+Exit criteria:
+- Staff can ask workflow and module-clarification questions from a protected assistant workspace.
+- Answers cite the supporting DWDS sources used.
+- The assistant refuses or narrows answers outside the user’s role scope.
+- V1 remains read-only and cannot trigger workflow mutations.
+- Retrieval quality is validated against a fixed internal question set before broader rollout.
+
+Recommended implementation order:
+1. Add the feature spec and roadmap documentation for EH15.
+2. Define the data model for embeddings, chunks, chat history, and retrieval metadata.
+3. Build ingestion/chunking for `memory-bank` and curated workflow guidance.
+4. Implement retrieval, reranking, and answer assembly with citations.
+5. Add the protected `/admin/assistant` UI and per-user conversation history.
+6. Add narrow live-record explanation helpers with role-aware access checks.
+7. Run an evaluation pass for workflow, refusal, ambiguity, and record-specific questions.
+
+Current recommendation:
+- Start with documentation-first RAG and avoid open-ended querying across all transactional records in the first slice.
+- Keep the assistant read-only in V1.
+- Use hybrid retrieval with metadata-aware filtering instead of pure semantic search.
+- The repo now includes an OpenRouter model-config layer that defaults to `openrouter/free` and falls back to `stepfun/step-3.5-flash:free` then `nvidia/nemotron-3-super-120b-a12b:free` when model-backed answer synthesis is switched on.
+
+Current progress:
+- `/admin/assistant` is now live as a protected staff workspace with role-aware guidance search, visible citations, and starter prompts.
+- Assistant retrieval is now persisted in PostgreSQL through dedicated assistant knowledge-document and chunk tables plus ingestion-run metadata for `memory-bank` and curated workflow-guide sources.
+- The assistant now saves per-user conversation history through dedicated conversation and message tables, and the protected UI now exposes recent saved threads for the signed-in account only.
+- The assistant now also supports OpenRouter-backed answer synthesis on top of retrieved role-safe sources, defaulting to `openrouter/free` with a configured free-model fallback chain when the API key is available.
+- The current popup-assistant implementation is now tested and validated for its shell-level chat UI, saved-thread behavior, multilingual prompt handling, and tariff-estimate helper path.
+- The current retrieval path still needs stronger reranking and source prioritization so operator-facing guidance outranks roadmap/progress text more reliably.
+- The next EH15 implementation target is retrieval-quality validation plus reranking on top of this persisted and model-backed baseline.
 
 ### EH12 Follow-On Analytics: Loss-Risk Watchlist
 **Priority:** High after the current validated route analytics baseline

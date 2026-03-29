@@ -14,6 +14,7 @@ Define the simplest stack that is still robust enough for an internal, money-han
 - **PostgreSQL** as the only production database
 - **Prisma v7** for schema, migrations, and data access
 - Next.js server actions and route handlers for business logic
+- **pgvector** in PostgreSQL is the recommended first vector store for the planned staff assistant
 
 ### Authentication and Security
 - **Auth.js Credentials** for internal staff sign-in
@@ -57,6 +58,7 @@ This is the simplest robust default because it avoids self-hosted database work,
 - No public signup or OAuth for the internal admin system
 - No event bus, queue system, or background worker service unless scale or reliability requirements prove they are necessary
 - No speculative vendor integrations before the workflow exists in the core app
+- No separate hosted vector database for the first assistant slice unless PostgreSQL proves insufficient
 
 ## Feature Guidance
 
@@ -94,6 +96,14 @@ This is the simplest robust default because it avoids self-hosted database work,
 - Add a charting library only when specific dashboards need it
 - Avoid a warehouse, BI stack, or separate analytics service in the current phase
 
+### Staff AI Assistant
+- Keep the first assistant slice inside the current Next.js + PostgreSQL + Prisma architecture
+- Use OpenRouter as the LLM gateway for the planned assistant feature
+- Default to `openrouter/free` for the first slice, with configured fallbacks such as `stepfun/step-3.5-flash:free` and `nvidia/nemotron-3-super-120b-a12b:free`
+- Prefer hybrid retrieval with metadata filtering and reranking over a pure embedding-only approach
+- Keep assistant answers read-only and role-aware in the first release
+- Persist assistant knowledge chunks, ingestion runs, and per-user conversation history in PostgreSQL before adding broader model-backed behavior
+
 ### Workflow Usability
 - Prefer reusable search/filter/status-chip controls implemented inside the current React/Tailwind/shadcn stack
 - Avoid introducing heavy grid frameworks or admin-template dependencies just to compensate for weak page-level UX
@@ -122,6 +132,7 @@ This is the simplest robust default because it avoids self-hosted database work,
 - The current EH9 field-service path now also keeps meter replacement history inside the same app and PostgreSQL core, linked directly to completed meter-linked work orders and the meter registry
 - The current EH9 field-service path now also keeps field-proof image metadata in the Prisma/PostgreSQL core while storing protected image files on local disk behind an authenticated route
 - The current planned improvement lane is a website-fundamentals pass on top of validated EH14.2, then broader EH14 composition refinement, then broader management analytics and audit/security refinements, not a tooling or platform rewrite
+- The newly planned EH15 assistant lane should follow that same bias: stay in the current app and PostgreSQL stack, prefer `pgvector` over a separate vector service, and treat retrieval quality and role-aware refusal behavior as product requirements rather than optional polish
 
 ## Practical Summary
 - **Keep:** Next.js, TypeScript, PostgreSQL, Prisma, Auth.js Credentials, bcrypt, built-in Node crypto for optional `SUPER_ADMIN` 2FA, Tailwind CSS, shadcn/ui, React Hook Form, Zod

@@ -5,6 +5,10 @@ import { notFound } from "next/navigation";
 
 import { buttonVariants } from "@/components/ui/button-variants";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
+import {
+  PrintableRecordPaper,
+  PrintableRecordShell,
+} from "@/features/admin/components/printable-record-shell";
 import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { getOutstandingBalance } from "@/features/follow-up/lib/workflow";
@@ -115,55 +119,42 @@ export default async function AdminPrintableNoticePage({
   const returnHref = notification.bill ? `/admin/billing/${notification.bill.id}` : "/admin/follow-up";
 
   return (
-    <main className="min-h-screen bg-[linear-gradient(180deg,#eef6f4_0%,#f7faf9_35%,#ffffff_100%)] px-4 py-6 print:min-h-0 print:bg-white print:px-0 print:py-0 sm:px-6 sm:py-8">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 print:max-w-none print:gap-0">
-        <header className="overflow-hidden rounded-[2rem] border border-[#d4e7e3] bg-[linear-gradient(135deg,#0f3f43,#1f5a60_55%,#2e7a7d)] px-6 py-6 text-white shadow-[0_32px_90px_-48px_rgba(16,63,67,0.88)] print:hidden lg:px-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-3xl space-y-2">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-white/70">
-                Printable Notice
-              </p>
-              <h1 className="font-heading text-4xl tracking-tight text-white">
-                Standardized customer communication
-              </h1>
-              <p className="max-w-2xl text-sm leading-7 text-white/78">
-                EH10 keeps printable notices tied to live billing and service records while
-                preserving the exact communication event in the DWDS log.
-              </p>
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <PrintNoticeButton />
-              <Link
-                href={returnHref}
-                className={cn(
-                  buttonVariants({
-                    variant: "outline",
-                    className:
-                      "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                  })
-                )}
-              >
-                Back to record
-              </Link>
-              <Link
-                href="/admin/follow-up"
-                className={cn(
-                  buttonVariants({
-                    variant: "outline",
-                    className:
-                      "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
-                  })
-                )}
-              >
-                Follow-up log
-              </Link>
-              <AdminSessionButton />
-            </div>
-          </div>
-        </header>
-
-        <section className="mx-auto w-full max-w-[210mm] overflow-hidden rounded-[2rem] border border-[#d9e7e4] bg-white shadow-[0_28px_80px_-54px_rgba(15,63,67,0.5)] print:max-w-none print:rounded-none print:border-0 print:shadow-none">
+    <PrintableRecordShell
+      eyebrow="Printable Notice"
+      title="Standardized customer communication"
+      description="EH10 keeps printable notices tied to live billing and service records while preserving the exact communication event in the DWDS log."
+      actions={
+        <>
+          <PrintNoticeButton />
+          <Link
+            href={returnHref}
+            className={cn(
+              buttonVariants({
+                variant: "outline",
+                className:
+                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
+              })
+            )}
+          >
+            Back to record
+          </Link>
+          <Link
+            href="/admin/follow-up"
+            className={cn(
+              buttonVariants({
+                variant: "outline",
+                className:
+                  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white",
+              })
+            )}
+          >
+            Follow-up log
+          </Link>
+          <AdminSessionButton />
+        </>
+      }
+    >
+      <PrintableRecordPaper>
           <div className="border-b border-[#d9e7e4] bg-[linear-gradient(180deg,#f8fbfb_0%,#f0f7f5_100%)] px-6 py-5 print:px-3 print:py-3">
             <div className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_18rem] print:gap-3 print:lg:grid-cols-[minmax(0,1fr)_9.5rem]">
               <div className="space-y-4 print:space-y-2">
@@ -331,8 +322,7 @@ export default async function AdminPrintableNoticePage({
               </div>
             </aside>
           </div>
-        </section>
-      </div>
-    </main>
+      </PrintableRecordPaper>
+    </PrintableRecordShell>
   );
 }

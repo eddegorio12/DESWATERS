@@ -32,6 +32,10 @@
 7. **Public-surface fundamentals are product architecture**
    - Treat metadata, crawlability, share previews, accessibility, and conversion handling as part of the public product surface, not as optional polish
    - Marketing routes should communicate one clear primary action and explicit trust proof for a staff-facing utility platform
+8. **AI assistance must stay role-aware and server-governed**
+   - Any future assistant must inherit the same authorization boundaries as the rest of the protected app
+   - Retrieval and live-record explanation must be filtered by role and module access before prompt assembly
+   - V1 should remain read-only until the assistant is validated as a trustworthy explanatory surface
 
 ## Product Naming Convention
 - **Formal name:** `DEGORIO WATER DISTRIBUTION SERVICES`
@@ -124,6 +128,8 @@
   - EH10 printable notice generation actions, print-log creation, and standalone notice rendering
 - `src/features/marketing/`
   - Shared public-site layout, navigation, footer, trust/conversion panels, site metadata helpers, brand lockup, screenshot showcase components, and centralized site content
+- `src/features/assistant/`
+  - EH15 assistant domain for retrieval ingestion, stored knowledge chunks, answer assembly, conversation history, and protected assistant UI
 - `src/features/admin/components/admin-surface-panel.tsx`
   - Shared lighter-weight protected-surface framing for summary-heavy admin boards that do not need the full dashboard-console card treatment
 - `src/app/layout.tsx`
@@ -194,6 +200,16 @@
 - The reporting workspace also summarizes unpaid, partially paid, and overdue receivables from open bills.
 - Overdue visibility now feeds an explicit follow-up workflow, but reporting remains focused on visibility rather than mutation controls.
 
+### Staff Assistant Workflow
+- EH15 is planned as a protected `/admin/assistant` route for signed-in staff.
+- The first assistant slice should retrieve from `memory-bank` documentation plus curated in-app workflow guidance before broader transactional data is considered.
+- The assistant is now also available as a protected shell-level popup so staff can ask for help without leaving the active module.
+- Assistant retrieval storage now persists documentation sources and chunks inside PostgreSQL through dedicated assistant knowledge and ingestion-run tables.
+- Assistant history now persists per signed-in user through dedicated assistant conversation and message tables exposed only on the protected workspace.
+- Any live-record explanation path should stay narrow, read-only, and role-aware, answering only explicitly requested record questions that the signed-in user already has module access to view.
+- Answer generation should include source citations, uncertainty handling, and next-module guidance where appropriate.
+- Retrieval data should stay inside the existing PostgreSQL architecture, preferably through `pgvector`, instead of adding a separate vector service in the first slice.
+
 ### Overdue & Disconnection Workflow
 - Open bills now carry explicit receivables follow-up states separate from printed bill wording.
 - Server-side synchronization keeps open bill status aligned with due dates and completed-payment totals.
@@ -233,9 +249,16 @@
 - EH14.4 now also introduces a smaller protected-surface panel/header primitive for summary-heavy admin boards so staff access, system readiness, and tariff registry can inherit the same anti-card-sprawl direction without pretending to be dashboard widgets.
 - That same protected-surface panel/header primitive now also extends into the collections and exceptions summary sections so reporting and anomaly-review boards no longer default to multiple equal-weight summary cards ahead of the main queue content.
 - That same protected-surface panel/header primitive now also extends into billing and follow-up support sections so cycle-governance controls, open-bill review, communication logging, and service-action boards no longer fall back to the older heavy standalone card stack.
+- The lagging billing open-bill review and follow-up communication-log tables now also reuse the shared responsive data-table pattern, adding stacked mobile-card fallbacks so the refined EH14 support sections do not regress into desktop-only overflow tables, and that refinement is now validated in the live protected workspace.
+- That same protected-surface panel/header primitive now also extends into the dashboard account-security area so self-service password changes and SUPER_ADMIN two-factor controls no longer fall back to older standalone panels inside the otherwise refined dashboard surface.
+- The dashboard account-security panel rollout is now validated as part of the active EH14 protected-surface composition baseline.
+- The protected printable bill, notice, and receipt routes now also share a small reusable print-surface shell so those document-facing admin routes inherit the same composition discipline instead of each maintaining their own duplicated hero and paper wrapper structure.
+- EH14 should now be treated as a closed architecture lane: the current protected shell, marketing baseline, summary-heavy admin boards, responsive support panels, account-security slice, and printable document surfaces all inherit the shared anti-card-sprawl composition system.
+- EH15 should extend the current protected admin architecture with one dedicated assistant surface rather than a cross-app floating agent first, so authorization, citation, and evaluation can be validated in one controlled workspace.
 - EH12 route analytics now also include a revenue-loss watchlist derived from recent billed-versus-collected gaps plus current overdue exposure, while route-linked complaint hotspot visibility is now backed by a first-class `Complaint` domain in the schema rather than inferred proxies.
 - The current architecture-level public-surface baseline now includes canonical/social metadata support, crawler-ready route metadata, generated share previews, and clearer CTA wiring without splitting the marketing surface into a separate app.
 - The next public-surface architecture task is continued manual accessibility QA while the current route structure and shared marketing primitives stay intact.
+- The next assistant-related architecture task is defining the EH15 retrieval/storage model, ingestion path, and role-filtered answer assembly before any mutation-capable agent behavior is considered.
 
 ## Usability Architecture Targets
 
@@ -439,6 +462,7 @@ Current long-lived schema domains include:
 - Route operations and field coordination: `ServiceZone`, `ServiceRoute`, `StaffRouteAssignment`, `Complaint`, `FieldWorkOrder`, `LeakReport`, and `RepairHistory`
 - Route operations and field coordination: `ServiceZone`, `ServiceRoute`, `StaffRouteAssignment`, `Complaint`, `FieldWorkOrder`, `LeakReport`, `RepairHistory`, `MeterReplacementHistory`, and `FieldWorkProof`
 - Recovery readiness: `BackupSnapshot`
+- Staff assistant retrieval and history: `AssistantKnowledgeDocument`, `AssistantKnowledgeChunk`, `AssistantIngestionRun`, `AssistantConversation`, and `AssistantConversationMessage`
 
 When updating architecture notes after a schema change, prefer summarizing the affected domains here and keep the canonical field-level detail in `prisma/schema.prisma`.
 

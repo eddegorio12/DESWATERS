@@ -6,6 +6,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { DashboardChrome } from "@/features/admin/components/dashboard-chrome";
 import { DashboardNav } from "@/features/admin/components/dashboard-nav";
 import { getDashboardNavItems } from "@/features/admin/lib/dashboard-navigation";
+import { AssistantPopup } from "@/features/assistant/components/assistant-popup";
 import { AdminSessionButton } from "@/features/auth/components/admin-session-button";
 import {
   getAccessibleAdminModules,
@@ -146,6 +147,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
               </div>
             </aside>
           </>
+        }
+        overlay={
+          isAuthenticated && getAccessibleAdminModules(current.user.role).includes("assistant") ? (
+            <AssistantPopup roleLabel={roleDisplayName[current.user.role]} />
+          ) : null
         }
       >
         {children}

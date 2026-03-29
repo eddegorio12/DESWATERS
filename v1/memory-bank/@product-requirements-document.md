@@ -51,6 +51,10 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH14.4 is now implemented as the follow-on admin-surface rollout for staff access, system readiness, and tariff registry so those summary-heavy protected boards no longer lag behind the newer EH14 composition language.
 - EH14.5 has now been validated as the public accessibility verification sweep, covering skip-link access, visible focus treatment, navigation current-page semantics, semantic list cleanup, decorative-icon hiding, and reduced-motion-safe marketing reveal behavior.
 - The EH14 protected-surface follow-on now also reaches collections, exceptions, readings, payments, customers, meters, routes, billing, and follow-up so those supporting admin sections move away from repeated equal-weight summary-card stacks.
+- The same EH14 protected-surface follow-on now also reaches the dashboard account-security area so password-management and SUPER_ADMIN two-factor controls no longer sit on the older standalone panel treatment.
+- That dashboard account-security slice is now tested and validated.
+- EH15 is now defined as a protected staff AI assistant and knowledge-retrieval lane built around documentation-first RAG, role-aware read-only answers, mandatory citations, and a dedicated `/admin/assistant` workspace.
+- EH15 now also persists documentation retrieval chunks, ingestion metadata, and per-user saved assistant history inside the core PostgreSQL stack.
 - EH12 now also includes a route-level loss-risk watchlist on `/admin/routes`, framed explicitly as a revenue-loss proxy from recent billed-versus-collected gaps plus overdue exposure, alongside route-linked complaint hotspot visibility from first-class complaint records.
 - Dedicated admin-management audit logging is now implemented, tested, and validated through a first-class account-management event log and a visible audit trail on `/admin/staff-access`.
 
@@ -63,6 +67,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 - **Intentional composition over card sprawl:** Cards should be reserved for actionable or stateful content. Simple grouping, navigation, and supporting information should more often use lists, rows, sections, dividers, and typography instead of repeated nested panels.
 - **Public trust must be explicit:** The marketing site should communicate deployment readiness, governance, security posture, role clarity, and real workflow proof instead of stopping at feature description.
 - **One clear public action path:** The website should drive one primary conversion route such as demo/contact/access request rather than behaving only as an informational brochure.
+- **Staff AI must be trustworthy before it is powerful:** The internal assistant should start as a citation-backed explanatory tool with strict role boundaries and no action-taking authority.
 
 ## Implemented MVP Scope
 1. **Authentication:** internal admin email/password sign-in and protected admin routes.

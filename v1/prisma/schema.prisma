@@ -101,6 +101,8 @@ model User {
   uploadedFieldWorkProofs FieldWorkProof[] @relation("FieldWorkProofUploadedBy")
   recordedRepairHistory RepairHistory[] @relation("RepairHistoryRecordedBy")
   recordedMeterReplacements MeterReplacementHistory[] @relation("MeterReplacementRecordedBy")
+  assistantConversations AssistantConversation[] @relation("AssistantConversationOwner")
+  assistantIngestionRuns AssistantIngestionRun[] @relation("AssistantIngestionTriggeredBy")
   finalizedBills Bill[] @relation("BillFinalizedBy")
   printedBills Bill[] @relation("BillPrintedBy")
   distributedBills Bill[] @relation("BillDistributedBy")
@@ -588,6 +590,105 @@ enum BackupSnapshotStatus {
   VERIFIED
   RESTORE_TESTED
   FAILED
+}
+
+model AssistantKnowledgeDocument {
+  id             String                  @id @default(uuid())
+  sourceKey      String                  @unique
+  title          String
+  sourcePath     String
+  sourceType     AssistantSourceType
+  href           String?
+  featureDomain  String?
+  routeScope     String?
+  roleScope      Role[]                  @default([])
+  contentHash    String
+  lastIngestedAt DateTime                @default(now())
+  chunks         AssistantKnowledgeChunk[]
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+
+  @@index([sourceType, sourcePath])
+}
+
+model AssistantKnowledgeChunk {
+  id                String                    @id @default(uuid())
+  documentId        String
+  document          AssistantKnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  chunkIndex        Int
+  sectionTitle      String?
+  body              String
+  summary           String
+  searchText        String
+  keywordTerms      String[]                  @default([])
+  roleScope         Role[]                    @default([])
+  contentHash       String
+  tokenCount        Int
+  embeddingUpdatedAt DateTime?
+  createdAt         DateTime                  @default(now())
+  updatedAt         DateTime                  @updatedAt
+
+  @@unique([documentId, chunkIndex])
+  @@index([documentId, chunkIndex])
+}
+
+model AssistantIngestionRun {
+  id            String                    @id @default(uuid())
+  triggeredById String?
+  triggeredBy   User?                     @relation("AssistantIngestionTriggeredBy", fields: [triggeredById], references: [id])
+  status        AssistantIngestionStatus  @default(RUNNING)
+  sourceCount   Int                       @default(0)
+  chunkCount    Int                       @default(0)
+  errorMessage  String?
+  startedAt     DateTime                  @default(now())
+  completedAt   DateTime?
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+
+  @@index([status, startedAt(sort: Desc)])
+}
+
+model AssistantConversation {
+  id         String                       @id @default(uuid())
+  userId     String
+  user       User                         @relation("AssistantConversationOwner", fields: [userId], references: [id])
+  title      String
+  lastAskedAt DateTime                    @default(now())
+  messages   AssistantConversationMessage[]
+  createdAt  DateTime                     @default(now())
+  updatedAt  DateTime                     @updatedAt
+
+  @@index([userId, lastAskedAt(sort: Desc)])
+}
+
+model AssistantConversationMessage {
+  id             String                           @id @default(uuid())
+  conversationId String
+  conversation   AssistantConversation            @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           AssistantConversationMessageRole
+  content        String
+  queryText      String?
+  citations      Json?
+  createdAt      DateTime                         @default(now())
+  updatedAt      DateTime                         @updatedAt
+
+  @@index([conversationId, createdAt])
+}
+
+enum AssistantSourceType {
+  MEMORY_BANK
+  WORKFLOW_GUIDE
+}
+
+enum AssistantIngestionStatus {
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum AssistantConversationMessageRole {
+  USER
+  ASSISTANT
 }
 
 model ServiceZone {

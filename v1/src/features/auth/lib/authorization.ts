@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export type AdminModule =
   | "dashboard"
+  | "assistant"
   | "staffAccess"
   | "systemReadiness"
   | "routeOperations"
@@ -48,6 +49,15 @@ export type StaffCapability =
 
 const moduleAccess: Record<AdminModule, readonly Role[]> = {
   dashboard: [
+    Role.SUPER_ADMIN,
+    Role.ADMIN,
+    Role.TECHNICIAN,
+    Role.METER_READER,
+    Role.BILLING,
+    Role.CASHIER,
+    Role.VIEWER,
+  ],
+  assistant: [
     Role.SUPER_ADMIN,
     Role.ADMIN,
     Role.TECHNICIAN,
@@ -101,6 +111,7 @@ const capabilityAccess: Record<StaffCapability, readonly Role[]> = {
 
 const moduleLabels: Record<AdminModule, string> = {
   dashboard: "dashboard",
+  assistant: "staff assistant",
   staffAccess: "admin management",
   systemReadiness: "system readiness",
   routeOperations: "route operations",

@@ -10,6 +10,7 @@ import {
   AdminSurfaceHeader,
   AdminSurfacePanel,
 } from "@/features/admin/components/admin-surface-panel";
+import { ResponsiveDataTable } from "@/features/admin/components/responsive-data-table";
 import { StatusPill } from "@/features/admin/components/status-pill";
 import { cn } from "@/lib/utils";
 
@@ -58,93 +59,136 @@ export function NotificationLogList({ notifications }: NotificationLogListProps)
         aside={`${notifications.length} recent attempt${notifications.length === 1 ? "" : "s"}`}
       />
 
-      <div className="mt-6 overflow-hidden rounded-[1.4rem] border border-border/70 bg-white/76">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-border text-left">
-            <thead className="bg-secondary/55">
-              <tr className="text-sm text-muted-foreground">
-                <th className="px-4 py-3 font-medium">Customer</th>
-                <th className="px-4 py-3 font-medium">Template</th>
-                <th className="px-4 py-3 font-medium">Channel</th>
-                <th className="px-4 py-3 font-medium">Destination</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Detail</th>
-                <th className="px-4 py-3 text-right font-medium">Record</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border bg-background">
-              {notifications.length ? (
-                notifications.map((notification) => (
-                  <tr key={notification.id} className="align-top text-sm">
-                    <td className="px-4 py-4">
-                      <div className="font-medium text-foreground">
-                        {notification.customer.name}
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {notification.customer.accountNumber}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="font-medium text-foreground">
-                        {notification.template.replaceAll("_", " ")}
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {notification.bill?.billingPeriod || "Customer-level notice"}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-muted-foreground">
-                      {notification.channel}
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {notification.provider}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-muted-foreground">{notification.destination}</td>
-                    <td className="px-4 py-4">
-                      <StatusPill priority={getStatusPriority(notification.status)}>
-                        {notification.status}
-                      </StatusPill>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="text-foreground">
-                        {notification.createdAt.toLocaleString("en-PH")}
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {notification.errorMessage || "Queued and delivered without logged provider error."}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 text-right">
-                      {notification.channel === "PRINT" ? (
-                        <Link
-                          href={`/admin/notices/${notification.id}`}
-                          className={cn(
-                            buttonVariants({
-                              variant: "outline",
-                              size: "sm",
-                              className: "rounded-xl px-3",
-                            })
-                          )}
-                        >
-                          Open notice
-                        </Link>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">Logged delivery</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
+      <div className="mt-6">
+        <ResponsiveDataTable
+          columns={["Customer", "Template", "Channel", "Destination", "Status", "Detail", "Record"]}
+          colSpan={7}
+          hasRows={notifications.length > 0}
+          emptyMessage="No notification attempts are logged yet. Send a reminder, final notice, or print notice to start the communication trail."
+          mobileCards={notifications.map((notification) => (
+            <article key={notification.id} className="rounded-[1.35rem] border border-[#dbe9e5] bg-white p-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="font-medium text-foreground">{notification.customer.name}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {notification.customer.accountNumber}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {notification.createdAt.toLocaleString("en-PH")}
+                  </p>
+                </div>
+                <StatusPill priority={getStatusPriority(notification.status)}>
+                  {notification.status}
+                </StatusPill>
+              </div>
+
+              <dl className="mt-4 grid gap-3 text-sm">
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Template
+                  </dt>
+                  <dd className="mt-1 text-muted-foreground">
+                    <div className="font-medium text-foreground">
+                      {notification.template.replaceAll("_", " ")}
+                    </div>
+                    <div className="mt-1 text-xs">
+                      {notification.bill?.billingPeriod || "Customer-level notice"}
+                    </div>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Delivery
+                  </dt>
+                  <dd className="mt-1 text-muted-foreground">
+                    <div>{notification.channel}</div>
+                    <div className="mt-1 text-xs">{notification.provider}</div>
+                    <div className="mt-1 text-xs break-all">{notification.destination}</div>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                    Detail
+                  </dt>
+                  <dd className="mt-1 text-muted-foreground">
+                    {notification.errorMessage ||
+                      "Queued and delivered without logged provider error."}
+                  </dd>
+                </div>
+              </dl>
+
+              {notification.channel === "PRINT" ? (
+                <Link
+                  href={`/admin/notices/${notification.id}`}
+                  className={cn(
+                    buttonVariants({
+                      variant: "outline",
+                      size: "sm",
+                      className: "mt-4 w-full justify-center rounded-xl px-3",
+                    })
+                  )}
+                >
+                  Open notice
+                </Link>
               ) : (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-10 text-center text-sm text-muted-foreground"
-                  >
-                    No notification attempts are logged yet. Send a reminder, final notice, or print notice to start the communication trail.
-                  </td>
-                </tr>
+                <p className="mt-4 text-xs text-muted-foreground">Logged delivery</p>
               )}
-            </tbody>
-          </table>
-        </div>
+            </article>
+          ))}
+          rows={notifications.map((notification) => (
+            <tr key={notification.id} className="align-top text-sm">
+              <td className="px-4 py-4">
+                <div className="font-medium text-foreground">{notification.customer.name}</div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {notification.customer.accountNumber}
+                </div>
+              </td>
+              <td className="px-4 py-4">
+                <div className="font-medium text-foreground">
+                  {notification.template.replaceAll("_", " ")}
+                </div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {notification.bill?.billingPeriod || "Customer-level notice"}
+                </div>
+              </td>
+              <td className="px-4 py-4 text-muted-foreground">
+                {notification.channel}
+                <div className="mt-1 text-xs text-muted-foreground">{notification.provider}</div>
+              </td>
+              <td className="px-4 py-4 text-muted-foreground">{notification.destination}</td>
+              <td className="px-4 py-4">
+                <StatusPill priority={getStatusPriority(notification.status)}>
+                  {notification.status}
+                </StatusPill>
+              </td>
+              <td className="px-4 py-4">
+                <div className="text-foreground">{notification.createdAt.toLocaleString("en-PH")}</div>
+                <div className="mt-1 text-xs text-muted-foreground">
+                  {notification.errorMessage ||
+                    "Queued and delivered without logged provider error."}
+                </div>
+              </td>
+              <td className="px-4 py-4 text-right">
+                {notification.channel === "PRINT" ? (
+                  <Link
+                    href={`/admin/notices/${notification.id}`}
+                    className={cn(
+                      buttonVariants({
+                        variant: "outline",
+                        size: "sm",
+                        className: "rounded-xl px-3",
+                      })
+                    )}
+                  >
+                    Open notice
+                  </Link>
+                ) : (
+                  <span className="text-xs text-muted-foreground">Logged delivery</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        />
       </div>
     </AdminSurfacePanel>
   );

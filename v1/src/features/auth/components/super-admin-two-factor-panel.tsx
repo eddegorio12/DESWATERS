@@ -4,6 +4,10 @@ import Image from "next/image";
 import { useActionState } from "react";
 
 import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
+import {
   beginSuperAdminTwoFactorSetup,
   confirmSuperAdminTwoFactorSetup,
   disableSuperAdminTwoFactor,
@@ -76,19 +80,12 @@ export function SuperAdminTwoFactorPanel({
               : null;
 
   return (
-    <section className="dwds-panel p-6">
-      <div className="space-y-2">
-        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Two-Factor Sign-In
-        </p>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-          Protect the SUPER_ADMIN account with an authenticator app
-        </h2>
-        <p className="text-sm leading-6 text-muted-foreground">
-          Optional EH11 security follow-on. When enabled, DWDS requires your password plus a
-          6-digit authenticator code or one recovery code before a SUPER_ADMIN session is issued.
-        </p>
-      </div>
+    <AdminSurfacePanel>
+      <AdminSurfaceHeader
+        eyebrow="Two-Factor Sign-In"
+        title="Protect the SUPER_ADMIN account with an authenticator app"
+        description="When enabled, DWDS requires your password plus a 6-digit authenticator code or one recovery code before a SUPER_ADMIN session is issued."
+      />
 
       <div className="mt-6 grid gap-3 md:grid-cols-3">
         <div className="rounded-[1.2rem] border border-border/70 bg-secondary/26 px-4 py-3">
@@ -239,7 +236,10 @@ export function SuperAdminTwoFactorPanel({
       ) : null}
 
       {panelEnabled ? (
-        <form action={disableAction} className="mt-6 grid gap-4 rounded-[1.35rem] border border-border/70 bg-background/90 p-5 md:grid-cols-3">
+        <form
+          action={disableAction}
+          className="mt-6 grid gap-4 rounded-[1.35rem] border border-border/70 bg-background/90 p-5 md:grid-cols-3"
+        >
           <div>
             <label className="text-sm font-medium text-foreground" htmlFor="disableCurrentPassword">
               Current password
@@ -288,6 +288,6 @@ export function SuperAdminTwoFactorPanel({
           </div>
         </form>
       ) : null}
-    </section>
+    </AdminSurfacePanel>
   );
 }

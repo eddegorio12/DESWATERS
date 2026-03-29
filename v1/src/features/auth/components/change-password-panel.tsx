@@ -1,20 +1,20 @@
+import {
+  AdminSurfaceHeader,
+  AdminSurfacePanel,
+} from "@/features/admin/components/admin-surface-panel";
 import { changeOwnPassword } from "@/features/auth/actions/auth-actions";
+
+const fieldClassName =
+  "mt-2 h-11 w-full rounded-2xl border border-input bg-white px-4 text-sm text-foreground shadow-xs outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20";
 
 export function ChangePasswordPanel() {
   return (
-    <section className="dwds-panel p-6">
-      <div className="space-y-2">
-        <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-          Password
-        </p>
-        <h2 className="text-2xl font-semibold tracking-tight text-foreground">
-          Change your sign-in password
-        </h2>
-        <p className="text-sm leading-6 text-muted-foreground">
-          Update your own password here. Use a new password and keep it separate from the
-          temporary one a SUPER_ADMIN may have assigned.
-        </p>
-      </div>
+    <AdminSurfacePanel>
+      <AdminSurfaceHeader
+        eyebrow="Password"
+        title="Change your sign-in password"
+        description="Update your own password here. Use a new password and keep it separate from the temporary one a SUPER_ADMIN may have assigned."
+      />
 
       <form action={changeOwnPassword} className="mt-6 grid gap-4 md:grid-cols-3">
         <div>
@@ -25,7 +25,7 @@ export function ChangePasswordPanel() {
             id="currentPassword"
             name="currentPassword"
             type="password"
-            className="mt-2 h-11 w-full rounded-2xl border border-input bg-white px-4 text-sm text-foreground shadow-xs outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20"
+            className={fieldClassName}
             required
           />
         </div>
@@ -39,7 +39,7 @@ export function ChangePasswordPanel() {
             name="newPassword"
             type="password"
             minLength={8}
-            className="mt-2 h-11 w-full rounded-2xl border border-input bg-white px-4 text-sm text-foreground shadow-xs outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20"
+            className={fieldClassName}
             required
           />
         </div>
@@ -53,7 +53,7 @@ export function ChangePasswordPanel() {
             name="confirmPassword"
             type="password"
             minLength={8}
-            className="mt-2 h-11 w-full rounded-2xl border border-input bg-white px-4 text-sm text-foreground shadow-xs outline-none transition focus:border-ring focus:ring-3 focus:ring-ring/20"
+            className={fieldClassName}
             required
           />
         </div>
@@ -67,6 +67,6 @@ export function ChangePasswordPanel() {
           </button>
         </div>
       </form>
-    </section>
+    </AdminSurfacePanel>
   );
 }

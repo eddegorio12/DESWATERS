@@ -1,7 +1,7 @@
 import type { DashboardNavItem } from "@/features/admin/components/dashboard-nav";
 import type { AdminModule } from "@/features/auth/lib/authorization";
 
-type DashboardSidebarModule = Exclude<AdminModule, "billPrint">;
+type DashboardSidebarModule = Exclude<AdminModule, "billPrint" | "assistant">;
 
 const dashboardNavMeta = {
   dashboard: {
@@ -86,7 +86,7 @@ const dashboardNavMeta = {
 
 export function getDashboardNavItems(modules: readonly AdminModule[]) {
   return modules.flatMap((module) => {
-    if (module === "billPrint") {
+    if (module === "billPrint" || module === "assistant") {
       return [];
     }
 
