@@ -255,10 +255,13 @@
 - The protected printable bill, notice, and receipt routes now also share a small reusable print-surface shell so those document-facing admin routes inherit the same composition discipline instead of each maintaining their own duplicated hero and paper wrapper structure.
 - EH14 should now be treated as a closed architecture lane: the current protected shell, marketing baseline, summary-heavy admin boards, responsive support panels, account-security slice, and printable document surfaces all inherit the shared anti-card-sprawl composition system.
 - EH15 should extend the current protected admin architecture with one dedicated assistant surface rather than a cross-app floating agent first, so authorization, citation, and evaluation can be validated in one controlled workspace.
+- Enterprise-grade assistant maturity now depends on five explicit architectural layers: retrieval hardening, trust/safety governance, evaluation-plus-observability, knowledge operations, and only then narrow live-record explanation helpers.
+- EH15.1 is now implemented as the retrieval-hardening layer: section-aware chunking, incremental corpus sync, deterministic source-priority reranking, and a hybrid lexical-plus-semantic retrieval path that can use embeddings without requiring `pgvector` to exist in the local runtime.
+- EH15.1 has now been validated as the retrieval-hardening baseline.
 - EH12 route analytics now also include a revenue-loss watchlist derived from recent billed-versus-collected gaps plus current overdue exposure, while route-linked complaint hotspot visibility is now backed by a first-class `Complaint` domain in the schema rather than inferred proxies.
 - The current architecture-level public-surface baseline now includes canonical/social metadata support, crawler-ready route metadata, generated share previews, and clearer CTA wiring without splitting the marketing surface into a separate app.
 - The next public-surface architecture task is continued manual accessibility QA while the current route structure and shared marketing primitives stay intact.
-- The next assistant-related architecture task is defining the EH15 retrieval/storage model, ingestion path, and role-filtered answer assembly before any mutation-capable agent behavior is considered.
+- The next assistant-related architecture task is EH15.2 trust/safety/governance on top of the validated EH15.1 retrieval baseline.
 
 ## Usability Architecture Targets
 
@@ -463,6 +466,8 @@ Current long-lived schema domains include:
 - Route operations and field coordination: `ServiceZone`, `ServiceRoute`, `StaffRouteAssignment`, `Complaint`, `FieldWorkOrder`, `LeakReport`, `RepairHistory`, `MeterReplacementHistory`, and `FieldWorkProof`
 - Recovery readiness: `BackupSnapshot`
 - Staff assistant retrieval and history: `AssistantKnowledgeDocument`, `AssistantKnowledgeChunk`, `AssistantIngestionRun`, `AssistantConversation`, and `AssistantConversationMessage`
+- Staff assistant retrieval and history: `AssistantKnowledgeDocument`, `AssistantKnowledgeChunk`, `AssistantIngestionRun`, `AssistantConversation`, and `AssistantConversationMessage`, now with JSONB embedding storage plus optional `embeddingVector` acceleration when the database exposes `pgvector`
+- Planned assistant follow-on governance and observability domains: source-governance state, answer-evaluation data, and assistant telemetry/audit records
 
 When updating architecture notes after a schema change, prefer summarizing the affected domains here and keep the canonical field-level detail in `prisma/schema.prisma`.
 

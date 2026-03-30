@@ -1,8 +1,11 @@
+import { redirect } from "next/navigation";
+
 import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
 import { getSearchParamText, type SearchParamValue } from "@/features/admin/lib/list-filters";
 import { AssistantWorkspace } from "@/features/assistant/components/assistant-workspace";
+import { runAssistantEvaluationSuite } from "@/features/assistant/lib/assistant-evaluation";
 import {
   getAssistantWorkspaceState,
   searchAssistantKnowledge,
@@ -25,6 +28,26 @@ export default async function AdminAssistantPage({
   const filters = await searchParams;
   const query = getSearchParamText(filters.q);
   const conversationId = getSearchParamText(filters.c);
+  const runEvaluation = getSearchParamText(filters.runEval) === "1";
+
+  if (
+    runEvaluation &&
+    (access.user.role === "SUPER_ADMIN" || access.user.role === "ADMIN")
+  ) {
+    await runAssistantEvaluationSuite(access.user.id);
+    const params = new URLSearchParams();
+
+    if (query) {
+      params.set("q", query);
+    }
+
+    if (conversationId) {
+      params.set("c", conversationId);
+    }
+
+    redirect(params.size ? `/admin/assistant?${params.toString()}` : "/admin/assistant");
+  }
+
   const response = await searchAssistantKnowledge({
     query,
     role: access.user.role,
@@ -33,6 +56,7 @@ export default async function AdminAssistantPage({
   });
   const workspaceState = await getAssistantWorkspaceState(
     access.user.id,
+    access.user.role,
     response?.conversationId ?? conversationId
   );
 
@@ -40,7 +64,7 @@ export default async function AdminAssistantPage({
     <AdminPageShell
       eyebrow="Staff Assistant"
       title="Search cited DWDS workflow guidance inside the protected workspace."
-      description="EH15 starts here with a role-aware internal assistant shell. This first slice retrieves from the memory-bank and curated module guidance, stays read-only, and points staff toward the correct module or next check."
+      description="EH15 now includes citation-led assistant telemetry, fixed evaluation runs, and an admin-visible quality view on top of the protected read-only guidance workflow."
       actions={
         <AdminPageActions
           links={[
@@ -77,9 +101,13 @@ export default async function AdminAssistantPage({
           accent: "amber",
         },
         {
-          label: "Role guard",
-          value: access.user.role.replaceAll("_", " "),
-          detail: "Answers should stay inside the signed-in staff role scope.",
+          label: "Evaluation",
+          value: workspaceState.qualityOverview?.latestEvaluationRun
+            ? `${workspaceState.qualityOverview.latestEvaluationRun.passedCount}/${workspaceState.qualityOverview.latestEvaluationRun.caseCount}`
+            : "Not run",
+          detail: workspaceState.qualityOverview?.latestEvaluationRun
+            ? "Latest regression suite result on the protected assistant baseline."
+            : "Run the fixed evaluation suite after assistant changes to compare quality.",
           accent: "violet",
         },
       ]}

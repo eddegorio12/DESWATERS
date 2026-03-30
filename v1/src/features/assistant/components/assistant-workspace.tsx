@@ -45,6 +45,44 @@ type WorkspaceState = {
     } | null;
     chunkCount: number;
   };
+  qualityOverview: {
+    recentWindowDays: number;
+    interactionCount: number;
+    noHitCount: number;
+    lowConfidenceCount: number;
+    failureCount: number;
+    recentFlaggedLogs: Array<{
+      id: string;
+      query: string;
+      disposition: string;
+      failureState: string;
+      noHits: boolean;
+      lowConfidence: boolean;
+      retrievalHitCount: number;
+      citedHitCount: number;
+      latencyMs: number;
+      createdAt: Date;
+      userName: string;
+      userRole: Role | null;
+    }>;
+    latestEvaluationRun: {
+      id: string;
+      caseCount: number;
+      passedCount: number;
+      averageScore: number | null;
+      startedAt: Date;
+      completedAt: Date | null;
+      summary: Prisma.JsonValue;
+      failedCases: Array<{
+        caseKey: string;
+        caseLabel: string;
+        category: string;
+        score: number;
+        failureState: string;
+        notes: string | null;
+      }>;
+    } | null;
+  } | null;
 };
 
 function formatActivityDate(value: Date) {
@@ -87,7 +125,7 @@ export function AssistantWorkspace({
           <AdminSurfaceHeader
             eyebrow="DWDS Assistant"
             title="Saved chats"
-            description="Chat history is scoped to the signed-in user only."
+            description="Chat history is scoped to the signed-in user and recent duplicates are collapsed."
             aside={
               <Link
                 href="/admin/assistant"
@@ -204,6 +242,125 @@ export function AssistantWorkspace({
             ))}
           </div>
         </AdminSurfacePanel>
+
+        {workspaceState.qualityOverview ? (
+          <AdminSurfacePanel>
+            <AdminSurfaceHeader
+              eyebrow="Assistant Quality"
+              title="Evaluation and observability"
+              description={`Admin-only view for the last ${workspaceState.qualityOverview.recentWindowDays} days of assistant behavior.`}
+              aside={
+                <Link
+                  href={`/admin/assistant?${activeConversationId ? `c=${encodeURIComponent(activeConversationId)}&` : ""}runEval=1`}
+                  className={cn(
+                    buttonVariants({
+                      variant: "outline",
+                      className: "h-10 rounded-full px-4",
+                    })
+                  )}
+                >
+                  Run suite
+                </Link>
+              }
+            />
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <article className="rounded-[1.1rem] border border-border/70 bg-muted/15 p-4">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
+                  Recent chats
+                </p>
+                <p className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
+                  {workspaceState.qualityOverview.interactionCount}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {workspaceState.qualityOverview.noHitCount} no-hit and{" "}
+                  {workspaceState.qualityOverview.lowConfidenceCount} low-confidence outcomes.
+                </p>
+              </article>
+
+              <article className="rounded-[1.1rem] border border-border/70 bg-muted/15 p-4">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
+                  Latest suite
+                </p>
+                <p className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
+                  {workspaceState.qualityOverview.latestEvaluationRun
+                    ? `${workspaceState.qualityOverview.latestEvaluationRun.passedCount}/${workspaceState.qualityOverview.latestEvaluationRun.caseCount}`
+                    : "Not run"}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {workspaceState.qualityOverview.latestEvaluationRun
+                    ? `Average score ${Math.round(workspaceState.qualityOverview.latestEvaluationRun.averageScore ?? 0)}.`
+                    : "Run the fixed assistant regression suite after retrieval or policy changes."}
+                </p>
+              </article>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Recent flagged prompts
+              </p>
+              {workspaceState.qualityOverview.recentFlaggedLogs.length ? (
+                workspaceState.qualityOverview.recentFlaggedLogs.map((log) => (
+                  <article
+                    key={log.id}
+                    className="rounded-[1.1rem] border border-border/70 bg-white p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-sm font-semibold leading-6 text-foreground">
+                        {log.query}
+                      </p>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {formatActivityDate(log.createdAt)}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                      {log.userName} {log.userRole ? `- ${log.userRole.replaceAll("_", " ")}` : ""}
+                    </p>
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                      {log.disposition} - {log.failureState}. Retrieval {log.retrievalHitCount},
+                      cited {log.citedHitCount}, latency {log.latencyMs} ms.
+                    </p>
+                  </article>
+                ))
+              ) : (
+                <div className="rounded-[1.1rem] border border-dashed border-border bg-muted/15 p-4 text-sm leading-7 text-muted-foreground">
+                  No recent no-hit, low-confidence, or failed chat patterns are recorded yet.
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 space-y-3">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                Latest failing evaluation cases
+              </p>
+              {workspaceState.qualityOverview.latestEvaluationRun?.failedCases.length ? (
+                workspaceState.qualityOverview.latestEvaluationRun.failedCases.map((result) => (
+                  <article
+                    key={result.caseKey}
+                    className="rounded-[1.1rem] border border-border/70 bg-white p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="text-sm font-semibold leading-6 text-foreground">
+                        {result.caseLabel}
+                      </p>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {result.score}/100
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                      {result.failureState}
+                      {result.notes ? ` - ${result.notes}` : ""}
+                    </p>
+                  </article>
+                ))
+              ) : (
+                <div className="rounded-[1.1rem] border border-dashed border-border bg-muted/15 p-4 text-sm leading-7 text-muted-foreground">
+                  The latest stored suite has no failing cases.
+                </div>
+              )}
+            </div>
+          </AdminSurfacePanel>
+        ) : null}
       </div>
 
       <AdminSurfacePanel className="flex min-h-[820px] flex-col">

@@ -1,7 +1,11 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 
-import { type AssistantSourceType, type Role } from "@prisma/client";
+import {
+  type AssistantSourceGovernanceState,
+  type AssistantSourceType,
+  type Role,
+} from "@prisma/client";
 
 import type { AdminModule } from "@/features/auth/lib/authorization";
 
@@ -24,6 +28,7 @@ export type AssistantCorpusDocument = {
   sourcePath: string;
   sourceType: SourceType;
   prismaSourceType: AssistantSourceType;
+  governanceState: AssistantSourceGovernanceState;
   href: string | null;
   featureDomain: string | null;
   routeScope: string | null;
@@ -40,6 +45,9 @@ export type WorkflowGuide = {
   keywords: readonly string[];
   roles: readonly Role[];
 };
+
+const ASSISTANT_MAX_CHUNK_TOKENS = 180;
+const ASSISTANT_CHUNK_OVERLAP_TOKENS = 32;
 
 export const memoryBankFiles = [
   "progress.md",
@@ -195,6 +203,98 @@ export function tokenize(value: string) {
   );
 }
 
+function estimateTokenCount(value: string) {
+  return value.match(/\S+/g)?.length ?? 0;
+}
+
+function collectOverlapParagraphs(paragraphs: string[]) {
+  const overlap: string[] = [];
+  let tokenBudget = 0;
+
+  for (let index = paragraphs.length - 1; index >= 0; index -= 1) {
+    const paragraph = paragraphs[index];
+    const paragraphTokens = estimateTokenCount(paragraph);
+
+    if (overlap.length && tokenBudget + paragraphTokens > ASSISTANT_CHUNK_OVERLAP_TOKENS) {
+      break;
+    }
+
+    overlap.unshift(paragraph);
+    tokenBudget += paragraphTokens;
+
+    if (tokenBudget >= ASSISTANT_CHUNK_OVERLAP_TOKENS) {
+      break;
+    }
+  }
+
+  return overlap;
+}
+
+function chunkSectionParagraphs(paragraphs: string[]) {
+  const normalizedParagraphs = paragraphs.map((paragraph) => paragraph.trim()).filter(Boolean);
+
+  if (!normalizedParagraphs.length) {
+    return [];
+  }
+
+  const chunks: string[] = [];
+  let currentParagraphs: string[] = [];
+  let currentTokens = 0;
+
+  for (const paragraph of normalizedParagraphs) {
+    const paragraphTokens = estimateTokenCount(paragraph);
+
+    if (paragraphTokens >= ASSISTANT_MAX_CHUNK_TOKENS) {
+      if (currentParagraphs.length) {
+        chunks.push(currentParagraphs.join("\n\n"));
+        currentParagraphs = [];
+        currentTokens = 0;
+      }
+
+      const words = paragraph.split(/\s+/);
+      let slice: string[] = [];
+      let sliceTokens = 0;
+
+      for (const word of words) {
+        slice.push(word);
+        sliceTokens += 1;
+
+        if (sliceTokens >= ASSISTANT_MAX_CHUNK_TOKENS) {
+          chunks.push(slice.join(" "));
+          slice = [];
+          sliceTokens = 0;
+        }
+      }
+
+      if (slice.length) {
+        currentParagraphs = [slice.join(" ")];
+        currentTokens = estimateTokenCount(currentParagraphs[0]);
+      }
+
+      continue;
+    }
+
+    if (currentParagraphs.length && currentTokens + paragraphTokens > ASSISTANT_MAX_CHUNK_TOKENS) {
+      chunks.push(currentParagraphs.join("\n\n"));
+      currentParagraphs = [...collectOverlapParagraphs(currentParagraphs), paragraph];
+      currentTokens = currentParagraphs.reduce(
+        (total, currentParagraph) => total + estimateTokenCount(currentParagraph),
+        0
+      );
+      continue;
+    }
+
+    currentParagraphs.push(paragraph);
+    currentTokens += paragraphTokens;
+  }
+
+  if (currentParagraphs.length) {
+    chunks.push(currentParagraphs.join("\n\n"));
+  }
+
+  return chunks;
+}
+
 function inferFeatureDomain(fileName: string) {
   if (fileName.includes("architecture")) {
     return "architecture";
@@ -223,6 +323,18 @@ function buildMemoryBankPath(fileName: string) {
   return path.join(process.cwd(), "memory-bank", fileName);
 }
 
+function getMemoryBankGovernanceState(fileName: string): AssistantSourceGovernanceState {
+  if (fileName === "features.md") {
+    return "APPROVED";
+  }
+
+  if (fileName === "progress.md") {
+    return "DEPRECATED";
+  }
+
+  return "DRAFT";
+}
+
 function parseMarkdownSections(fileName: string, source: string): AssistantCorpusDocument {
   const lines = source.split(/\r?\n/);
   const rootTitle =
@@ -230,33 +342,38 @@ function parseMarkdownSections(fileName: string, source: string): AssistantCorpu
     fileName.replace(/\.md$/, "");
   const chunks: AssistantCorpusChunk[] = [];
   let currentHeading: string | null = rootTitle;
-  let buffer: string[] = [];
+  let sectionParagraphs: string[] = [];
+  let paragraphBuffer: string[] = [];
   let chunkIndex = 0;
 
   const flush = () => {
-    const body = buffer.join(" ").replace(/\s+/g, " ").trim();
+    if (paragraphBuffer.length) {
+      sectionParagraphs.push(paragraphBuffer.join(" ").replace(/\s+/g, " ").trim());
+      paragraphBuffer = [];
+    }
 
-    if (!body) {
-      buffer = [];
+    if (!sectionParagraphs.length) {
       return;
     }
 
-    const tokenCount = tokenize(body).length;
     const keywordTerms = tokenize(`${rootTitle} ${currentHeading ?? ""}`).slice(0, 12);
 
-    chunks.push({
-      chunkIndex,
-      sectionTitle: currentHeading,
-      body,
-      summary: trimSnippet(body),
-      searchText: `${rootTitle} ${currentHeading ?? ""} ${body}`.trim(),
-      keywordTerms,
-      roleScope: ["SUPER_ADMIN", "ADMIN", "TECHNICIAN", "METER_READER", "BILLING", "CASHIER", "VIEWER"],
-      tokenCount,
-    });
+    for (const body of chunkSectionParagraphs(sectionParagraphs)) {
+      chunks.push({
+        chunkIndex,
+        sectionTitle: currentHeading,
+        body,
+        summary: trimSnippet(body),
+        searchText: `${rootTitle} ${currentHeading ?? ""} ${body}`.trim(),
+        keywordTerms,
+        roleScope: ["SUPER_ADMIN", "ADMIN", "TECHNICIAN", "METER_READER", "BILLING", "CASHIER", "VIEWER"],
+        tokenCount: estimateTokenCount(body),
+      });
 
-    chunkIndex += 1;
-    buffer = [];
+      chunkIndex += 1;
+    }
+
+    sectionParagraphs = [];
   };
 
   for (const line of lines) {
@@ -274,9 +391,10 @@ function parseMarkdownSections(fileName: string, source: string): AssistantCorpu
       .trim();
 
     if (cleaned) {
-      buffer.push(cleaned);
-    } else if (buffer.length) {
-      buffer.push(" ");
+      paragraphBuffer.push(cleaned);
+    } else if (paragraphBuffer.length) {
+      sectionParagraphs.push(paragraphBuffer.join(" ").replace(/\s+/g, " ").trim());
+      paragraphBuffer = [];
     }
   }
 
@@ -288,6 +406,7 @@ function parseMarkdownSections(fileName: string, source: string): AssistantCorpu
     sourcePath: `memory-bank/${fileName}`,
     sourceType: "memory-bank",
     prismaSourceType: "MEMORY_BANK",
+    governanceState: getMemoryBankGovernanceState(fileName),
     href: null,
     featureDomain: inferFeatureDomain(fileName),
     routeScope: null,
@@ -315,6 +434,7 @@ function buildWorkflowDocuments() {
     sourcePath: guide.href,
     sourceType: "workflow-guide" as const,
     prismaSourceType: "WORKFLOW_GUIDE" as const,
+    governanceState: "APPROVED" as const,
     href: guide.href,
     featureDomain: guide.module,
     routeScope: guide.module === "routeOperations" ? "route-operations" : null,
@@ -329,7 +449,7 @@ function buildWorkflowDocuments() {
         searchText: `${guide.title} ${guide.summary}`.trim(),
         keywordTerms: [...guide.keywords],
         roleScope: [...guide.roles],
-        tokenCount: tokenize(guide.summary).length,
+        tokenCount: estimateTokenCount(guide.summary),
       },
     ],
   }));

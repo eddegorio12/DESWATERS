@@ -713,6 +713,9 @@ Current recommendation:
 - Keep the assistant read-only in V1.
 - Use hybrid retrieval with metadata-aware filtering instead of pure semantic search.
 - The repo now includes an OpenRouter model-config layer that defaults to `openrouter/free` and falls back to `stepfun/step-3.5-flash:free` then `nvidia/nemotron-3-super-120b-a12b:free` when model-backed answer synthesis is switched on.
+- EH15.1 is now validated.
+- The immediate enterprise-grade next step is now `EH15.2`, focused on trust, safety, and governance on top of the validated retrieval baseline.
+- After EH15.2, the assistant should move through `EH15.3` evaluation-plus-observability before any `EH15.5` live-record explanation helpers are expanded.
 
 Current progress:
 - `/admin/assistant` is now live as a protected staff workspace with role-aware guidance search, visible citations, and starter prompts.
@@ -720,8 +723,113 @@ Current progress:
 - The assistant now saves per-user conversation history through dedicated conversation and message tables, and the protected UI now exposes recent saved threads for the signed-in account only.
 - The assistant now also supports OpenRouter-backed answer synthesis on top of retrieved role-safe sources, defaulting to `openrouter/free` with a configured free-model fallback chain when the API key is available.
 - The current popup-assistant implementation is now tested and validated for its shell-level chat UI, saved-thread behavior, multilingual prompt handling, and tariff-estimate helper path.
-- The current retrieval path still needs stronger reranking and source prioritization so operator-facing guidance outranks roadmap/progress text more reliably.
-- The next EH15 implementation target is retrieval-quality validation plus reranking on top of this persisted and model-backed baseline.
+- EH15.1 retrieval hardening is now implemented in the repo through tighter section-aware chunking, incremental corpus sync, embedding freshness tracking, hybrid lexical-plus-semantic retrieval, and deterministic source-priority reranking.
+- The EH15.1 embedding path now persists embeddings in JSONB so local Postgres works without `pgvector`, while the same retrieval path can also populate an optional `embeddingVector` column whenever the database exposes the `vector` extension.
+- Local EH15.1 validation has now completed through Prisma client generation, targeted linting on the touched assistant files, successful migration deployment, and a successful full production `npm run build`.
+- EH15.1 has now been user-tested and validated.
+- The next EH15 implementation target is EH15.2 trust/safety/governance.
+
+### EH15.1: Retrieval Quality Hardening
+**Priority:** Highest within EH15
+**Status:** Validated
+**Depends on:** current EH15 persisted-storage baseline already in repo
+
+Scope:
+1. Add hybrid retrieval using lexical matching plus `pgvector` embeddings.
+2. Add reranking before prompt assembly.
+3. Improve chunking and metadata filtering by role, module, source type, and route scope.
+4. Add source-priority weighting so workflow guides and approved operator-safe material outrank roadmap/progress text for operational queries.
+5. Tighten multilingual and informal-query normalization only where it improves retrieval without weakening precision.
+
+Exit criteria:
+- Operational questions retrieve workflow-safe guidance ahead of planning text.
+- Citation quality improves because the top retrieved chunks are more relevant.
+- Retrieval still degrades safely when embeddings, reranking, or the model path are unavailable.
+
+Recommended implementation order:
+1. Enable `pgvector` in the PostgreSQL runtime and extend the assistant schema for embeddings and retrieval metadata.
+2. Rebuild ingestion to generate stable embeddings and improved chunk metadata.
+3. Add hybrid retrieval scoring plus source-priority rules.
+4. Add reranking on the top candidate set before final prompt assembly.
+5. Compare retrieval outcomes against the fixed assistant validation set.
+
+Current progress:
+- `src/features/assistant/lib/assistant-corpus.ts` now applies chunk-size limits and overlap so large markdown sections no longer stay as one retrieval block.
+- `src/features/assistant/lib/assistant-store.ts` now performs incremental sync, tracks embedding freshness by content hash, and skips unnecessary full re-ingestion when the corpus is already current.
+- Retrieval now merges lexical candidates with embedding-backed semantic candidates when embeddings are available, then reranks them with deterministic source-priority logic so workflow guides and operator-safe material outrank roadmap/progress text for operational questions.
+- `prisma/schema.prisma` plus `prisma/migrations/20260329_eh15_retrieval_hardening/` now add the EH15.1 embedding storage path, using JSONB as the guaranteed baseline and optional `pgvector` acceleration when the database exposes the extension.
+- `.env.example` now documents the EH15.1 embedding-model controls, and the revised migration path plus full build have both succeeded locally.
+
+### EH15.2: Trust, Safety, and Governance
+**Priority:** High within EH15 after EH15.1
+**Status:** Validated
+**Depends on:** EH15.1 retrieval baseline
+
+Scope:
+1. Add an assistant policy layer for allowed, narrowed, refused, and escalation-required requests.
+2. Add prompt-injection and secret-exfiltration defenses around retrieved content and final answer assembly.
+3. Add source-governance states such as `approved`, `draft`, and `deprecated`.
+4. Enforce citation-presence and low-confidence fallback behavior server-side.
+5. Keep the assistant read-only while governance and refusal behavior are still being validated.
+
+Exit criteria:
+- Unsafe or out-of-scope requests are refused or narrowed consistently.
+- Production-safe guidance can be separated from planning or deprecated material.
+- The assistant never depends on client-side conventions alone for safety behavior.
+- Implementation status:
+  - The repo now applies a server-side assistant policy layer that classifies requests into allowed, narrowed, refused, and escalation-required outcomes before answer assembly.
+  - Prompt-injection and secret-exfiltration attempts are now refused directly, and suspicious retrieved source content is excluded before synthesis.
+  - Assistant knowledge documents now persist governance states so workflow guides stay `approved`, planning-heavy memory-bank sources stay `draft`, and historical status tracking can be marked `deprecated`.
+  - Server-side answer assembly now refuses weakly supported responses, requires citation-backed retrieval, and narrows operational answers when only planning-oriented material matches.
+  - Local validation has now completed through Prisma generation, targeted assistant-file linting, successful migration deployment, and a successful full production build.
+  - EH15.2 has now been user-tested and validated.
+  - EH15.3 is now the next allowed step, but should only start when explicitly requested.
+
+### EH15.3: Evaluation and Observability
+**Priority:** High within EH15 after EH15.2
+**Status:** Planned
+**Depends on:** EH15.1 and EH15.2
+
+Scope:
+1. Build a fixed evaluation set for workflow guidance, module routing, refusal quality, ambiguity handling, multilingual questions, and later record explanations.
+2. Log assistant metadata such as latency, model used, retrieval hits, cited hits, fallback path, refusal reason, and failure state.
+3. Add an internal quality view for no-hit, low-confidence, and failed-answer patterns.
+4. Add regression checks so assistant changes can be validated before rollout.
+
+Exit criteria:
+- Assistant quality is measurable rather than anecdotal.
+- Retrieval and answer regressions can be detected before shipping.
+- The product can identify which question types still fail and why.
+
+### EH15.4: Knowledge Operations
+**Priority:** Medium within EH15 after EH15.3
+**Status:** Planned
+**Depends on:** EH15.2 governance baseline
+
+Scope:
+1. Add admin-facing ingestion and curation controls for assistant knowledge.
+2. Support ingestion status, source review, diff visibility, rollback, and source-level disable or pin actions.
+3. Expand curated workflow guidance so protected modules rely less on raw planning text and more on operator-safe summaries.
+4. Treat knowledge quality as a managed product concern rather than a one-time ingestion task.
+
+Exit criteria:
+- Assistant knowledge can be reviewed and controlled without code edits alone.
+- Operators see more direct workflow-safe guidance and less planning-heavy language.
+
+### EH15.5: Narrow Live-Record Explanations
+**Priority:** Medium within EH15 after EH15.4
+**Status:** Planned
+**Depends on:** EH15.1 through EH15.4
+
+Scope:
+1. Add read-only explainers for specific records already visible to the signed-in user.
+2. Minimize record payloads to status explanation, supporting facts, and next-step reasoning.
+3. Start with high-value domains such as billing status, payment settlement state, follow-up stage, route pressure, and exceptions severity.
+4. Keep all live-data answers inside current role scope with explicit server-side authorization checks.
+
+Exit criteria:
+- Staff can ask why a visible record shows a given state without broad transactional-data querying.
+- Live-record answers remain explanatory, narrow, and auditable.
 
 ### EH12 Follow-On Analytics: Loss-Risk Watchlist
 **Priority:** High after the current validated route analytics baseline

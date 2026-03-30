@@ -142,7 +142,10 @@ export function AssistantPopup({
       });
 
       if (!response.ok) {
-        throw new Error("The assistant could not answer that yet.");
+        const payload = (await response.json().catch(() => null)) as
+          | { error?: string }
+          | null;
+        throw new Error(payload?.error || "The assistant could not answer that yet.");
       }
 
       const payload = (await response.json()) as {
@@ -172,7 +175,7 @@ export function AssistantPopup({
         <button
           type="button"
           onClick={() => setIsOpen(true)}
-          className="fixed right-4 bottom-4 z-50 flex items-center gap-3 rounded-full border border-primary/20 bg-primary px-4 py-3 text-left text-primary-foreground shadow-[0_18px_45px_rgba(16,84,109,0.32)] transition hover:bg-primary/92 sm:right-6 sm:bottom-6"
+          className="fixed right-4 bottom-4 z-[80] flex items-center gap-3 rounded-full border border-primary/20 bg-primary px-4 py-3 text-left text-primary-foreground shadow-[0_18px_45px_rgba(16,84,109,0.32)] transition hover:bg-primary/92 sm:right-6 sm:bottom-6"
         >
           <div className="flex size-10 items-center justify-center rounded-full bg-white/14">
             <BotMessageSquare className="size-5" />
@@ -185,7 +188,7 @@ export function AssistantPopup({
       ) : null}
 
       {isOpen ? (
-        <div className="fixed right-4 bottom-4 z-50 w-[min(100vw-2rem,25rem)] overflow-hidden rounded-[1.75rem] border border-border/80 bg-[#fbfdfe] shadow-[0_28px_90px_rgba(15,23,42,0.18)] sm:right-6 sm:bottom-6">
+        <div className="fixed right-2 bottom-2 z-[80] w-[min(100vw-1rem,25rem)] rounded-[1.75rem] border border-border/80 bg-[#fbfdfe] shadow-[0_28px_90px_rgba(15,23,42,0.18)] sm:right-6 sm:bottom-6 sm:w-[min(100vw-2rem,25rem)]">
           <div className="border-b border-border/70 bg-white px-5 py-4">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
@@ -211,14 +214,16 @@ export function AssistantPopup({
             </div>
           </div>
 
-          <div className="grid max-h-[72vh] min-h-[31rem] grid-rows-[auto_minmax(0,1fr)_auto]">
+          <div className="grid max-h-[min(82vh,42rem)] min-h-[28rem] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden rounded-b-[1.75rem] sm:min-h-[31rem]">
             <div className="border-b border-border/70 bg-white/80 px-4 py-3">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/72">
-                    Recent help
+                    Recent topics
                   </p>
-                  <p className="mt-1 text-sm text-muted-foreground">Pick a recent question or start fresh.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Distinct recent chats only, so repeats stay out of the way.
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -246,9 +251,10 @@ export function AssistantPopup({
                 </button>
               </div>
 
-              <div className="mt-3 flex flex-wrap gap-2">
+              <div className="-mx-1 mt-3 overflow-x-auto px-1 pb-1">
+                <div className="flex min-w-max gap-2 sm:min-w-0 sm:flex-wrap">
                 {workspaceState?.recentConversations.length ? (
-                  workspaceState.recentConversations.slice(0, 5).map((conversation) => {
+                  workspaceState.recentConversations.slice(0, 2).map((conversation) => {
                     const isActive = conversation.id === activeConversationId;
 
                     return (
@@ -260,7 +266,7 @@ export function AssistantPopup({
                           void loadWorkspace(conversation.id);
                         }}
                         className={cn(
-                          "min-w-0 max-w-full rounded-full border px-3 py-2 text-left text-xs transition",
+                          "shrink-0 rounded-full border px-3 py-2 text-left text-xs transition sm:min-w-0 sm:max-w-full sm:shrink",
                           isActive
                             ? "border-primary/30 bg-primary/8 text-foreground"
                             : "border-border/70 bg-white text-muted-foreground hover:border-primary/25 hover:text-foreground"
@@ -277,6 +283,7 @@ export function AssistantPopup({
                     Your first question will appear here.
                   </div>
                 )}
+                </div>
               </div>
             </div>
 

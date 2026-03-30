@@ -42,6 +42,27 @@ function serializeWorkspaceState(
         : null,
       chunkCount: state.knowledgeBase.chunkCount,
     },
+    qualityOverview: state.qualityOverview
+      ? {
+          recentWindowDays: state.qualityOverview.recentWindowDays,
+          interactionCount: state.qualityOverview.interactionCount,
+          noHitCount: state.qualityOverview.noHitCount,
+          lowConfidenceCount: state.qualityOverview.lowConfidenceCount,
+          failureCount: state.qualityOverview.failureCount,
+          recentFlaggedLogs: state.qualityOverview.recentFlaggedLogs.map((log) => ({
+            ...log,
+            createdAt: log.createdAt.toISOString(),
+          })),
+          latestEvaluationRun: state.qualityOverview.latestEvaluationRun
+            ? {
+                ...state.qualityOverview.latestEvaluationRun,
+                startedAt: state.qualityOverview.latestEvaluationRun.startedAt.toISOString(),
+                completedAt:
+                  state.qualityOverview.latestEvaluationRun.completedAt?.toISOString() ?? null,
+              }
+            : null,
+        }
+      : null,
   };
 }
 
@@ -64,7 +85,12 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const conversationId = searchParams.get("conversationId");
-  const workspaceState = await getAssistantWorkspaceState(user.id, conversationId);
+  const workspaceState = await getAssistantWorkspaceState(
+    user.id,
+    user.role,
+    conversationId
+  );
+
 
   return NextResponse.json({
     workspaceState: serializeWorkspaceState(workspaceState),
@@ -88,16 +114,32 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Question is required." }, { status: 400 });
   }
 
-  const response = await searchAssistantKnowledge({
-    query,
-    role: user.role,
-    userId: user.id,
-    conversationId,
-  });
-  const workspaceState = await getAssistantWorkspaceState(user.id, response?.conversationId ?? null);
+  try {
+    const response = await searchAssistantKnowledge({
+      query,
+      role: user.role,
+      userId: user.id,
+      conversationId,
+    });
+    const workspaceState = await getAssistantWorkspaceState(
+      user.id,
+      user.role,
+      response?.conversationId ?? null
+    );
 
-  return NextResponse.json({
-    response,
-    workspaceState: serializeWorkspaceState(workspaceState),
-  });
+    return NextResponse.json({
+      response,
+      workspaceState: serializeWorkspaceState(workspaceState),
+    });
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "The assistant failed while processing this question.",
+      },
+      { status: 500 }
+    );
+  }
 }

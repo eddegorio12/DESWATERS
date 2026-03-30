@@ -103,6 +103,8 @@ model User {
   recordedMeterReplacements MeterReplacementHistory[] @relation("MeterReplacementRecordedBy")
   assistantConversations AssistantConversation[] @relation("AssistantConversationOwner")
   assistantIngestionRuns AssistantIngestionRun[] @relation("AssistantIngestionTriggeredBy")
+  assistantResponseLogs AssistantResponseLog[] @relation("AssistantResponseLogUser")
+  assistantEvaluationRuns AssistantEvaluationRun[] @relation("AssistantEvaluationTriggeredBy")
   finalizedBills Bill[] @relation("BillFinalizedBy")
   printedBills Bill[] @relation("BillPrintedBy")
   distributedBills Bill[] @relation("BillDistributedBy")
@@ -598,6 +600,7 @@ model AssistantKnowledgeDocument {
   title          String
   sourcePath     String
   sourceType     AssistantSourceType
+  governanceState AssistantSourceGovernanceState @default(APPROVED)
   href           String?
   featureDomain  String?
   routeScope     String?
@@ -612,24 +615,29 @@ model AssistantKnowledgeDocument {
 }
 
 model AssistantKnowledgeChunk {
-  id                String                    @id @default(uuid())
-  documentId        String
-  document          AssistantKnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  chunkIndex        Int
-  sectionTitle      String?
-  body              String
-  summary           String
-  searchText        String
-  keywordTerms      String[]                  @default([])
-  roleScope         Role[]                    @default([])
-  contentHash       String
-  tokenCount        Int
-  embeddingUpdatedAt DateTime?
-  createdAt         DateTime                  @default(now())
-  updatedAt         DateTime                  @updatedAt
+  id                   String                     @id @default(uuid())
+  documentId           String
+  document             AssistantKnowledgeDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  chunkIndex           Int
+  sectionTitle         String?
+  body                 String
+  summary              String
+  searchText           String
+  keywordTerms         String[]                   @default([])
+  roleScope            Role[]                     @default([])
+  contentHash          String
+  tokenCount           Int
+  embedding            Json?
+  embeddingModel       String?
+  embeddingDimensions  Int?
+  embeddingContentHash String?
+  embeddingUpdatedAt   DateTime?
+  createdAt            DateTime                   @default(now())
+  updatedAt            DateTime                   @updatedAt
 
   @@unique([documentId, chunkIndex])
   @@index([documentId, chunkIndex])
+  @@index([embeddingUpdatedAt])
 }
 
 model AssistantIngestionRun {
@@ -675,9 +683,89 @@ model AssistantConversationMessage {
   @@index([conversationId, createdAt])
 }
 
+model AssistantResponseLog {
+  id                 String                    @id @default(uuid())
+  userId             String?
+  user               User?                     @relation("AssistantResponseLogUser", fields: [userId], references: [id])
+  interactionSource  AssistantInteractionSource @default(USER_CHAT)
+  evaluationCaseKey  String?
+  conversationId     String?
+  query              String
+  disposition        AssistantDisposition
+  modelUsed          String?
+  fallbackPath       String[]                  @default([])
+  refusalReason      String?
+  failureState       AssistantFailureState     @default(NONE)
+  noHits             Boolean                   @default(false)
+  lowConfidence      Boolean                   @default(false)
+  retrievalHitCount  Int                       @default(0)
+  citedHitCount      Int                       @default(0)
+  latencyMs          Int
+  topHitScore        Float?
+  citations          Json?
+  relatedModuleHrefs String[]                  @default([])
+  createdAt          DateTime                  @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([interactionSource, createdAt(sort: Desc)])
+  @@index([failureState, createdAt(sort: Desc)])
+  @@index([noHits, lowConfidence, createdAt(sort: Desc)])
+}
+
+model AssistantEvaluationRun {
+  id           String                     @id @default(uuid())
+  triggeredById String?
+  triggeredBy  User?                      @relation("AssistantEvaluationTriggeredBy", fields: [triggeredById], references: [id])
+  status       AssistantEvaluationRunStatus @default(RUNNING)
+  caseCount    Int                        @default(0)
+  passedCount  Int                        @default(0)
+  averageScore Float?
+  summary      Json?
+  errorMessage String?
+  startedAt    DateTime                   @default(now())
+  completedAt  DateTime?
+  createdAt    DateTime                   @default(now())
+  updatedAt    DateTime                   @updatedAt
+  results      AssistantEvaluationResult[]
+
+  @@index([status, startedAt(sort: Desc)])
+}
+
+model AssistantEvaluationResult {
+  id                  String                 @id @default(uuid())
+  runId               String
+  run                 AssistantEvaluationRun @relation(fields: [runId], references: [id], onDelete: Cascade)
+  caseKey             String
+  caseLabel           String
+  category            AssistantEvaluationCategory
+  role                Role
+  query               String
+  expectedDisposition AssistantDisposition
+  actualDisposition   AssistantDisposition
+  passed              Boolean                @default(false)
+  score               Int                    @default(0)
+  citedHitCount       Int                    @default(0)
+  relatedModuleMatch  Boolean                @default(false)
+  keywordMatch        Boolean                @default(false)
+  failureState        AssistantFailureState  @default(NONE)
+  answerExcerpt       String?
+  notes               String?
+  createdAt           DateTime               @default(now())
+
+  @@unique([runId, caseKey])
+  @@index([runId, passed])
+  @@index([category, passed])
+}
+
 enum AssistantSourceType {
   MEMORY_BANK
   WORKFLOW_GUIDE
+}
+
+enum AssistantSourceGovernanceState {
+  APPROVED
+  DRAFT
+  DEPRECATED
 }
 
 enum AssistantIngestionStatus {
@@ -689,6 +777,43 @@ enum AssistantIngestionStatus {
 enum AssistantConversationMessageRole {
   USER
   ASSISTANT
+}
+
+enum AssistantInteractionSource {
+  USER_CHAT
+  EVALUATION
+}
+
+enum AssistantDisposition {
+  ALLOWED
+  NARROWED
+  REFUSED
+  ESCALATION_REQUIRED
+}
+
+enum AssistantFailureState {
+  NONE
+  NO_HITS
+  LOW_CONFIDENCE
+  GOVERNANCE_GATED
+  POLICY_REFUSED
+  POLICY_ESCALATION
+  INTERNAL_ERROR
+}
+
+enum AssistantEvaluationRunStatus {
+  RUNNING
+  SUCCEEDED
+  FAILED
+}
+
+enum AssistantEvaluationCategory {
+  WORKFLOW_ROUTING
+  POLICY_EXPLANATION
+  ROLE_BOUNDARY
+  AMBIGUITY
+  MULTILINGUAL
+  SAFETY
 }
 
 model ServiceZone {

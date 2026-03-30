@@ -53,6 +53,15 @@
 - EH15 now also exposes the assistant as a non-technical shell-level popup chat for signed-in staff, so workflow help no longer depends on opening a separate dedicated page.
 - EH15 now also includes OpenRouter-backed answer synthesis on top of retrieved sources, defaulting to `openrouter/free` with configured free-model fallbacks when the API key is available.
 - The current EH15 popup-assistant baseline is now tested and validated for the implemented shell-level chat surface, saved-history behavior, multilingual prompt handling, tariff-estimate helper path, and model-backed answer synthesis with fallback behavior.
+- The current EH15 baseline is not yet enterprise-grade because retrieval ranking, governance, evaluation, and assistant operations are still too lightweight for production-scale trust requirements.
+- The next EH15 roadmap is now explicitly split into retrieval hardening, safety/governance, evaluation-plus-observability, knowledge operations, and only then narrow live-record explanations.
+- EH15.1 retrieval hardening is now implemented in the repo through tighter chunking, incremental corpus sync, embedding freshness tracking, hybrid lexical-plus-semantic retrieval, and deterministic source-priority reranking.
+- The EH15.1 embedding path now uses JSONB as the guaranteed local baseline and can also populate an optional `embeddingVector` column when the database exposes `pgvector`, so retrieval hardening no longer depends on extension availability in local Postgres.
+- EH15.1 local validation has now completed through Prisma generation, targeted assistant-file linting, successful migration deployment, and a successful full production build.
+- EH15.1 has now been user-tested and validated.
+- EH15.2 trust/safety/governance is now implemented in the repo through server-side request policy decisions, prompt-injection plus secret-exfiltration defenses, governed assistant source states, and citation-backed low-confidence fallback behavior.
+- EH15.2 local validation has now completed through Prisma generation, targeted assistant-file linting, successful migration deployment, and a successful full production build.
+- EH15.2 has now been user-tested and validated.
 - `/admin/routes` now also includes a clearly labeled loss-risk watchlist that ranks routes by recent billed-versus-collected gap plus current overdue exposure, plus a route-linked complaint hotspot view based on first-class complaint records.
 - Dedicated admin-management audit logging is now implemented, tested, and validated through a first-class Prisma event table plus a visible audit trail on `/admin/staff-access` for account creation, role changes, activation changes, lockout clearing, temporary-password resets, and self-service password changes.
 - The deferred EH9 field-service expansion has now been implemented, tested, and validated with complaint-driven field work orders on `/admin/exceptions`, including technician assignment, dispatch notes, scheduled visits, in-progress tracking, completion logging, and complaint auto-resolution on completed work.
@@ -179,6 +188,7 @@
 - The planned staff assistant should launch as a protected internal tool, not a public chatbot.
 - The initial implementation should remain read-only and should not trigger operational mutations.
 - Documentation-first RAG is the recommended first slice; broad open-ended querying across transactional data should remain deferred.
+- Enterprise-grade maturity now specifically requires stronger retrieval ranking, measurable evaluation, server-enforced safety behavior, and governed knowledge-source quality before broader live-data scope is approved.
 - Any live-record explanation path must stay inside the signed-in user’s current role scope and should only answer narrowly scoped record questions.
 - Answers should cite their sources and explicitly acknowledge uncertainty when retrieval is incomplete.
 
@@ -268,11 +278,14 @@
 
 ### EH15: Staff AI Assistant & Knowledge Retrieval
 - Status: `in progress`
-- Notes: The next newly defined feature lane is a protected internal DWDS assistant on `/admin/assistant`, using documentation-first RAG, role-aware read-only answers, mandatory citations, per-user chat history, and OpenRouter-backed model access. Broad open-ended transactional-data querying remains deferred until the documentation-first baseline is validated. The first implementation slice is now in the repo as a protected assistant workspace with role-aware search over `memory-bank` documentation plus curated module guides, visible citations, and starter prompts. The next persisted-retrieval slice is now also in the repo through assistant knowledge-document and chunk storage, ingestion-run metadata, and user-scoped assistant conversation history. Model-backed answer synthesis is now also wired in on top of retrieved sources through `openrouter/free` with configured fallbacks. The current popup-assistant baseline is now tested and validated for the implemented chat surface, multilingual prompt handling, saved-history behavior, and tariff-estimate helper path. Retrieval reranking still remains open.
+- Notes: The next newly defined feature lane is a protected internal DWDS assistant on `/admin/assistant`, using documentation-first RAG, role-aware read-only answers, mandatory citations, per-user chat history, and OpenRouter-backed model access. Broad open-ended transactional-data querying remains deferred until the documentation-first baseline is validated. The first implementation slice is now in the repo as a protected assistant workspace with role-aware search over `memory-bank` documentation plus curated module guides, visible citations, and starter prompts. The next persisted-retrieval slice is now also in the repo through assistant knowledge-document and chunk storage, ingestion-run metadata, and user-scoped assistant conversation history. Model-backed answer synthesis is now also wired in on top of retrieved sources through `openrouter/free` with configured fallbacks. The current popup-assistant baseline is now tested and validated for the implemented chat surface, multilingual prompt handling, saved-history behavior, and tariff-estimate helper path. EH15.2 trust/safety/governance is now implemented through a server-side assistant policy layer for allowed, narrowed, refused, and escalation-required requests; prompt-injection plus secret-exfiltration defenses; governed `approved`/`draft`/`deprecated` source states; and enforced citation-backed low-confidence fallback behavior. EH15.2 has now been user-tested and validated. EH15.3 evaluation and observability is now the next allowed assistant maturity step, but it should only start when explicitly requested.
+- EH15.1 status: `validated`
+- EH15.1 notes: the repo now includes section-aware chunking, hybrid retrieval, deterministic source-priority reranking, incremental sync, and embedding storage that works on local Postgres without requiring `pgvector`.
 
 ## Current Next-Step Recommendation
 EH13 and EH14 are now closed. The immediate deferred EH11 security follow-on has now also been completed through optional `SUPER_ADMIN` 2FA.
 
 The next step is now:
-1. continue EH15 with retrieval reranking and stronger source prioritization so roadmap chunks stop surfacing above operator-facing guidance
-2. run the fixed EH15 validation set for workflow answers, refusal behavior, ambiguity handling, multilingual prompts, and saved-history behavior before any live-record helpers
+1. implement `EH15.3` evaluation and observability when explicitly requested now that EH15.2 is user-validated
+2. keep the EH15 assistant read-only while the earlier governance and observability layers mature
+3. keep `EH15.5` live-record explainers deferred until the earlier EH15 maturity layers are stable
