@@ -1,6 +1,8 @@
 "use server";
 
 import {
+  AutomationProposalDecision,
+  AutomationWorkerType,
   BillStatus,
   CustomerStatus,
   NotificationTemplate,
@@ -9,12 +11,20 @@ import {
 } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
+import {
+  completeAutomationRunWithProposals,
+  createPendingAutomationRun,
+  failAutomationRun,
+} from "@/features/automation/lib/automation-store";
+import { type FollowUpTriageCandidate } from "@/features/automation/lib/openclaw-adapter";
 import { requireStaffCapability } from "@/features/auth/lib/authorization";
 import {
   getOperationalBillStatus,
   getOutstandingBalance,
   syncReceivableStatuses,
 } from "@/features/follow-up/lib/workflow";
+import { getDaysPastDue } from "@/features/follow-up/lib/workflow";
+import { generateFollowUpTriageProposals } from "@/features/follow-up/lib/follow-up-triage";
 import { dispatchFollowUpNotifications } from "@/features/notifications/lib/dispatch";
 import { createPrintedNoticeLog } from "@/features/notices/lib/logging";
 import { prisma } from "@/lib/prisma";
@@ -34,6 +44,169 @@ function revalidateOperationalSurfaces() {
   revalidatePath("/admin/billing");
   revalidatePath("/admin/payments");
   revalidatePath("/admin/collections");
+  revalidatePath("/admin/follow-up");
+}
+
+export async function runFollowUpTriage() {
+  const staffUser = await requireStaffCapability("followup:update");
+  await syncReceivableStatuses();
+
+  const startedAt = Date.now();
+  const run = await createPendingAutomationRun({
+    workerType: AutomationWorkerType.FOLLOW_UP_TRIAGE,
+    scopeType: "FOLLOW_UP_VISIBLE_QUEUE",
+    triggeredById: staffUser.id,
+    provider: "DWDS_INTERNAL",
+    model: "follow-up-heuristic-v1",
+  });
+
+  try {
+    const bills = await prisma.bill.findMany({
+      where: {
+        status: {
+          in: [BillStatus.UNPAID, BillStatus.PARTIALLY_PAID, BillStatus.OVERDUE],
+        },
+      },
+      orderBy: [{ dueDate: "asc" }],
+      select: {
+        id: true,
+        billingPeriod: true,
+        dueDate: true,
+        totalCharges: true,
+        status: true,
+        followUpStatus: true,
+        customer: {
+          select: {
+            id: true,
+            accountNumber: true,
+            name: true,
+            status: true,
+          },
+        },
+        payments: {
+          where: {
+            status: PaymentStatus.COMPLETED,
+          },
+          select: {
+            amount: true,
+          },
+        },
+      },
+    });
+
+    const candidates = bills
+      .map((bill) => {
+        const outstandingBalance = getOutstandingBalance(bill.totalCharges, bill.payments);
+
+        if (outstandingBalance <= 0) {
+          return null;
+        }
+
+        const queueFocus: FollowUpTriageCandidate["queueFocus"] =
+          bill.customer.status === CustomerStatus.DISCONNECTED
+            ? "DISCONNECTED_HOLD"
+            : bill.status === BillStatus.OVERDUE && bill.followUpStatus === ReceivableFollowUpStatus.CURRENT
+              ? "NEEDS_REMINDER"
+              : bill.status === BillStatus.OVERDUE &&
+                  bill.followUpStatus === ReceivableFollowUpStatus.REMINDER_SENT
+                ? "NEEDS_FINAL_NOTICE"
+                : bill.status === BillStatus.OVERDUE &&
+                    (bill.followUpStatus === ReceivableFollowUpStatus.FINAL_NOTICE_SENT ||
+                      bill.followUpStatus === ReceivableFollowUpStatus.DISCONNECTION_REVIEW)
+                  ? "READY_FOR_DISCONNECTION"
+                  : "MONITORING";
+
+        return {
+          billId: bill.id,
+          customerId: bill.customer.id,
+          customerName: bill.customer.name,
+          accountNumber: bill.customer.accountNumber,
+          billingPeriod: bill.billingPeriod,
+          queueFocus,
+          followUpStatus: bill.followUpStatus,
+          customerStatus: bill.customer.status,
+          daysPastDue: getDaysPastDue(bill.dueDate),
+          outstandingBalance,
+        };
+      })
+      .filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null);
+
+    const proposals = await generateFollowUpTriageProposals(candidates);
+
+    await completeAutomationRunWithProposals({
+      runId: run.id,
+      latencyMs: Date.now() - startedAt,
+      proposals: proposals.map((proposal) => ({
+        rank: proposal.rank,
+        targetType: "BILL",
+        targetId: proposal.billId,
+        summary: proposal.summary,
+        recommendedReviewStep: proposal.recommendedReviewStep,
+        rationale: proposal.rationale,
+        confidenceLabel: proposal.confidenceLabel,
+        sourceMetadata: proposal.sourceMetadata,
+      })),
+    });
+  } catch (error) {
+    await failAutomationRun({
+      runId: run.id,
+      latencyMs: Date.now() - startedAt,
+      failureReason: error instanceof Error ? error.message : "The follow-up triage worker failed.",
+    });
+
+    throw error;
+  }
+
+  revalidateOperationalSurfaces();
+}
+
+export async function dismissFollowUpTriageProposal(proposalId: string) {
+  const staffUser = await requireStaffCapability("followup:update");
+
+  const proposal = await prisma.automationProposal.findUnique({
+    where: {
+      id: proposalId,
+    },
+    select: {
+      id: true,
+      runId: true,
+      dismissedAt: true,
+      run: {
+        select: {
+          workerType: true,
+        },
+      },
+    },
+  });
+
+  if (!proposal || proposal.run.workerType !== AutomationWorkerType.FOLLOW_UP_TRIAGE) {
+    throw new Error("That follow-up triage proposal no longer exists.");
+  }
+
+  if (proposal.dismissedAt) {
+    return;
+  }
+
+  await prisma.$transaction([
+    prisma.automationProposal.update({
+      where: {
+        id: proposal.id,
+      },
+      data: {
+        dismissedAt: new Date(),
+        dismissedById: staffUser.id,
+      },
+    }),
+    prisma.automationReview.create({
+      data: {
+        runId: proposal.runId,
+        proposalId: proposal.id,
+        reviewedById: staffUser.id,
+        decision: AutomationProposalDecision.DISMISSED,
+      },
+    }),
+  ]);
+
   revalidatePath("/admin/follow-up");
 }
 

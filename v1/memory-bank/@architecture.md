@@ -36,6 +36,10 @@
    - Any future assistant must inherit the same authorization boundaries as the rest of the protected app
    - Retrieval and live-record explanation must be filtered by role and module access before prompt assembly
    - V1 should remain read-only until the assistant is validated as a trustworthy explanatory surface
+9. **Automation must be supervised before it is trusted**
+   - Any future AI worker or automation layer must begin as proposal-first orchestration, not silent mutation
+   - Workflow mutations must still execute through the same server-authoritative actions, authorization checks, and audit trails used by human staff
+   - Background execution or agent runtime infrastructure should be introduced only when a narrow operational use case proves the need
 
 ## Product Naming Convention
 - **Formal name:** `DEGORIO WATER DISTRIBUTION SERVICES`
@@ -214,6 +218,33 @@
 - Retrieval data should stay inside the existing PostgreSQL architecture, preferably through `pgvector`, instead of adding a separate vector service in the first slice.
 - `/admin/assistant` now also exposes an admin-only knowledge-operations layer for source sync review, diff visibility, source-level curation, and revision-backed rollback without leaving the protected assistant domain.
 
+### Staff Automation Workflow
+- EH16 should extend the validated EH15 assistant baseline rather than bypassing it with a separate autonomous control plane.
+- The first automation slice should stay inside the protected DWDS app and rely on the same PostgreSQL, Prisma, Auth.js, and role-authorization foundation already governing staff workflows.
+- Early worker behavior should remain advisory, with follow-up triage defined as the first EH16 slice inside `/admin/follow-up`.
+- Worker outputs should include source basis, confidence or caution signals, and enough context for a reviewer to accept, edit, or reject the proposal.
+- EH16 V1 should not include any direct action-execution path from worker output to workflow mutation.
+- Broad autonomous multi-step execution, unrestricted record discovery, or hidden background retries should remain out of scope until a later phase proves the need and adds explicit safety plus audit controls.
+- Later worker lanes may include exception summarization, route-pressure briefings, notice drafting, and assistant knowledge-maintenance support after the follow-up triage baseline proves useful.
+
+#### EH16.1 File Responsibilities
+- `prisma/schema.prisma`: defines the durable worker-state contract through `AutomationRun`, `AutomationProposal`, and `AutomationReview`. This keeps proposal history, dismissal state, and run metadata inside the same PostgreSQL authority already used by the rest of DWDS.
+- `src/features/automation/lib/automation-store.ts`: low-level persistence helpers for worker runs. This file should stay narrow and storage-focused so future worker types can reuse the same run/proposal lifecycle without duplicating Prisma transaction logic.
+- `src/features/automation/lib/openclaw-adapter.ts`: the only intended runtime integration seam for OpenClaw-style orchestration. It should translate bounded DWDS candidates into provider calls and map provider output back into DWDS proposal shape, but it must not become a second source of truth or mutate records directly.
+- `src/features/follow-up/lib/follow-up-triage.ts`: the domain ranking layer for EH16.1. It owns the current deterministic fallback scoring, summary generation, rationale generation, confidence labels, and the provider-fallback decision when the OpenClaw adapter returns no result.
+- `src/features/follow-up/actions.ts`: the server-authoritative orchestration layer for the worker. It is responsible for auth checks, candidate gathering, run lifecycle updates, dismissal review logging, and route revalidation. Any later worker action path should still flow through explicit protected server actions here or in an equivalent domain module.
+- `src/app/(dashboard)/admin/follow-up/page.tsx`: the module composition point that loads both the operational follow-up queue and the latest worker output. Keeping the worker embedded here preserves the product rule that EH16 augments existing staff modules instead of creating a separate automation console.
+- `src/features/follow-up/components/follow-up-triage-panel.tsx`: the advisory presentation layer for EH16.1. It renders run status, proposal cards, and dismissal controls only. It should stay free of direct business-state mutation logic.
+- `prisma/seed.mjs`: local-development realism support. It now includes optional sample operational data and role-scoped sample staff accounts so EH16.1 can be validated against non-empty follow-up queues instead of synthetic placeholder rows.
+
+#### EH16.1 Architectural Notes
+- The active baseline is deliberately split into three layers: persistence (`automation-store.ts`), runtime boundary (`openclaw-adapter.ts`), and domain reasoning (`follow-up-triage.ts`). Keep that separation if EH16 grows.
+- The OpenClaw seam is optional infrastructure, not a requirement for the current baseline. If the adapter is unavailable or intentionally disabled, the deterministic fallback remains the system behavior.
+- Proposal persistence is part of the product design, not incidental implementation detail. Future workers should preserve the same inspectable run history, dismissal state, and review records even if the reasoning backend changes.
+- EH16.1 is embedded in the follow-up module because the architectural goal is augmentation of existing protected workflows. Future worker slices should prefer the same pattern: place the worker beside the owning workflow rather than behind a generic autonomous-agent dashboard.
+- The current fallback ranking is intentionally policy-shaped rather than purely numerical: disconnection-ready accounts rank first, disconnected-hold review ranks next, then final-notice review, reminder review, and monitoring. This reflects operator urgency and workflow stage, not just balance size.
+- Summary and rationale generation are also part of the architecture contract. The worker should explain rank in staff-operational language using visible DWDS facts such as billing period, account number, follow-up stage, days past due, outstanding balance, and customer disconnect state.
+
 ### Overdue & Disconnection Workflow
 - Open bills now carry explicit receivables follow-up states separate from printed bill wording.
 - Server-side synchronization keeps open bill status aligned with due dates and completed-payment totals.
@@ -268,7 +299,10 @@
 - EH12 route analytics now also include a revenue-loss watchlist derived from recent billed-versus-collected gaps plus current overdue exposure, while route-linked complaint hotspot visibility is now backed by a first-class `Complaint` domain in the schema rather than inferred proxies.
 - The current architecture-level public-surface baseline now includes canonical/social metadata support, crawler-ready route metadata, generated share previews, and clearer CTA wiring without splitting the marketing surface into a separate app.
 - The next public-surface architecture task is continued manual accessibility QA while the current route structure and shared marketing primitives stay intact.
-- The next assistant-related architecture task is continued scope discipline on the validated EH15.5 live-record explainers, while the assistant remains read-only and documentation-first outside those narrow record helpers.
+- The completed EH15 baseline should remain scope-disciplined: the validated EH15.5 live-record explainers stay narrow, and the assistant remains read-only and documentation-first outside those record helpers.
+- EH16 should be the next automation architecture lane: supervised worker runs inside the protected app, proposal review before execution, and explicit auditability for every accepted automation output.
+- Any future OpenClaw integration should be treated as an orchestration adapter or worker runtime behind the protected app, not as the system of record and not as the authority for direct workflow mutation.
+- If EH16 later needs asynchronous execution, it should begin with narrow admin-triggered jobs plus visible status tracking before any broader queue or background-worker architecture is introduced.
 
 ## Usability Architecture Targets
 

@@ -10,6 +10,7 @@ import {
 import { ModuleAccessStateView } from "@/features/admin/components/module-access-state";
 import { getModuleAccess } from "@/features/auth/lib/authorization";
 import { FollowUpBoard } from "@/features/follow-up/components/follow-up-board";
+import { FollowUpTriagePanel } from "@/features/follow-up/components/follow-up-triage-panel";
 import {
   getDaysPastDue,
   getOutstandingBalance,
@@ -20,6 +21,37 @@ import { prisma } from "@/lib/prisma";
 
 type AdminFollowUpPageProps = {
   searchParams: Promise<Record<string, SearchParamValue>>;
+};
+
+type FollowUpCustomerEntry = {
+  id: string;
+  accountNumber: string;
+  name: string;
+  status: "ACTIVE" | "INACTIVE" | "DISCONNECTED";
+  statusNote: string | null;
+  totalOutstanding: number;
+  overdueBalance: number;
+  canDisconnect: boolean;
+  canReinstate: boolean;
+  hasOpenOverdue: boolean;
+  bills: {
+    id: string;
+    billingPeriod: string;
+    meterNumber: string;
+    dueDate: string;
+    paidAmount: number;
+    outstandingBalance: number;
+    status: "UNPAID" | "PARTIALLY_PAID" | "PAID" | "OVERDUE";
+    followUpStatus:
+      | "CURRENT"
+      | "REMINDER_SENT"
+      | "FINAL_NOTICE_SENT"
+      | "DISCONNECTION_REVIEW"
+      | "DISCONNECTED"
+      | "RESOLVED";
+    followUpNote: string | null;
+    daysPastDue: number;
+  }[];
 };
 
 export default async function AdminFollowUpPage({
@@ -42,7 +74,7 @@ export default async function AdminFollowUpPage({
     | "DISCONNECTED_HOLD"
     | "MONITORING";
 
-  const [bills, notifications] = await Promise.all([
+  const [bills, notifications, latestTriageRun] = await Promise.all([
     prisma.bill.findMany({
       where: {
         status: {
@@ -111,35 +143,47 @@ export default async function AdminFollowUpPage({
         },
       },
     }),
+    prisma.automationRun.findFirst({
+      where: {
+        workerType: "FOLLOW_UP_TRIAGE",
+      },
+      orderBy: [{ startedAt: "desc" }],
+      select: {
+        id: true,
+        status: true,
+        startedAt: true,
+        completedAt: true,
+        proposalCount: true,
+        failureReason: true,
+        triggeredBy: {
+          select: {
+            name: true,
+            role: true,
+          },
+        },
+        proposals: {
+          orderBy: [{ rank: "asc" }],
+          select: {
+            id: true,
+            rank: true,
+            summary: true,
+            recommendedReviewStep: true,
+            rationale: true,
+            confidenceLabel: true,
+            targetId: true,
+            dismissedAt: true,
+            dismissedBy: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    }),
   ]);
 
-  const customerMap = new Map<
-    string,
-    {
-      id: string;
-      accountNumber: string;
-      name: string;
-      status: (typeof bills)[number]["customer"]["status"];
-      statusNote: string | null;
-      totalOutstanding: number;
-      overdueBalance: number;
-      canDisconnect: boolean;
-      canReinstate: boolean;
-      hasOpenOverdue: boolean;
-      bills: {
-        id: string;
-        billingPeriod: string;
-        meterNumber: string;
-        dueDate: string;
-        paidAmount: number;
-        outstandingBalance: number;
-        status: (typeof bills)[number]["status"];
-        followUpStatus: (typeof bills)[number]["followUpStatus"];
-        followUpNote: string | null;
-        daysPastDue: number;
-      }[];
-    }
-  >();
+  const customerMap = new Map<string, FollowUpCustomerEntry>();
 
   for (const bill of bills) {
     const outstandingBalance = getOutstandingBalance(bill.totalCharges, bill.payments);
@@ -149,7 +193,7 @@ export default async function AdminFollowUpPage({
     }
 
     const paidAmount = Math.max(0, bill.totalCharges - outstandingBalance);
-    const customerEntry = customerMap.get(bill.customer.id) ?? {
+    const customerEntry: FollowUpCustomerEntry = customerMap.get(bill.customer.id) ?? {
       id: bill.customer.id,
       accountNumber: bill.customer.accountNumber,
       name: bill.customer.name,
@@ -291,6 +335,21 @@ export default async function AdminFollowUpPage({
       return right.outstandingBalance - left.outstandingBalance;
     });
 
+  const queueByBillId = new Map(
+    queue.map((bill) => [
+      bill.id,
+      {
+        customerName: bill.customerName,
+        accountNumber: bill.accountNumber,
+        billingPeriod: bill.billingPeriod,
+        followUpStatus: bill.followUpStatus,
+        queueFocus: bill.queueFocus,
+        daysPastDue: bill.daysPastDue,
+        outstandingBalance: bill.outstandingBalance,
+      },
+    ])
+  );
+
   const filteredQueue = queue.filter((bill) => {
     const matchesFocus = !focus || focus === "ALL" ? true : bill.queueFocus === focus;
 
@@ -314,6 +373,51 @@ export default async function AdminFollowUpPage({
   const disconnectedCount = customers.filter((customer) => customer.status === "DISCONNECTED").length;
   const overdueCustomerCount = customers.filter((customer) => customer.overdueBalance > 0).length;
   const totalOutstanding = customers.reduce((sum, customer) => sum + customer.totalOutstanding, 0);
+
+  const triageRun = latestTriageRun
+    ? {
+        id: latestTriageRun.id,
+        status: latestTriageRun.status,
+        startedAtLabel: latestTriageRun.startedAt.toLocaleString("en-PH"),
+        completedAtLabel: latestTriageRun.completedAt
+          ? latestTriageRun.completedAt.toLocaleString("en-PH")
+          : null,
+        proposalCount: latestTriageRun.proposalCount,
+        failureReason: latestTriageRun.failureReason,
+        triggeredByName: latestTriageRun.triggeredBy.name,
+        triggeredByRole: latestTriageRun.triggeredBy.role.replaceAll("_", " "),
+      }
+    : null;
+
+  const triageProposals = latestTriageRun
+    ? latestTriageRun.proposals.map((proposal: (typeof latestTriageRun.proposals)[number]) => {
+        const queueEntry = queueByBillId.get(proposal.targetId);
+
+        return {
+          id: proposal.id,
+          rank: proposal.rank,
+          summary: proposal.summary,
+          recommendedReviewStep: proposal.recommendedReviewStep,
+          rationale: proposal.rationale,
+          confidenceLabel: proposal.confidenceLabel,
+          targetId: proposal.targetId,
+          customerName: queueEntry?.customerName ?? "Unavailable bill",
+          accountNumber: queueEntry?.accountNumber ?? "Unavailable account",
+          billingPeriod: queueEntry?.billingPeriod ?? "Unknown period",
+          followUpStatus: queueEntry?.followUpStatus ?? "CURRENT",
+          queueFocus: queueEntry?.queueFocus ?? "MONITORING",
+          daysPastDue: queueEntry?.daysPastDue ?? 0,
+          outstandingBalanceLabel: new Intl.NumberFormat("en-PH", {
+            style: "currency",
+            currency: "PHP",
+          }).format(queueEntry?.outstandingBalance ?? 0),
+          dismissedAtLabel: proposal.dismissedAt
+            ? proposal.dismissedAt.toLocaleString("en-PH")
+            : null,
+          dismissedByName: proposal.dismissedBy?.name ?? null,
+        };
+      })
+    : [];
 
   return (
     <AdminPageShell
@@ -353,6 +457,7 @@ export default async function AdminFollowUpPage({
         },
       ]}
     >
+      <FollowUpTriagePanel run={triageRun} proposals={triageProposals} />
       <FollowUpBoard
         queue={filteredQueue}
         totalCount={queue.length}

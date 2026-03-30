@@ -680,7 +680,7 @@ Current progress:
 
 ### EH15: Staff AI Assistant & Knowledge Retrieval
 **Priority:** High after the current validated EH14 protected-surface baseline
-**Status:** In progress
+**Status:** Complete
 **Depends on:** EH2 role boundaries, EH14 protected admin baseline, PostgreSQL runtime stability
 
 Scope:
@@ -716,6 +716,7 @@ Current recommendation:
 - EH15.1 is now validated.
 - EH15.2 is now validated as the trust, safety, and governance baseline on top of the validated retrieval path.
 - EH15.3 evaluation-plus-observability is now implemented and user-validated in the repo, and `EH15.4` knowledge operations are now implemented and user-validated in the repo.
+- EH15 should now be treated as a validated, closed enhancement lane whose current scope remains read-only and governance-first.
 
 Current progress:
 - `/admin/assistant` is now live as a protected staff workspace with role-aware guidance search, visible citations, and starter prompts.
@@ -864,6 +865,53 @@ Current progress:
 - Returned live context is minimized to the status reason, a few supporting facts, visible citation metadata, and related-module next steps rather than dumping raw record payloads.
 - The request-policy layer still escalates broad record discovery, list-all, and show-me queries, so EH15.5 expands explanation depth without opening unrestricted live transactional search.
 - The assistant evaluation suite now keeps a broad live-record safety case and can also add dynamic live-record explanation cases from the current database when representative records exist.
+
+### EH16: Staff Automation & AI Workers
+**Priority:** Medium after the validated EH15.5 baseline
+**Status:** In progress
+**Depends on:** EH15 validated governance baseline, EH2 role boundaries, PostgreSQL runtime stability
+
+Scope:
+1. Add supervised worker runs for bounded internal tasks, with follow-up triage defined as the first EH16 implementation slice.
+2. Keep worker output proposal-first and read-only in V1: summaries, recommendations, and ranked queues that staff can review before any action is taken.
+3. Persist worker-run, proposal, review, and execution-log records so every automation output remains inspectable and auditable.
+4. Defer any approved operational change path until a later EH16 slice instead of allowing workers to mutate records directly.
+5. Support a pluggable worker runtime or orchestration adapter such as OpenClaw only behind the protected app boundary.
+6. Defer broad autonomous multi-step execution, unrestricted record search, payment or billing mutation, and admin-security actions.
+
+Exit criteria:
+- Staff can trigger a bounded follow-up triage worker run from the protected follow-up module and review a clear proposal with supporting rationale.
+- Worker output remains advisory only and does not execute any DWDS workflow mutation.
+- Rejected, expired, or ignored proposals do not mutate records.
+- The system exposes enough telemetry to review worker quality, latency, acceptance rate, and failure causes.
+- OpenClaw or any equivalent worker runtime remains an implementation detail behind DWDS rather than a second source of truth.
+
+Recommended implementation order:
+1. Define the worker data model and proposal-review lifecycle.
+2. Ship one read-only worker lane for follow-up triage inside `/admin/follow-up`.
+3. Add UI for proposal review, dismissal, and run history in the protected follow-up module.
+4. Add observability, evaluation, and refusal rules for out-of-scope worker requests.
+5. Only after that, consider a later EH16 slice for a staff-approved draft-to-action path.
+
+Technical design note:
+- Treat `memory-bank/eh16.1-follow-up-triage-design.md` as the concrete implementation design for the first EH16 slice.
+
+Current recommendation:
+- Treat EH16 as supervised orchestration, not autonomous agency.
+- Use EH15 retrieval, policy, evaluation, and knowledge-governance primitives as the base context layer for any worker reasoning.
+- Keep the first OpenClaw integration behind a server-side adapter so DWDS remains the authority for auth, data access, and mutation rules.
+- Start with follow-up triage as the only EH16 V1 worker.
+- Keep EH16 V1 proposal-only, with no direct action execution path.
+- Avoid queue infrastructure, background daemons, or direct database write privileges until a narrow production need proves they are required.
+
+Current progress:
+- EH16.1 is now implemented in the repo as a proposal-only follow-up triage worker on `/admin/follow-up`.
+- The current slice now persists `AutomationRun`, `AutomationProposal`, and `AutomationReview` records in PostgreSQL for bounded worker history and dismissal tracking.
+- `/admin/follow-up` now exposes an `AI Triage` panel that can run the bounded worker, show ranked proposals, and dismiss proposals without mutating follow-up stage, notices, or service state.
+- The current OpenClaw adapter remains a protected server-side boundary and intentionally falls back to deterministic local triage logic until a real integration is explicitly approved.
+- Local validation has now covered Prisma client regeneration, a successful full `tsc --noEmit` pass, realistic sample-data seeding, seeded staff sign-in, in-app triage runs, persisted dismissal behavior, and manual confirmation that workflow mutations remain blocked.
+- Initial operator feedback on the refined seeded local cases is now positive, so EH16.1 should remain in active validation as the current bounded worker baseline.
+- EH16.2 exception summarization remains deferred until EH16.1 has deeper validation across more real-world usage and edge cases.
 
 ### EH12 Follow-On Analytics: Loss-Risk Watchlist
 **Priority:** High after the current validated route analytics baseline

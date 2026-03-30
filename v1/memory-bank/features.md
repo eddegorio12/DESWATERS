@@ -200,3 +200,81 @@ Exit target:
 3. Add and validate `EH15.3` evaluation plus observability.
 4. Add `EH15.4` admin knowledge operations.
 5. Add `EH15.5` narrow live-record explanations.
+
+## EH16: Staff Automation & AI Workers
+
+### Goal
+Add a supervised staff-automation layer that helps DWDS operators prepare and review operational work faster without giving AI workers silent authority over protected workflows.
+
+### Product Position
+- This is an internal staff-automation lane, not a general autonomous-agent system.
+- EH16 should build on the validated EH15 assistant baseline rather than replacing it.
+- Workers should improve operator speed on repetitive analysis and drafting tasks while preserving current role boundaries and audit expectations.
+
+### Recommended V1 Scope
+- Protected in-app worker runs only
+- Proposal-first output for staff review
+- Follow-up triage as the first and only EH16 V1 worker
+- `/admin/follow-up` as the first worker surface
+- No direct database mutations by workers
+- No direct action execution from worker output in V1
+- No autonomous billing, payment, disconnection, tariff, route, or admin-security actions
+- Bounded workflow context limited to follow-up triage in V1
+- Persisted worker-run history, proposal state, and review outcome
+
+### Recommended First Worker Types
+- Follow-up triage worker: rank overdue or at-risk accounts and suggest the next review step
+
+### Deferred Worker Types
+- Exceptions worker: summarize why a case is severe and what evidence or module should be checked next
+- Route worker: produce a route-pressure or risk briefing from existing route analytics
+- Notice worker: draft a printable or reviewable notice body from authoritative DWDS data before staff approval
+- Knowledge worker: flag stale workflow guidance, summarize diffs, or prepare assistant-source update proposals
+
+### Disallowed V1 Behavior
+- No silent actions
+- No direct record mutation
+- No bulk transactional-data discovery outside the approved task context
+- No authority to post payments, generate bills, disconnect service, change tariffs, reassign routes, or modify admin-access state
+- No bypass of existing role authorization or server-side workflow rules
+
+### Worker Contract
+Each worker result should:
+1. state the task it completed
+2. summarize the proposed outcome directly
+3. include the supporting basis or source context
+4. show confidence, caution, or escalation signals where relevant
+5. remain reviewable, editable, and rejectable by staff before any real action executes
+
+### Execution Model Recommendation
+- Keep the orchestration layer behind the protected DWDS app
+- Treat OpenClaw or any similar runtime as an adapter, not as the source of truth
+- Keep V1 proposal-only with no route from worker output to direct workflow execution
+- Persist worker-run, proposal, dismissal, and execution-log records in PostgreSQL
+- Add asynchronous job handling only if a narrow use case proves the need
+
+### Validation Baseline
+Before EH16 is treated as validated, test:
+- proposal quality on one bounded workflow
+- refusal behavior on out-of-scope or over-privileged requests
+- dismissal and non-action handling
+- proof that no worker output can directly execute a workflow mutation
+- role-scope enforcement when workers are triggered from protected modules
+
+### Recommended Delivery Order
+1. Define `EH16` in the roadmap and architecture docs
+2. Add worker-run and proposal-review data contracts
+3. Ship the read-only follow-up triage worker on `/admin/follow-up`
+4. Add staff review, dismissal, and audit history
+5. Add evaluation and observability for worker quality
+6. Only then define later worker types or any future approved execution path
+
+### Technical Design Reference
+- The first implementation slice is specified in `memory-bank/eh16.1-follow-up-triage-design.md`.
+
+### Current Implemented Baseline
+- EH16.1 is now live as a proposal-only follow-up triage worker on `/admin/follow-up`.
+- The current slice stores bounded worker runs, ranked proposals, and dismissal reviews in PostgreSQL.
+- The active implementation uses deterministic local triage logic behind the same protected server-side boundary where a later OpenClaw integration can attach.
+- The current EH16 baseline does not execute any workflow mutation and should still be treated as advisory only.
+- Initial seeded local validation feedback is now positive: the refined ranking and operator-facing wording feel right enough to keep EH16.1 in active validation without opening EH16.2 yet.

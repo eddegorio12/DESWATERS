@@ -107,6 +107,9 @@ model User {
   assistantKnowledgeDocumentRevisions AssistantKnowledgeDocumentRevision[] @relation("AssistantKnowledgeDocumentRevisionCreatedBy")
   assistantResponseLogs AssistantResponseLog[] @relation("AssistantResponseLogUser")
   assistantEvaluationRuns AssistantEvaluationRun[] @relation("AssistantEvaluationTriggeredBy")
+  automationRuns AutomationRun[] @relation("AutomationRunTriggeredBy")
+  dismissedAutomationProposals AutomationProposal[] @relation("AutomationProposalDismissedBy")
+  automationReviews AutomationReview[] @relation("AutomationReviewReviewedBy")
   finalizedBills Bill[] @relation("BillFinalizedBy")
   printedBills Bill[] @relation("BillPrintedBy")
   distributedBills Bill[] @relation("BillDistributedBy")
@@ -798,6 +801,72 @@ model AssistantEvaluationResult {
   @@index([category, passed])
 }
 
+model AutomationRun {
+  id            String              @id @default(uuid())
+  workerType    AutomationWorkerType
+  scopeType     String
+  scopeKey      String?
+  status        AutomationRunStatus @default(PENDING)
+  triggeredById String
+  triggeredBy   User                @relation("AutomationRunTriggeredBy", fields: [triggeredById], references: [id])
+  model         String?
+  provider      String?
+  latencyMs     Int?
+  proposalCount Int                 @default(0)
+  failureReason String?
+  startedAt     DateTime            @default(now())
+  completedAt   DateTime?
+  proposals     AutomationProposal[]
+  reviews       AutomationReview[]
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([workerType, startedAt(sort: Desc)])
+  @@index([status, startedAt(sort: Desc)])
+  @@index([triggeredById, startedAt(sort: Desc)])
+}
+
+model AutomationProposal {
+  id                   String               @id @default(uuid())
+  runId                String
+  run                  AutomationRun        @relation(fields: [runId], references: [id], onDelete: Cascade)
+  rank                 Int
+  targetType           String
+  targetId             String
+  summary              String
+  recommendedReviewStep String
+  rationale            String
+  confidenceLabel      String
+  sourceMetadata       Json?
+  dismissedAt          DateTime?
+  dismissedById        String?
+  dismissedBy          User?                @relation("AutomationProposalDismissedBy", fields: [dismissedById], references: [id])
+  reviews              AutomationReview[]
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  @@index([runId, rank])
+  @@index([targetType, targetId])
+  @@index([dismissedAt])
+}
+
+model AutomationReview {
+  id           String                     @id @default(uuid())
+  runId         String
+  run           AutomationRun              @relation(fields: [runId], references: [id], onDelete: Cascade)
+  proposalId    String
+  proposal      AutomationProposal         @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  reviewedById  String
+  reviewedBy    User                       @relation("AutomationReviewReviewedBy", fields: [reviewedById], references: [id])
+  decision      AutomationProposalDecision
+  notes         String?
+  createdAt     DateTime                   @default(now())
+
+  @@index([runId, createdAt(sort: Desc)])
+  @@index([proposalId, createdAt(sort: Desc)])
+  @@index([reviewedById, createdAt(sort: Desc)])
+}
+
 enum AssistantSourceType {
   MEMORY_BANK
   WORKFLOW_GUIDE
@@ -855,6 +924,21 @@ enum AssistantEvaluationCategory {
   AMBIGUITY
   MULTILINGUAL
   SAFETY
+}
+
+enum AutomationWorkerType {
+  FOLLOW_UP_TRIAGE
+}
+
+enum AutomationRunStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum AutomationProposalDecision {
+  KEPT
+  DISMISSED
 }
 
 model ServiceZone {

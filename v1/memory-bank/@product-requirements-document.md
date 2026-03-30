@@ -57,6 +57,8 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH15 now also persists documentation retrieval chunks, ingestion metadata, and per-user saved assistant history inside the core PostgreSQL stack.
 - EH15 now also includes admin-facing knowledge operations on `/admin/assistant`, including source review, sync visibility, source-level curation controls, revision-backed rollback, and richer protected-module workflow guidance.
 - EH15 now also includes tested and validated narrow live-record explainers for specific visible bill, payment, route, follow-up, and exception questions inside existing role scope.
+- EH16 is now in progress as a supervised staff-automation lane built on top of the validated EH15 assistant baseline rather than as an unrestricted autonomous-agent layer.
+- EH16.1 is now implemented as a proposal-only follow-up triage worker on `/admin/follow-up`, with persisted worker runs and no direct action execution.
 - EH12 now also includes a route-level loss-risk watchlist on `/admin/routes`, framed explicitly as a revenue-loss proxy from recent billed-versus-collected gaps plus overdue exposure, alongside route-linked complaint hotspot visibility from first-class complaint records.
 - Dedicated admin-management audit logging is now implemented, tested, and validated through a first-class account-management event log and a visible audit trail on `/admin/staff-access`.
 
@@ -70,6 +72,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 - **Public trust must be explicit:** The marketing site should communicate deployment readiness, governance, security posture, role clarity, and real workflow proof instead of stopping at feature description.
 - **One clear public action path:** The website should drive one primary conversion route such as demo/contact/access request rather than behaving only as an informational brochure.
 - **Staff AI must be trustworthy before it is powerful:** The internal assistant should start as a citation-backed explanatory tool with strict role boundaries and no action-taking authority.
+- **Automation must be reviewable before it is actionable:** Any AI worker should first produce bounded, auditable recommendations that staff can approve, edit, or reject before DWDS executes a real workflow change.
 
 ## Implemented MVP Scope
 1. **Authentication:** internal admin email/password sign-in and protected admin routes.
@@ -353,6 +356,7 @@ Current status:
 ## Current Contribution Priority
 1. Extend EH12 again only if management asks for another route-analytics layer beyond the current loss-risk and complaint-hotspot baseline.
 2. Revisit later EH11 security refinements only if priorities move beyond the now-implemented `SUPER_ADMIN` 2FA baseline.
+3. Continue EH16 only if the goal remains supervised staff automation on top of the validated EH15 baseline, not general autonomous control.
 
 ### Visual-Composition Refinement Direction
 Goal: make DWDS feel intentionally designed rather than template-assembled by reducing repeated card patterns and letting hierarchy come more from layout, typography, and state emphasis.
@@ -413,6 +417,7 @@ Current status:
 2. Broader EH12 management analytics.
 3. Optional later EH11 security and backup refinements.
 4. Optional later EH9 field-service expansion beyond the new proof baseline only if richer media or storage workflows are explicitly approved.
+5. Supervised EH16 staff automation should stay governance-first and bounded, with EH16.1 kept proposal-only while later slices are evaluated.
 
 ## Rule of Thumb for Developers
 Always read [@architecture.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\@architecture.md) before changing schema or architecture. Every major addition must map either to the implemented MVP surface or to a named enhancement phase in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md).

@@ -44,6 +44,7 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - EH14.4 now extends the newer admin composition language to the summary-heavy staff access, system readiness, and tariff registry boards.
 - EH14.5 is now validated through skip-link support, focus-visible treatment, active-route semantics, semantic list cleanup, decorative-icon hiding, and reduced-motion-safe marketing reveal behavior.
 - Dedicated admin-management audit logging is now implemented through `AuthAdminManagementEvent` and the `/admin/staff-access` audit trail.
+- EH16 is now in progress after the validated EH15.5 baseline, with EH16.1 implemented as proposal-only follow-up triage and no direct action execution.
 - EH14.1 is now implemented as the dashboard-only enterprise-console refinement pass. Preserve that current DWDS dashboard concept and shared console primitives when extending adjacent admin surfaces; do not redesign the dashboard from scratch unless the user explicitly changes scope.
 - EH14.2 is now validated as the landing-page proof pass. Preserve that sharper homepage narrative when refining adjacent marketing routes: one operational promise, screenshot-led workflow proof, early readiness/trust signals, tighter CTA vocabulary, and explicit staff-facing positioning over broad feature-grid enumeration.
 - The next public-site contribution inside EH14 should now be explicit accessibility verification on top of that stronger website baseline, not a repeat metadata/crawler pass.
@@ -57,6 +58,7 @@ These rules define how any AI agent should behave when working in the DWDS codeb
   - [@architecture.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\@architecture.md) for structural or schema changes
   - [progress.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\progress.md) for completed work and constraints
 - If new future work is discovered, add it as a clearly named enhancement phase with dependencies and rationale instead of a loose bullet.
+- If the request concerns AI workers or automation, map it to EH16 and keep the recommendation proposal-first, role-aware, and server-governed unless the user explicitly approves a later architectural expansion.
 
 When the requested work is UI/UX-oriented:
 - Treat the current priority as workflow usability, not a visual redesign for its own sake.
@@ -70,6 +72,7 @@ When the requested work is UI/UX-oriented:
 - Recommend the active EH14 composition rollout plus the now-implemented EH12 complaint-area visibility baseline before later deferred EH9/EH11 refinements unless the user explicitly reprioritizes.
 - If the user explicitly asks to continue the former deferred-next-step lane, treat EH9 field-work-order validation plus leak/repair persistence, meter-replacement history, field-proof upload, and the now-implemented optional `SUPER_ADMIN` 2FA as complete before proposing later EH11 security refinements.
 - Use the recorded EH13 task IDs (`EH13.2a` through `EH13.5`) when breaking down or sequencing the current usability lane.
+- For AI planning, treat EH15 as the validated assistant baseline and EH16 as the active next lane. EH16.1 follow-up triage is now implemented on `/admin/follow-up`; the next allowed slice after validation is another proposal-only worker such as exception summarization, not unrestricted autonomous agents, direct database writes, or broad transactional search.
 
 ## 7. GitHub and MCP Guidance
 - A special skill is not required just to inspect or edit the local repository.
@@ -83,6 +86,7 @@ When the requested work is UI/UX-oriented:
 - **Lean route files:** Keep route segments compositional. Push business logic into server actions, feature libs, and data-access helpers.
 - **Server-first business logic:** Keep client components small. Sensitive logic belongs on the server.
 - **Auth and authorization are separate concerns:** Auth.js protects identity/session flow, while role-based authorization must be enforced in app logic.
+- **Automation is not an authorization bypass:** Any worker-generated proposal must still execute through normal DWDS server actions and audit trails.
 
 ## 5. Design & UI/UX Guidelines
 - Use the installed `ui-ux-pro-max` skill when the task is design-heavy.
