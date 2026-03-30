@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 
 import { isStandaloneAdminRoute } from "@/features/admin/lib/dashboard-navigation";
@@ -21,12 +21,12 @@ export function DashboardChrome({
   }
 
   return (
-    <div className="grid min-h-dvh w-full gap-0 px-0 lg:grid-cols-[272px_minmax(0,1fr)]">
-      {sidebar}
+    <div className="grid min-h-dvh w-full gap-0 px-0 lg:grid-cols-[288px_minmax(0,1fr)]">
+      <Fragment key="sidebar">{sidebar}</Fragment>
       <div className="min-w-0 border-t border-border/70 lg:border-l lg:border-t-0">
         {children}
       </div>
-      {overlay}
+      {overlay ? <Fragment key="overlay">{overlay}</Fragment> : null}
     </div>
   );
 }

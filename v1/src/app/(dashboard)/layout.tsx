@@ -75,14 +75,14 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                     Public site
                   </Link>
                   {isAuthenticated ? (
-                    <AdminSessionButton className="w-full border-border/80 bg-white/70 text-foreground hover:bg-white hover:text-foreground" />
+                    <AdminSessionButton className="w-full justify-start border-border/80 bg-white/70 text-foreground hover:bg-white hover:text-foreground" />
                   ) : null}
                 </div>
               </div>
             </details>
 
             <aside className="hidden lg:flex lg:min-h-dvh lg:flex-col lg:border-r lg:border-border/70 lg:bg-white/52 lg:backdrop-blur">
-              <div className="sticky top-0 flex h-dvh flex-col px-5 py-5">
+              <div className="sticky top-0 flex h-dvh flex-col px-6 py-5">
                 <div className="border-b border-border/70 pb-5">
                   <div className="flex items-start justify-between gap-3">
                     <BrandLockup size="sm" className="w-fit" />
@@ -134,7 +134,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                       buttonVariants({
                         variant: "outline",
                         className:
-                          "h-10 w-full rounded-full border-border/80 bg-white/70 px-4 text-sm text-foreground hover:bg-white",
+                          "h-10 w-full justify-start rounded-full border-border/80 bg-white/70 px-4 text-sm text-foreground hover:bg-white",
                       })
                     )}
                   >
@@ -142,7 +142,7 @@ export default async function DashboardLayout({ children }: { children: ReactNod
                     Public site
                   </Link>
                   {isAuthenticated ? (
-                    <AdminSessionButton className="w-full border-border/80 bg-white/70 text-foreground hover:bg-white hover:text-foreground" />
+                    <AdminSessionButton className="w-full justify-start border-border/80 bg-white/70 text-foreground hover:bg-white hover:text-foreground" />
                   ) : null}
                 </div>
               </div>

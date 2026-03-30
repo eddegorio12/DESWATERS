@@ -60,7 +60,7 @@ function SidebarNavItem({
       href={item.href}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "group relative flex cursor-pointer items-start gap-3 px-3 py-3 text-left transition-colors duration-200",
+        "group relative flex cursor-pointer items-start gap-3.5 px-3.5 py-3 text-left transition-colors duration-200",
         isActive
           ? "bg-primary/6 text-foreground"
           : "text-muted-foreground hover:bg-secondary/46 hover:text-foreground"
@@ -93,7 +93,7 @@ function SidebarNavItem({
         </p>
         <p
           className={cn(
-            "mt-1 line-clamp-2 text-[0.72rem] leading-5",
+            "mt-1 line-clamp-2 pr-1 text-[0.72rem] leading-5",
             isActive ? "text-muted-foreground" : "text-muted-foreground/88"
           )}
         >
