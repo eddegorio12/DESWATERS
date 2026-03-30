@@ -38,59 +38,56 @@ export function AdminPageShell({
 }: AdminPageShellProps) {
   return (
     <section className={cn("bg-transparent", className)}>
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <section className="dwds-panel-dark overflow-hidden">
-          <div className="grid gap-6 px-5 py-5 sm:px-6 sm:py-6 lg:grid-cols-[1.18fr_0.82fr] lg:gap-8 lg:px-8 lg:py-8">
-            <div className="space-y-5">
-              <span className="dwds-kicker border-white/14 bg-white/8 text-white/78">
+      <div className="flex w-full flex-col">
+        <header className="border-b border-border/70 px-5 py-5 sm:px-7 lg:px-8">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div className="max-w-4xl">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-primary/72">
                 {eyebrow}
-              </span>
-
-              <div className="space-y-3">
-                <h1 className="max-w-4xl font-heading text-3xl leading-tight tracking-[-0.03em] sm:text-4xl lg:text-5xl">
-                  {title}
-                </h1>
-                <p className="max-w-3xl text-sm leading-6 text-white/76 sm:text-base sm:leading-7">
-                  {description}
-                </p>
-              </div>
-
-              {actions ? (
-                <div className="flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:flex-wrap">
-                  {actions}
-                </div>
-              ) : null}
+              </p>
+              <h1 className="mt-3 font-heading text-[1.9rem] leading-tight tracking-[-0.05em] text-foreground sm:text-[2.35rem]">
+                {title}
+              </h1>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground sm:text-base">
+                {description}
+              </p>
             </div>
 
-            <div className="self-start lg:justify-self-end">
-              {stats.length ? (
-                <div className="grid gap-0 overflow-hidden rounded-[1.5rem] border border-white/12 bg-white/7 md:grid-cols-2">
-                  {stats.map((stat) => (
-                    <article
-                      key={`${stat.label}-${stat.value}`}
-                      className="border-b border-white/10 p-3.5 last:border-b-0 md:border-b-0 md:p-4 [&:nth-child(odd)]:md:border-r [&:nth-child(odd)]:md:border-white/10"
-                    >
-                      <span
-                        className={cn(
-                          "inline-flex rounded-full px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em]",
-                          accentClasses[stat.accent ?? "teal"]
-                        )}
-                      >
-                        {stat.label}
-                      </span>
-                      <p className="mt-3 break-words text-xl font-semibold tracking-tight text-white sm:text-2xl md:text-[1.85rem]">
-                        {stat.value}
-                      </p>
-                      <p className="mt-1.5 text-sm leading-5 text-white/70">{stat.detail}</p>
-                    </article>
-                  ))}
-                </div>
-              ) : null}
-            </div>
+            {actions ? (
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">{actions}</div>
+            ) : null}
           </div>
-        </section>
+        </header>
 
-        {children}
+        {stats.length ? (
+          <section className="border-b border-border/70">
+            <div className="grid gap-0 md:grid-cols-2 xl:grid-cols-3">
+              {stats.map((stat) => (
+                <article
+                  key={`${stat.label}-${stat.value}`}
+                  className="border-b border-border/70 px-5 py-5 md:border-r xl:border-b-0 [&:nth-child(2n)]:md:border-r-0 [&:nth-child(3n)]:xl:border-r-0"
+                >
+                  <span
+                    className={cn(
+                      "inline-flex rounded-full px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.18em]",
+                      accentClasses[stat.accent ?? "teal"]
+                    )}
+                  >
+                    {stat.label}
+                  </span>
+                  <p className="mt-4 break-words font-heading text-[1.7rem] tracking-[-0.05em] text-foreground sm:text-[2rem]">
+                    {stat.value}
+                  </p>
+                  <p className="mt-2 max-w-sm text-sm leading-6 text-muted-foreground">
+                    {stat.detail}
+                  </p>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        <div className="flex flex-col gap-6 px-5 py-6 sm:px-7 lg:px-8">{children}</div>
       </div>
     </section>
   );

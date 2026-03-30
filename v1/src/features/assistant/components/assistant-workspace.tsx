@@ -12,6 +12,7 @@ import {
   getAssistantStarterPrompts,
   type AssistantSearchResponse,
 } from "@/features/assistant/lib/assistant-knowledge";
+import { AssistantKnowledgeOperations } from "@/features/assistant/components/assistant-knowledge-operations";
 import { cn } from "@/lib/utils";
 
 type WorkspaceState = {
@@ -82,6 +83,51 @@ type WorkspaceState = {
         notes: string | null;
       }>;
     } | null;
+  } | null;
+  knowledgeOperations: {
+    latestRun: {
+      id: string;
+      status: "RUNNING" | "SUCCEEDED" | "FAILED";
+      sourceCount: number;
+      chunkCount: number;
+      errorMessage: string | null;
+      startedAt: Date;
+      completedAt: Date | null;
+    } | null;
+    totals: {
+      sourceCount: number;
+      pendingCount: number;
+      pinnedCount: number;
+      disabledCount: number;
+    };
+    sources: Array<{
+      documentId: string | null;
+      sourceKey: string;
+      title: string;
+      sourcePath: string;
+      sourceType: "memory-bank" | "workflow-guide";
+      governanceState: "APPROVED" | "DRAFT" | "DEPRECATED";
+      isPinned: boolean;
+      isDisabled: boolean;
+      disabledReason: string | null;
+      status: "current" | "changed" | "new" | "removed";
+      hasPendingChanges: boolean;
+      changeSummary: {
+        addedChunks: number;
+        removedChunks: number;
+        changedChunks: number;
+      };
+      chunkCount: number;
+      currentChunkCount: number;
+      lastIngestedAt: Date | null;
+      lastReviewedAt: Date | null;
+      lastReviewedByName: string | null;
+      latestRevisionAt: Date | null;
+      revisionCount: number;
+      canRollback: boolean;
+      latestStoredSummary: string | null;
+      currentSourceSummary: string | null;
+    }>;
   } | null;
 };
 
@@ -361,6 +407,12 @@ export function AssistantWorkspace({
             </div>
           </AdminSurfacePanel>
         ) : null}
+
+        {workspaceState.knowledgeOperations ? (
+          <AssistantKnowledgeOperations
+            knowledgeOperations={workspaceState.knowledgeOperations}
+          />
+        ) : null}
       </div>
 
       <AdminSurfacePanel className="flex min-h-[820px] flex-col">
@@ -374,7 +426,7 @@ export function AssistantWorkspace({
           description={
             hasConversation
               ? "The assistant keeps this thread citation-led, read-only, and inside your current role scope."
-              : "Ask a workflow or policy question. The assistant will save the thread and cite the DWDS material it used."
+              : "Ask a workflow, policy, or narrow live-record question. The assistant will save the thread and cite the DWDS material it used."
           }
           aside={
             <div className="text-right">
@@ -471,7 +523,8 @@ export function AssistantWorkspace({
               </h3>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
                 Good prompts mention the DWDS module, status, or workflow you are dealing with.
-                The assistant will answer from stored guidance, cite its sources, and save the
+                The assistant can now also explain one visible bill ID, receipt number, route
+                code, meter number, or account alert without mutating anything, then save the
                 thread for your account.
               </p>
             </div>

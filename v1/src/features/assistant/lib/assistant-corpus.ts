@@ -64,7 +64,7 @@ export const workflowGuides: readonly WorkflowGuide[] = [
     title: "Staff assistant",
     href: "/admin/assistant",
     summary:
-      "Use this workspace for role-aware DWDS workflow questions, module routing, and cited internal guidance. The first slice stays read-only and does not perform mutations.",
+      "Use this workspace for role-aware DWDS workflow questions, module routing, and cited internal guidance. Ask with the page name, task, or status when possible so retrieval can match approved guidance faster. This assistant stays read-only and cannot post, approve, reset, or mutate operational records.",
     keywords: ["assistant", "help", "guide", "workflow", "module", "citation", "question"],
     roles: ["SUPER_ADMIN", "ADMIN", "TECHNICIAN", "METER_READER", "BILLING", "CASHIER", "VIEWER"],
   },
@@ -73,7 +73,7 @@ export const workflowGuides: readonly WorkflowGuide[] = [
     title: "Admin dashboard",
     href: "/admin/dashboard",
     summary:
-      "Use the dashboard to review daily priorities, queue pressure, signed-in role scope, and fast links into the main operational modules.",
+      "Use the dashboard to review daily priorities, queue pressure, signed-in role scope, and fast links into the main operational modules. Start here when you need to orient yourself before opening billing, follow-up, readings, routes, or exceptions. The dashboard is the summary surface, not the place to post transactional updates.",
     keywords: ["dashboard", "overview", "daily", "priority", "queue", "home"],
     roles: ["SUPER_ADMIN", "ADMIN", "TECHNICIAN", "METER_READER", "BILLING", "CASHIER", "VIEWER"],
   },
@@ -82,7 +82,7 @@ export const workflowGuides: readonly WorkflowGuide[] = [
     title: "Route operations",
     href: "/admin/routes",
     summary:
-      "Use routes for service-zone setup, route ownership, coverage gaps, complaint hotspots, and route-level overdue or collection pressure.",
+      "Use routes for service-zone setup, route ownership, coverage gaps, complaint hotspots, and route-level overdue or collection pressure. This is the right page for assigning meter-reading or bill-distribution responsibility and for checking which route is carrying the heaviest collection or complaint pressure. Review route analytics here before changing field assignments or print-batch scope.",
     keywords: ["route", "zone", "coverage", "complaint", "field", "distribution", "reader"],
     roles: ["SUPER_ADMIN", "ADMIN", "BILLING"],
   },
@@ -91,7 +91,7 @@ export const workflowGuides: readonly WorkflowGuide[] = [
     title: "Customer registry",
     href: "/admin/customers",
     summary:
-      "Use customers for account setup, service contact review, account status changes, and customer-level record maintenance.",
+      "Use customers for account setup, service contact review, account status changes, and customer-level record maintenance. Start here when the issue is about the account holder, contact details, or service status rather than meter hardware or payment posting. Customer changes should stay separate from cashier, billing-cycle, and field-work updates.",
     keywords: ["customer", "account", "contact", "service status", "registry"],
     roles: ["SUPER_ADMIN", "ADMIN", "TECHNICIAN"],
   },
@@ -100,7 +100,7 @@ export const workflowGuides: readonly WorkflowGuide[] = [
     title: "Meter operations",
     href: "/admin/meters",
     summary:
-      "Use meters for registration, assignment, holder transfer review, and defect or replacement visibility.",
+      "Use meters for registration, assignment, holder transfer review, and defect or replacement visibility. Open this page when the work is about the physical meter, active holder linkage, route assignment, or replacement history. Meter maintenance belongs here even when the customer or complaint pages mention the same service point.",
     keywords: ["meter", "assignment", "holder", "transfer", "defective", "replacement"],
     roles: ["SUPER_ADMIN", "ADMIN", "TECHNICIAN"],
   },
@@ -109,7 +109,7 @@ export const workflowGuides: readonly WorkflowGuide[] = [
     title: "Reading operations",
     href: "/admin/readings",
     summary:
-      "Use readings for meter-reading entry, pending-review cleanup, approval review, and ready-to-bill intake.",
+      "Use readings for meter-reading entry, pending-review cleanup, approval review, and ready-to-bill intake. Meter readers encode readings here, while admins or billing staff use it to review and approve submissions before billing. If the question is about a reading still waiting for review or deletion of a pending submission, this is the first module to check.",
     keywords: ["reading", "meter reading", "pending review", "approve", "usage"],
     roles: ["SUPER_ADMIN", "ADMIN", "METER_READER", "BILLING"],
   },
@@ -118,7 +118,7 @@ export const workflowGuides: readonly WorkflowGuide[] = [
     title: "Billing controls",
     href: "/admin/billing",
     summary:
-      "Use billing for bill generation, cycle governance, unpaid-bill review, print-batch preparation, and distribution tracking.",
+      "Use billing for bill generation, cycle governance, unpaid-bill review, print-batch preparation, and distribution tracking. This module is the authority for open versus finalized billing-cycle state, regeneration controls, and print-batch preparation. Use billing when the issue is about bill lifecycle, print status, or distribution progress rather than cashier settlement.",
     keywords: ["billing", "bill", "generate", "cycle", "print batch", "distribution"],
     roles: ["SUPER_ADMIN", "ADMIN", "BILLING"],
   },
@@ -127,7 +127,7 @@ export const workflowGuides: readonly WorkflowGuide[] = [
     title: "Cashier posting",
     href: "/admin/payments",
     summary:
-      "Use payments for cashier settlement posting, official receipt printing, and remaining-balance review after settlement.",
+      "Use payments for cashier settlement posting, official receipt printing, and remaining-balance review after settlement. Cashiers post complete or partial settlements here and can print the official receipt from the recorded payment path. Do not use this page to reopen billing cycles or change tariff rules.",
     keywords: ["payment", "cashier", "receipt", "settlement", "post payment"],
     roles: ["SUPER_ADMIN", "ADMIN", "CASHIER"],
   },
@@ -136,7 +136,7 @@ export const workflowGuides: readonly WorkflowGuide[] = [
     title: "Collections reporting",
     href: "/admin/collections",
     summary:
-      "Use collections for filtered payment history, receivables visibility, and Manila-day cash collection monitoring.",
+      "Use collections for filtered payment history, receivables visibility, and Manila-day cash collection monitoring. This page is for reporting and review, especially when staff need to compare recent payments with unpaid or overdue exposure. Use collections to analyze performance, not to encode a new payment.",
     keywords: ["collections", "report", "payment history", "receivable", "daily totals"],
     roles: ["SUPER_ADMIN", "ADMIN", "BILLING", "CASHIER", "VIEWER"],
   },
@@ -145,7 +145,7 @@ export const workflowGuides: readonly WorkflowGuide[] = [
     title: "Receivables follow-up",
     href: "/admin/follow-up",
     summary:
-      "Use follow-up for overdue reminder stages, disconnection review, disconnection actions, and reinstatement controls.",
+      "Use follow-up for overdue reminder stages, disconnection review, disconnection actions, and reinstatement controls. This is the operational queue for reminder escalation, final notices, service disconnection review, and reinstatement after settlement. If the question is about why an account is overdue or what the next receivables action should be, start here.",
     keywords: ["follow-up", "overdue", "reminder", "disconnection", "reinstatement"],
     roles: ["SUPER_ADMIN", "ADMIN", "BILLING"],
   },
@@ -154,7 +154,7 @@ export const workflowGuides: readonly WorkflowGuide[] = [
     title: "Operational exceptions",
     href: "/admin/exceptions",
     summary:
-      "Use exceptions to review abnormal readings, mismatch alerts, complaints, work orders, repair history, and field-proof records.",
+      "Use exceptions to review abnormal readings, mismatch alerts, complaints, work orders, repair history, and field-proof records. This page connects office-side anomaly review with complaint-driven field dispatch and completed repair evidence. Use exceptions when the question is about leaks, field service, work-order progress, or abnormal operational signals.",
     keywords: ["exception", "alert", "complaint", "work order", "repair", "leak", "field proof"],
     roles: ["SUPER_ADMIN", "ADMIN", "BILLING", "CASHIER", "TECHNICIAN"],
   },
@@ -163,7 +163,7 @@ export const workflowGuides: readonly WorkflowGuide[] = [
     title: "Staff access",
     href: "/admin/staff-access",
     summary:
-      "Use staff access for SUPER_ADMIN account creation, role changes, activation state, lockout review, and audit trail visibility.",
+      "Use staff access for SUPER_ADMIN account creation, role changes, activation state, lockout review, and audit trail visibility. This module is limited to internal admin-account governance and should be used for password-reset, role, and activation questions rather than day-to-day utility records. Review the audit trail here before making sensitive account changes.",
     keywords: ["staff", "admin", "role", "lockout", "account", "audit"],
     roles: ["SUPER_ADMIN"],
   },
@@ -172,7 +172,7 @@ export const workflowGuides: readonly WorkflowGuide[] = [
     title: "System readiness",
     href: "/admin/system-readiness",
     summary:
-      "Use system readiness for backup snapshot logs, restore guidance, security visibility, and recovery export checks.",
+      "Use system readiness for backup snapshot logs, restore guidance, security visibility, and recovery export checks. This is the place to confirm recovery prerequisites, record monthly snapshot references, and download the current readiness bundle. Use it for production-readiness and recovery questions, not billing or cashier workflow steps.",
     keywords: ["system", "backup", "restore", "recovery", "security"],
     roles: ["SUPER_ADMIN", "ADMIN"],
   },
@@ -181,7 +181,7 @@ export const workflowGuides: readonly WorkflowGuide[] = [
     title: "Tariff registry",
     href: "/admin/tariffs",
     summary:
-      "Use tariffs for effectivity-dated billing rule changes, active tariff visibility, and fee-audit history.",
+      "Use tariffs for effectivity-dated billing rule changes, active tariff visibility, and fee-audit history. This page controls the current billing rule set, including minimum charge, usage tiers, penalties, and reconnection fees. Tariff review belongs here before asking the assistant for bill-estimate logic or billing-rule explanations.",
     keywords: ["tariff", "rate", "billing rule", "effectivity", "fee"],
     roles: ["SUPER_ADMIN", "ADMIN", "BILLING"],
   },

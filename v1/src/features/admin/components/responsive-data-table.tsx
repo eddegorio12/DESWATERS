@@ -43,13 +43,13 @@ export function ResponsiveDataTable({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-[1.5rem] border border-[#dbe9e5] shadow-[0_18px_40px_-38px_rgba(16,63,67,0.45)]",
+        "overflow-hidden border border-border/70 bg-white/58",
         className
       )}
     >
       <div
         className={cn(
-          "space-y-3 bg-background p-3",
+          "space-y-3 bg-transparent p-3",
           visibility.mobile,
           mobileContainerClassName
         )}
@@ -65,7 +65,7 @@ export function ResponsiveDataTable({
 
       <div className={cn("overflow-x-auto", visibility.desktop)}>
         <table className={cn("min-w-full divide-y divide-border text-left", tableClassName)}>
-          <thead className="bg-secondary/55">
+          <thead className="bg-secondary/34">
             <tr className="text-sm text-muted-foreground">
               {columns.map((column) => (
                 <th key={column} className="px-4 py-3 font-medium">
@@ -74,7 +74,7 @@ export function ResponsiveDataTable({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border bg-background">
+          <tbody className="divide-y divide-border bg-transparent">
             {hasRows ? (
               rows
             ) : (

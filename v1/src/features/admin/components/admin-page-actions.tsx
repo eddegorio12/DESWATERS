@@ -17,7 +17,7 @@ type AdminPageActionsProps = {
 };
 
 const adminActionButtonClassName =
-  "h-10 rounded-full border-white/18 bg-white/8 px-5 text-white hover:bg-white/12 hover:text-white";
+  "h-10 rounded-full border-border/80 bg-white/70 px-5 text-foreground hover:bg-white hover:text-foreground";
 
 export function AdminPageActions({
   links = [],

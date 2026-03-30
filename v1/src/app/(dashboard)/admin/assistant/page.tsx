@@ -64,7 +64,7 @@ export default async function AdminAssistantPage({
     <AdminPageShell
       eyebrow="Staff Assistant"
       title="Search cited DWDS workflow guidance inside the protected workspace."
-      description="EH15 now includes citation-led assistant telemetry, fixed evaluation runs, and an admin-visible quality view on top of the protected read-only guidance workflow."
+      description="EH15 now includes citation-led assistant telemetry, admin knowledge-operations controls, fixed evaluation runs, and protected read-only explainers for narrow live records inside existing module access."
       actions={
         <AdminPageActions
           links={[
@@ -101,13 +101,13 @@ export default async function AdminAssistantPage({
           accent: "amber",
         },
         {
-          label: "Evaluation",
-          value: workspaceState.qualityOverview?.latestEvaluationRun
-            ? `${workspaceState.qualityOverview.latestEvaluationRun.passedCount}/${workspaceState.qualityOverview.latestEvaluationRun.caseCount}`
+          label: "Knowledge ops",
+          value: workspaceState.knowledgeOperations
+            ? `${workspaceState.knowledgeOperations.totals.pendingCount} pending`
             : "Not run",
-          detail: workspaceState.qualityOverview?.latestEvaluationRun
-            ? "Latest regression suite result on the protected assistant baseline."
-            : "Run the fixed evaluation suite after assistant changes to compare quality.",
+          detail: workspaceState.knowledgeOperations
+            ? `${workspaceState.knowledgeOperations.totals.pinnedCount} pinned and ${workspaceState.knowledgeOperations.totals.disabledCount} disabled sources under admin review.`
+            : "Knowledge operations are available to admin roles only.",
           accent: "violet",
         },
       ]}

@@ -14,6 +14,10 @@ import { prisma } from "@/lib/prisma";
 
 import { memoryBankFiles } from "./assistant-corpus";
 import {
+  explainAssistantLiveRecordQuery,
+  type AssistantCitationHit,
+} from "./assistant-live-records";
+import {
   createOpenRouterChatCompletion,
   getOpenRouterConfig,
 } from "./openrouter";
@@ -29,23 +33,14 @@ import {
 } from "./assistant-observability";
 import {
   getAssistantConversationHistory,
+  getAssistantKnowledgeOperationsState,
   getRelatedModulesFromHits,
   persistAssistantConversation,
   searchAssistantKnowledgeChunks,
   syncAssistantKnowledgeBase,
 } from "./assistant-store";
 
-export type AssistantKnowledgeHit = {
-  id: string;
-  title: string;
-  summary: string;
-  sectionTitle: string | null;
-  sourcePath: string;
-  sourceType: "memory-bank" | "workflow-guide";
-  href: string | null;
-  matchingTerms: string[];
-  score: number;
-};
+export type AssistantKnowledgeHit = AssistantCitationHit;
 
 export type AssistantSearchResponse = {
   query: string;
@@ -201,17 +196,7 @@ function isLowConfidenceHitSet(
 }
 
 function serializeAssistantHits(
-  hits: Array<{
-    id: string;
-    title: string;
-    summary: string;
-    sectionTitle: string | null;
-    sourcePath: string;
-    sourceType: "memory-bank" | "workflow-guide";
-    href: string | null;
-    matchingTerms: string[];
-    score: number;
-  }>
+  hits: AssistantCitationHit[]
 ): AssistantKnowledgeHit[] {
   return hits.map((hit) => ({
     id: hit.id,
@@ -280,6 +265,7 @@ export function getAssistantStarterPrompts(role: Role) {
     "Which DWDS module should I use to review overdue accounts?",
     "What does the receivables follow-up workflow mean in DWDS?",
     "Where do I check route complaints and field work orders?",
+    "Why is bill ID 123e4567-e89b-12d3-a456-426614174000 showing overdue status?",
     "Can I ask in Bisaya?",
   ];
 
@@ -360,7 +346,7 @@ export async function searchAssistantKnowledge({
       answer: string;
       basis: string;
       uncertainty: string | null;
-      citations?: Awaited<ReturnType<typeof searchAssistantKnowledgeChunks>>;
+      citations?: AssistantCitationHit[];
       relatedModules?: { href: string; label: string }[];
       modelUsed?: string | null;
       disposition?: AssistantPolicyDisposition;
@@ -568,6 +554,25 @@ export async function searchAssistantKnowledge({
       });
     }
 
+    const liveRecordExplanation = await explainAssistantLiveRecordQuery({
+      query: normalizedQuery,
+      role,
+    });
+
+    if (liveRecordExplanation) {
+      return finalizeResponse({
+        answer: liveRecordExplanation.answer,
+        basis: liveRecordExplanation.basis,
+        uncertainty: liveRecordExplanation.uncertainty,
+        citations: liveRecordExplanation.citations,
+        relatedModules: liveRecordExplanation.relatedModules,
+        disposition: liveRecordExplanation.disposition,
+        fallbackPath: liveRecordExplanation.fallbackPath,
+        lowConfidence: liveRecordExplanation.lowConfidence,
+        failureState: liveRecordExplanation.failureState,
+      });
+    }
+
     const hits = (await searchAssistantKnowledgeChunks(role, expandedQuery)).filter(
       (hit) =>
         !containsSuspiciousAssistantSourceContent(
@@ -712,14 +717,18 @@ export async function getAssistantWorkspaceState(
   role: Role,
   conversationId?: string | null
 ) {
-  const [history, qualityOverview] = await Promise.all([
+  const [history, qualityOverview, knowledgeOperations] = await Promise.all([
     getAssistantConversationHistory(userId, conversationId),
     getAssistantQualityOverview(role),
+    role === "SUPER_ADMIN" || role === "ADMIN"
+      ? getAssistantKnowledgeOperationsState()
+      : Promise.resolve(null),
   ]);
 
   return {
     ...history,
     qualityOverview,
+    knowledgeOperations,
   };
 }
 

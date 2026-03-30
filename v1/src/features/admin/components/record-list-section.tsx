@@ -93,14 +93,14 @@ export function RecordListSection({
   }
 
   return (
-    <section className="rounded-[1.9rem] border border-[#dbe9e5] bg-white/92 p-6 shadow-[0_22px_72px_-48px_rgba(16,63,67,0.55)]">
+    <section className="border border-border/70 bg-white/44 p-5 backdrop-blur-sm sm:p-6">
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2 xl:flex-row xl:items-end xl:justify-between">
           <div className="space-y-2">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-primary/72">
               {eyebrow}
             </p>
-            <h2 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+            <h2 className="font-heading text-[1.45rem] tracking-[-0.03em] text-foreground sm:text-[1.7rem]">
               {title}
             </h2>
             {description ? (
@@ -182,7 +182,7 @@ export function RecordListSection({
         </form>
 
         {helperText || nextStep ? (
-          <div className="flex flex-col gap-2 rounded-[1.4rem] border border-[#dbe9e5] bg-secondary/35 px-4 py-3 text-sm md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-2 border border-border/70 bg-white/50 px-4 py-3 text-sm md:flex-row md:items-center md:justify-between">
             <p className="text-muted-foreground">{helperText}</p>
             {nextStep ? <p className="font-medium text-foreground">{nextStep}</p> : null}
           </div>

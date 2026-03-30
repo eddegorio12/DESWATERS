@@ -195,6 +195,14 @@
     @apply rounded-[1.75rem] border border-white/70 bg-white/78 shadow-[0_22px_80px_-52px_rgba(15,35,62,0.38)] backdrop-blur;
   }
 
+  .dwds-region {
+    @apply rounded-[2rem] border border-border/75 bg-white/62 backdrop-blur;
+  }
+
+  .dwds-region-soft {
+    @apply rounded-[1.5rem] border border-border/60 bg-white/44 backdrop-blur;
+  }
+
   .dwds-panel-dark {
     background: var(--dwds-hero);
     @apply rounded-[1.9rem] border border-white/10 text-white shadow-[0_40px_120px_-60px_rgba(15,35,62,0.85)];
@@ -210,6 +218,10 @@
 
   .dwds-divider {
     @apply border-t border-border/75;
+  }
+
+  .dwds-rule {
+    @apply border-border/70;
   }
 
   .dwds-kicker {

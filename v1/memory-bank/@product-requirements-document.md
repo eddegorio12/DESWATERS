@@ -55,6 +55,8 @@ Build a modular, robust web-based utility operations system that starts with a s
 - That dashboard account-security slice is now tested and validated.
 - EH15 is now defined as a protected staff AI assistant and knowledge-retrieval lane built around documentation-first RAG, role-aware read-only answers, mandatory citations, and a dedicated `/admin/assistant` workspace.
 - EH15 now also persists documentation retrieval chunks, ingestion metadata, and per-user saved assistant history inside the core PostgreSQL stack.
+- EH15 now also includes admin-facing knowledge operations on `/admin/assistant`, including source review, sync visibility, source-level curation controls, revision-backed rollback, and richer protected-module workflow guidance.
+- EH15 now also includes tested and validated narrow live-record explainers for specific visible bill, payment, route, follow-up, and exception questions inside existing role scope.
 - EH12 now also includes a route-level loss-risk watchlist on `/admin/routes`, framed explicitly as a revenue-loss proxy from recent billed-versus-collected gaps plus overdue exposure, alongside route-linked complaint hotspot visibility from first-class complaint records.
 - Dedicated admin-management audit logging is now implemented, tested, and validated through a first-class account-management event log and a visible audit trail on `/admin/staff-access`.
 

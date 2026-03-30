@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import {
   Prisma,
   type AssistantSourceGovernanceState,
+  type AssistantSourceType,
   type Role,
 } from "@prisma/client";
 
@@ -136,6 +137,44 @@ type PrismaSqlClient = Pick<
   "$executeRawUnsafe" | "$queryRawUnsafe"
 >;
 
+type AssistantDocumentControlState = {
+  governanceState: AssistantSourceGovernanceState;
+  isPinned: boolean;
+  isDisabled: boolean;
+  disabledReason: string | null;
+};
+
+type KnowledgeOpsSourceStatus = "current" | "changed" | "new" | "removed";
+
+type AssistantKnowledgeOpsSource = {
+  documentId: string | null;
+  sourceKey: string;
+  title: string;
+  sourcePath: string;
+  sourceType: "memory-bank" | "workflow-guide";
+  governanceState: AssistantSourceGovernanceState;
+  isPinned: boolean;
+  isDisabled: boolean;
+  disabledReason: string | null;
+  status: KnowledgeOpsSourceStatus;
+  hasPendingChanges: boolean;
+  changeSummary: {
+    addedChunks: number;
+    removedChunks: number;
+    changedChunks: number;
+  };
+  chunkCount: number;
+  currentChunkCount: number;
+  lastIngestedAt: Date | null;
+  lastReviewedAt: Date | null;
+  lastReviewedByName: string | null;
+  latestRevisionAt: Date | null;
+  revisionCount: number;
+  canRollback: boolean;
+  latestStoredSummary: string | null;
+  currentSourceSummary: string | null;
+};
+
 let vectorRuntimeSupport:
   | {
       checked: boolean;
@@ -215,44 +254,30 @@ async function updateChunkEmbedding(input: {
   }
 }
 
-async function setAssistantDocumentGovernanceState(
-  client: PrismaSqlClient,
-  input: {
-    sourceKey: string;
-    governanceState: AssistantSourceGovernanceState;
-  }
-) {
-  await client.$executeRawUnsafe(
-    `
-      UPDATE "AssistantKnowledgeDocument"
-      SET
-        "governanceState" = $1::"AssistantSourceGovernanceState",
-        "updatedAt" = NOW()
-      WHERE "sourceKey" = $2
-    `,
-    input.governanceState,
-    input.sourceKey
-  );
-}
-
-async function loadAssistantDocumentGovernanceStates(
+async function loadAssistantDocumentControlStates(
   client: PrismaSqlClient,
   documentIds: string[]
 ) {
   if (!documentIds.length) {
-    return new Map<string, AssistantSourceGovernanceState>();
+    return new Map<string, AssistantDocumentControlState>();
   }
 
   const rows = await client.$queryRawUnsafe<
     Array<{
       id: string;
       governanceState: AssistantSourceGovernanceState | null;
+      isPinned: boolean | null;
+      isDisabled: boolean | null;
+      disabledReason: string | null;
     }>
   >(
     `
       SELECT
         "id",
-        "governanceState"::text AS "governanceState"
+        "governanceState"::text AS "governanceState",
+        "isPinned",
+        "isDisabled",
+        "disabledReason"
       FROM "AssistantKnowledgeDocument"
       WHERE "id" = ANY($1)
     `,
@@ -260,8 +285,119 @@ async function loadAssistantDocumentGovernanceStates(
   );
 
   return new Map(
-    rows.map((row) => [row.id, row.governanceState ?? "APPROVED"])
+    rows.map((row) => [
+      row.id,
+      {
+        governanceState: row.governanceState ?? "APPROVED",
+        isPinned: Boolean(row.isPinned),
+        isDisabled: Boolean(row.isDisabled),
+        disabledReason: row.disabledReason,
+      },
+    ])
   );
+}
+
+function buildRevisionHash(input: {
+  contentHash: string;
+  governanceState: AssistantSourceGovernanceState;
+  isPinned: boolean;
+  isDisabled: boolean;
+  disabledReason: string | null;
+}) {
+  return hashValue(JSON.stringify(input));
+}
+
+function buildChunkSnapshot(
+  chunks: Array<{
+    chunkIndex: number;
+    sectionTitle: string | null;
+    body: string;
+    summary: string;
+    searchText: string;
+    keywordTerms: string[];
+    roleScope: Role[];
+    tokenCount: number;
+    contentHash: string;
+  }>
+) {
+  return chunks.map((chunk) => ({
+    chunkIndex: chunk.chunkIndex,
+    sectionTitle: chunk.sectionTitle,
+    body: chunk.body,
+    summary: chunk.summary,
+    searchText: chunk.searchText,
+    keywordTerms: chunk.keywordTerms,
+    roleScope: chunk.roleScope,
+    tokenCount: chunk.tokenCount,
+    contentHash: chunk.contentHash,
+  }));
+}
+
+async function createAssistantDocumentRevision(
+  tx: Prisma.TransactionClient,
+  input: {
+    documentId: string;
+    ingestionRunId?: string | null;
+    createdById?: string | null;
+    title: string;
+    sourcePath: string;
+    sourceType: AssistantSourceType;
+    href: string | null;
+    featureDomain: string | null;
+    routeScope: string | null;
+    roleScope: Role[];
+    contentHash: string;
+    controlState: AssistantDocumentControlState;
+    chunks: Array<{
+      chunkIndex: number;
+      sectionTitle: string | null;
+      body: string;
+      summary: string;
+      searchText: string;
+      keywordTerms: string[];
+      roleScope: Role[];
+      tokenCount: number;
+      contentHash: string;
+    }>;
+  }
+) {
+  const revisionHash = buildRevisionHash({
+    contentHash: input.contentHash,
+    governanceState: input.controlState.governanceState,
+    isPinned: input.controlState.isPinned,
+    isDisabled: input.controlState.isDisabled,
+    disabledReason: input.controlState.disabledReason,
+  });
+
+  await tx.assistantKnowledgeDocumentRevision.upsert({
+    where: {
+      documentId_revisionHash: {
+        documentId: input.documentId,
+        revisionHash,
+      },
+    },
+    update: {},
+    create: {
+      documentId: input.documentId,
+      ingestionRunId: input.ingestionRunId ?? null,
+      createdById: input.createdById ?? null,
+      revisionHash,
+      title: input.title,
+      sourcePath: input.sourcePath,
+      sourceType: input.sourceType,
+      governanceState: input.controlState.governanceState,
+      isPinned: input.controlState.isPinned,
+      isDisabled: input.controlState.isDisabled,
+      disabledReason: input.controlState.disabledReason,
+      href: input.href,
+      featureDomain: input.featureDomain,
+      routeScope: input.routeScope,
+      roleScope: input.roleScope,
+      contentHash: input.contentHash,
+      chunkCount: input.chunks.length,
+      chunkSnapshot: buildChunkSnapshot(input.chunks) as Prisma.InputJsonValue,
+    },
+  });
 }
 
 async function refreshChunkEmbeddings(chunks: PendingEmbeddingChunk[]) {
@@ -307,11 +443,29 @@ export async function syncAssistantKnowledgeBase(triggeredById?: string) {
     select: {
       id: true,
       sourceKey: true,
+      title: true,
+      sourcePath: true,
+      sourceType: true,
+      href: true,
+      featureDomain: true,
+      routeScope: true,
+      roleScope: true,
       contentHash: true,
+      governanceState: true,
+      isPinned: true,
+      isDisabled: true,
+      disabledReason: true,
       chunks: {
         select: {
           id: true,
           chunkIndex: true,
+          sectionTitle: true,
+          body: true,
+          summary: true,
+          searchText: true,
+          keywordTerms: true,
+          roleScope: true,
+          tokenCount: true,
           contentHash: true,
           embeddingContentHash: true,
         },
@@ -412,6 +566,7 @@ export async function syncAssistantKnowledgeBase(triggeredById?: string) {
             title: document.title,
             sourcePath: document.sourcePath,
             sourceType: document.prismaSourceType,
+            governanceState: document.governanceState,
             href: document.href,
             featureDomain: document.featureDomain,
             routeScope: document.routeScope,
@@ -419,13 +574,20 @@ export async function syncAssistantKnowledgeBase(triggeredById?: string) {
             contentHash: document.documentHash,
             lastIngestedAt: new Date(),
           },
-          select: { id: true },
+          select: {
+            id: true,
+            governanceState: true,
+            isPinned: true,
+            isDisabled: true,
+            disabledReason: true,
+          },
         });
-
-        await setAssistantDocumentGovernanceState(tx, {
-          sourceKey: document.sourceKey,
-          governanceState: document.governanceState,
-        });
+        const controlState = {
+          governanceState: upserted.governanceState,
+          isPinned: upserted.isPinned,
+          isDisabled: upserted.isDisabled,
+          disabledReason: upserted.disabledReason,
+        } satisfies AssistantDocumentControlState;
 
         chunkCount += document.chunkPayload.length;
         const chunkIndexes = document.chunkPayload.map((chunk) => chunk.chunkIndex);
@@ -488,13 +650,84 @@ export async function syncAssistantKnowledgeBase(triggeredById?: string) {
             chunkIndex: { notIn: chunkIndexes.length ? chunkIndexes : [-1] },
           },
         });
+
+        await createAssistantDocumentRevision(tx, {
+          documentId: upserted.id,
+          ingestionRunId: run.id,
+          createdById: triggeredById ?? null,
+          title: document.title,
+          sourcePath: document.sourcePath,
+          sourceType: document.prismaSourceType,
+          href: document.href,
+          featureDomain: document.featureDomain,
+          routeScope: document.routeScope,
+          roleScope: document.roleScope,
+          contentHash: document.documentHash,
+          controlState,
+          chunks: document.chunkPayload.map((chunk) => ({
+            chunkIndex: chunk.chunkIndex,
+            sectionTitle: chunk.sectionTitle,
+            body: chunk.body,
+            summary: chunk.summary,
+            searchText: chunk.searchText,
+            keywordTerms: chunk.keywordTerms,
+            roleScope: chunk.roleScope,
+            tokenCount: chunk.tokenCount,
+            contentHash: chunk.contentHash,
+          })),
+        });
       }
 
-      await tx.assistantKnowledgeDocument.deleteMany({
-        where: {
-          sourceKey: { notIn: sourceKeys },
-        },
-      });
+      for (const deletedSourceKey of deletedSourceKeys) {
+        const existingDocument = existingDocumentMap.get(deletedSourceKey);
+
+        if (!existingDocument) {
+          continue;
+        }
+
+        await createAssistantDocumentRevision(tx, {
+          documentId: existingDocument.id,
+          ingestionRunId: run.id,
+          createdById: triggeredById ?? null,
+          title: existingDocument.title,
+          sourcePath: existingDocument.sourcePath,
+          sourceType: existingDocument.sourceType,
+          href: existingDocument.href,
+          featureDomain: existingDocument.featureDomain,
+          routeScope: existingDocument.routeScope,
+          roleScope: existingDocument.roleScope,
+          contentHash: existingDocument.contentHash,
+          controlState: {
+            governanceState: existingDocument.governanceState,
+            isPinned: existingDocument.isPinned,
+            isDisabled: existingDocument.isDisabled,
+            disabledReason: existingDocument.disabledReason,
+          },
+          chunks: existingDocument.chunks.map((chunk) => ({
+            chunkIndex: chunk.chunkIndex,
+            sectionTitle: chunk.sectionTitle,
+            body: chunk.body,
+            summary: chunk.summary,
+            searchText: chunk.searchText,
+            keywordTerms: chunk.keywordTerms,
+            roleScope: chunk.roleScope,
+            tokenCount: chunk.tokenCount,
+            contentHash: chunk.contentHash,
+          })),
+        });
+
+        await tx.assistantKnowledgeDocument.update({
+          where: {
+            id: existingDocument.id,
+          },
+          data: {
+            isDisabled: true,
+            disabledReason: "Source removed from the live assistant corpus.",
+            lastReviewedAt: new Date(),
+            lastReviewedById: triggeredById ?? null,
+          },
+        });
+      }
     });
 
     const embeddedChunkCount = await refreshChunkEmbeddings(embeddingQueue);
@@ -531,6 +764,8 @@ type PersistedChunkHit = {
   sourcePath: string;
   sourceType: "memory-bank" | "workflow-guide";
   governanceState: AssistantSourceGovernanceState;
+  isPinned: boolean;
+  isDisabled: boolean;
   href: string | null;
   matchingTerms: string[];
   score: number;
@@ -621,10 +856,15 @@ function getSourcePriority(input: {
   sourceType: "memory-bank" | "workflow-guide";
   sourcePath: string;
   governanceState: AssistantSourceGovernanceState;
+  isPinned: boolean;
   queryTokens: string[];
   title: string;
   featureDomain: string | null;
 }) {
+  if (input.isPinned) {
+    return 48;
+  }
+
   if (input.governanceState === "DEPRECATED") {
     return -24;
   }
@@ -757,6 +997,8 @@ async function findLexicalChunkCandidates(role: Role, normalizedQuery: string) {
           title: true,
           sourcePath: true,
           sourceType: true,
+          isPinned: true,
+          isDisabled: true,
           href: true,
           featureDomain: true,
           routeScope: true,
@@ -764,13 +1006,19 @@ async function findLexicalChunkCandidates(role: Role, normalizedQuery: string) {
       },
     },
   });
-  const governanceStates = await loadAssistantDocumentGovernanceStates(
+  const controlStates = await loadAssistantDocumentControlStates(
     prisma,
     [...new Set(chunks.map((chunk) => chunk.document.id))]
   );
 
   return chunks
     .map((chunk) => {
+      const controlState = controlStates.get(chunk.document.id);
+
+      if (controlState?.isDisabled || chunk.document.isDisabled) {
+        return null;
+      }
+
       const { score, matchingTerms } = scoreChunk(
         {
           sectionTitle: chunk.sectionTitle,
@@ -798,7 +1046,9 @@ async function findLexicalChunkCandidates(role: Role, normalizedQuery: string) {
         sectionTitle: chunk.sectionTitle,
         sourcePath: chunk.document.sourcePath,
         sourceType: chunk.document.sourceType === "WORKFLOW_GUIDE" ? "workflow-guide" : "memory-bank",
-        governanceState: governanceStates.get(chunk.document.id) ?? "APPROVED",
+        governanceState: controlState?.governanceState ?? "APPROVED",
+        isPinned: controlState?.isPinned ?? chunk.document.isPinned,
+        isDisabled: controlState?.isDisabled ?? chunk.document.isDisabled,
         href: chunk.document.href,
         matchingTerms,
         score,
@@ -820,6 +1070,8 @@ type VectorSearchRow = {
   sourcePath: string;
   sourceType: "MEMORY_BANK" | "WORKFLOW_GUIDE";
   governanceState: AssistantSourceGovernanceState;
+  isPinned: boolean;
+  isDisabled: boolean;
   href: string | null;
   featureDomain: string | null;
   routeScope: string | null;
@@ -877,6 +1129,8 @@ async function findJsonVectorChunkCandidates(role: Role, queryEmbedding: number[
           title: true,
           sourcePath: true,
           sourceType: true,
+          isPinned: true,
+          isDisabled: true,
           href: true,
           featureDomain: true,
           routeScope: true,
@@ -884,13 +1138,19 @@ async function findJsonVectorChunkCandidates(role: Role, queryEmbedding: number[
       },
     },
   });
-  const governanceStates = await loadAssistantDocumentGovernanceStates(
+  const controlStates = await loadAssistantDocumentControlStates(
     prisma,
     [...new Set(chunks.map((chunk) => chunk.document.id))]
   );
 
   return chunks
     .map((chunk) => {
+      const controlState = controlStates.get(chunk.document.id);
+
+      if (controlState?.isDisabled || chunk.document.isDisabled) {
+        return null;
+      }
+
       const embedding = parseEmbeddingJson(chunk.embedding);
 
       if (!embedding) {
@@ -910,7 +1170,9 @@ async function findJsonVectorChunkCandidates(role: Role, queryEmbedding: number[
         sectionTitle: chunk.sectionTitle,
         sourcePath: chunk.document.sourcePath,
         sourceType: chunk.document.sourceType,
-        governanceState: governanceStates.get(chunk.document.id) ?? "APPROVED",
+        governanceState: controlState?.governanceState ?? "APPROVED",
+        isPinned: controlState?.isPinned ?? chunk.document.isPinned,
+        isDisabled: controlState?.isDisabled ?? chunk.document.isDisabled,
         href: chunk.document.href,
         featureDomain: chunk.document.featureDomain,
         routeScope: chunk.document.routeScope,
@@ -955,6 +1217,8 @@ async function findVectorChunkCandidates(role: Role, normalizedQuery: string) {
             d."sourcePath",
             d."sourceType",
             d."governanceState",
+            d."isPinned",
+            d."isDisabled",
             d."href",
             d."featureDomain",
             d."routeScope",
@@ -964,6 +1228,7 @@ async function findVectorChunkCandidates(role: Role, normalizedQuery: string) {
             ON d."id" = c."documentId"
           WHERE
             $2 = ANY(c."roleScope")
+            AND d."isDisabled" = false
             AND c."embeddingVector" IS NOT NULL
           ORDER BY c."embeddingVector" <=> $1::vector
           LIMIT 18
@@ -1019,6 +1284,8 @@ export async function searchAssistantKnowledgeChunks(role: Role, query: string) 
       sourcePath: vectorCandidate.sourcePath,
       sourceType,
       governanceState: vectorCandidate.governanceState,
+      isPinned: vectorCandidate.isPinned,
+      isDisabled: vectorCandidate.isDisabled,
       href: vectorCandidate.href,
       matchingTerms: [],
       score: 0,
@@ -1036,6 +1303,7 @@ export async function searchAssistantKnowledgeChunks(role: Role, query: string) 
         sourceType: candidate.sourceType,
         sourcePath: candidate.sourcePath,
         governanceState: candidate.governanceState,
+        isPinned: candidate.isPinned,
         queryTokens,
         title: candidate.title,
         featureDomain: candidate.featureDomain,
@@ -1050,6 +1318,513 @@ export async function searchAssistantKnowledgeChunks(role: Role, query: string) 
     .slice(0, 6);
 }
 
+function summarizeDocumentPreview(chunks: Array<{ summary: string }>) {
+  const preview = chunks.map((chunk) => chunk.summary).find(Boolean) ?? null;
+  return preview ? trimConversationTitle(preview) : null;
+}
+
+function calculateChunkDiff(
+  storedChunks: Array<{ chunkIndex: number; contentHash: string }>,
+  currentChunks: Array<{ chunkIndex: number; contentHash: string }>
+) {
+  const storedByIndex = new Map(storedChunks.map((chunk) => [chunk.chunkIndex, chunk.contentHash]));
+  const currentByIndex = new Map(currentChunks.map((chunk) => [chunk.chunkIndex, chunk.contentHash]));
+  let addedChunks = 0;
+  let removedChunks = 0;
+  let changedChunks = 0;
+
+  for (const [chunkIndex, currentHash] of currentByIndex) {
+    if (!storedByIndex.has(chunkIndex)) {
+      addedChunks += 1;
+      continue;
+    }
+
+    if (storedByIndex.get(chunkIndex) !== currentHash) {
+      changedChunks += 1;
+    }
+  }
+
+  for (const chunkIndex of storedByIndex.keys()) {
+    if (!currentByIndex.has(chunkIndex)) {
+      removedChunks += 1;
+    }
+  }
+
+  return {
+    addedChunks,
+    removedChunks,
+    changedChunks,
+  };
+}
+
+export async function getAssistantKnowledgeOperationsState() {
+  const [currentDocuments, storedDocuments, latestRun] = await Promise.all([
+    loadAssistantCorpusDocuments(),
+    prisma.assistantKnowledgeDocument.findMany({
+      orderBy: [{ isPinned: "desc" }, { sourceType: "asc" }, { title: "asc" }],
+      select: {
+        id: true,
+        sourceKey: true,
+        title: true,
+        sourcePath: true,
+        sourceType: true,
+        governanceState: true,
+        isPinned: true,
+        isDisabled: true,
+        disabledReason: true,
+        contentHash: true,
+        lastIngestedAt: true,
+        lastReviewedAt: true,
+        lastReviewedBy: {
+          select: {
+            name: true,
+          },
+        },
+        chunks: {
+          orderBy: {
+            chunkIndex: "asc",
+          },
+          select: {
+            chunkIndex: true,
+            summary: true,
+            contentHash: true,
+          },
+        },
+        revisions: {
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 2,
+          select: {
+            id: true,
+            createdAt: true,
+            revisionHash: true,
+            contentHash: true,
+            chunkCount: true,
+          },
+        },
+        _count: {
+          select: {
+            revisions: true,
+          },
+        },
+      },
+    }),
+    prisma.assistantIngestionRun.findFirst({
+      orderBy: {
+        startedAt: "desc",
+      },
+      select: {
+        id: true,
+        status: true,
+        sourceCount: true,
+        chunkCount: true,
+        errorMessage: true,
+        startedAt: true,
+        completedAt: true,
+      },
+    }),
+  ]);
+
+  const currentMap = new Map(
+    currentDocuments.map((document) => {
+      const documentHash = buildDocumentHash(document);
+
+      return [
+        document.sourceKey,
+        {
+          ...document,
+          documentHash,
+          chunkPayload: document.chunks.map((chunk) => ({
+            ...chunk,
+            contentHash: buildChunkHash(chunk),
+          })),
+        },
+      ];
+    })
+  );
+  const storedMap = new Map(storedDocuments.map((document) => [document.sourceKey, document]));
+  const sourceKeys = [...new Set([...currentMap.keys(), ...storedMap.keys()])].sort();
+
+  const sources = sourceKeys.map((sourceKey) => {
+    const currentDocument = currentMap.get(sourceKey);
+    const storedDocument = storedMap.get(sourceKey);
+    const changeSummary = calculateChunkDiff(
+      storedDocument?.chunks.map((chunk) => ({
+        chunkIndex: chunk.chunkIndex,
+        contentHash: chunk.contentHash,
+      })) ?? [],
+      currentDocument?.chunkPayload.map((chunk) => ({
+        chunkIndex: chunk.chunkIndex,
+        contentHash: chunk.contentHash,
+      })) ?? []
+    );
+    const status: KnowledgeOpsSourceStatus = !storedDocument
+      ? "new"
+      : !currentDocument
+        ? "removed"
+        : storedDocument.contentHash === currentDocument.documentHash
+          ? "current"
+          : "changed";
+
+    return {
+      documentId: storedDocument?.id ?? null,
+      sourceKey,
+      title: storedDocument?.title ?? currentDocument?.title ?? sourceKey,
+      sourcePath: storedDocument?.sourcePath ?? currentDocument?.sourcePath ?? sourceKey,
+      sourceType:
+        (storedDocument?.sourceType ?? currentDocument?.prismaSourceType) === "WORKFLOW_GUIDE"
+          ? "workflow-guide"
+          : "memory-bank",
+      governanceState: storedDocument?.governanceState ?? currentDocument?.governanceState ?? "APPROVED",
+      isPinned: storedDocument?.isPinned ?? false,
+      isDisabled: storedDocument?.isDisabled ?? false,
+      disabledReason: storedDocument?.disabledReason ?? null,
+      status,
+      hasPendingChanges: status === "new" || status === "changed" || status === "removed",
+      changeSummary,
+      chunkCount: storedDocument?.chunks.length ?? 0,
+      currentChunkCount: currentDocument?.chunkPayload.length ?? 0,
+      lastIngestedAt: storedDocument?.lastIngestedAt ?? null,
+      lastReviewedAt: storedDocument?.lastReviewedAt ?? null,
+      lastReviewedByName: storedDocument?.lastReviewedBy?.name ?? null,
+      latestRevisionAt: storedDocument?.revisions[0]?.createdAt ?? null,
+      revisionCount: storedDocument?._count.revisions ?? 0,
+      canRollback: Boolean(storedDocument?.revisions[1]),
+      latestStoredSummary: summarizeDocumentPreview(storedDocument?.chunks ?? []),
+      currentSourceSummary: summarizeDocumentPreview(currentDocument?.chunkPayload ?? []),
+    } satisfies AssistantKnowledgeOpsSource;
+  });
+
+  return {
+    latestRun,
+    sources,
+    totals: {
+      sourceCount: sources.length,
+      pendingCount: sources.filter((source) => source.hasPendingChanges).length,
+      pinnedCount: sources.filter((source) => source.isPinned).length,
+      disabledCount: sources.filter((source) => source.isDisabled).length,
+    },
+  };
+}
+
+export async function updateAssistantKnowledgeDocumentControls(input: {
+  documentId: string;
+  actorId: string;
+  governanceState: AssistantSourceGovernanceState;
+  isPinned: boolean;
+  isDisabled: boolean;
+  disabledReason?: string | null;
+}) {
+  const document = await prisma.assistantKnowledgeDocument.findUnique({
+    where: {
+      id: input.documentId,
+    },
+    select: {
+      id: true,
+      title: true,
+      sourcePath: true,
+      sourceType: true,
+      href: true,
+      featureDomain: true,
+      routeScope: true,
+      roleScope: true,
+      contentHash: true,
+      chunks: {
+        orderBy: {
+          chunkIndex: "asc",
+        },
+        select: {
+          chunkIndex: true,
+          sectionTitle: true,
+          body: true,
+          summary: true,
+          searchText: true,
+          keywordTerms: true,
+          roleScope: true,
+          tokenCount: true,
+          contentHash: true,
+        },
+      },
+    },
+  });
+
+  if (!document) {
+    throw new Error("The selected assistant knowledge source no longer exists.");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.assistantKnowledgeDocument.update({
+      where: {
+        id: input.documentId,
+      },
+      data: {
+        governanceState: input.governanceState,
+        isPinned: input.isPinned,
+        isDisabled: input.isDisabled,
+        disabledReason:
+          input.isDisabled && input.disabledReason?.trim()
+            ? input.disabledReason.trim()
+            : null,
+        lastReviewedAt: new Date(),
+        lastReviewedById: input.actorId,
+      },
+    });
+
+    await createAssistantDocumentRevision(tx, {
+      documentId: document.id,
+      createdById: input.actorId,
+      title: document.title,
+      sourcePath: document.sourcePath,
+      sourceType: document.sourceType,
+      href: document.href,
+      featureDomain: document.featureDomain,
+      routeScope: document.routeScope,
+      roleScope: document.roleScope,
+      contentHash: document.contentHash,
+      controlState: {
+        governanceState: input.governanceState,
+        isPinned: input.isPinned,
+        isDisabled: input.isDisabled,
+        disabledReason:
+          input.isDisabled && input.disabledReason?.trim()
+            ? input.disabledReason.trim()
+            : null,
+      },
+      chunks: document.chunks,
+    });
+  });
+}
+
+type AssistantRevisionChunkSnapshot = {
+  chunkIndex: number;
+  sectionTitle: string | null;
+  body: string;
+  summary: string;
+  searchText: string;
+  keywordTerms: string[];
+  roleScope: Role[];
+  tokenCount: number;
+  contentHash: string;
+};
+
+function parseRevisionChunkSnapshot(value: Prisma.JsonValue): AssistantRevisionChunkSnapshot[] {
+  if (!Array.isArray(value)) {
+    throw new Error("The selected assistant revision is missing its chunk snapshot.");
+  }
+
+  return value.map((entry) => {
+    if (
+      !entry ||
+      typeof entry !== "object" ||
+      typeof (entry as { chunkIndex?: unknown }).chunkIndex !== "number" ||
+      typeof (entry as { body?: unknown }).body !== "string" ||
+      typeof (entry as { summary?: unknown }).summary !== "string" ||
+      typeof (entry as { searchText?: unknown }).searchText !== "string" ||
+      !Array.isArray((entry as { keywordTerms?: unknown }).keywordTerms) ||
+      !Array.isArray((entry as { roleScope?: unknown }).roleScope) ||
+      typeof (entry as { tokenCount?: unknown }).tokenCount !== "number" ||
+      typeof (entry as { contentHash?: unknown }).contentHash !== "string"
+    ) {
+      throw new Error("The selected assistant revision has an invalid chunk snapshot.");
+    }
+
+    return {
+      chunkIndex: (entry as { chunkIndex: number }).chunkIndex,
+      sectionTitle:
+        typeof (entry as { sectionTitle?: unknown }).sectionTitle === "string"
+          ? (entry as { sectionTitle: string }).sectionTitle
+          : null,
+      body: (entry as { body: string }).body,
+      summary: (entry as { summary: string }).summary,
+      searchText: (entry as { searchText: string }).searchText,
+      keywordTerms: (entry as { keywordTerms: string[] }).keywordTerms,
+      roleScope: (entry as { roleScope: Role[] }).roleScope,
+      tokenCount: (entry as { tokenCount: number }).tokenCount,
+      contentHash: (entry as { contentHash: string }).contentHash,
+    };
+  });
+}
+
+export async function rollbackAssistantKnowledgeDocumentToRevision(input: {
+  documentId: string;
+  actorId: string;
+}) {
+  const document = await prisma.assistantKnowledgeDocument.findUnique({
+    where: {
+      id: input.documentId,
+    },
+    select: {
+      id: true,
+      title: true,
+      sourcePath: true,
+      sourceType: true,
+      href: true,
+      featureDomain: true,
+      routeScope: true,
+      roleScope: true,
+      contentHash: true,
+      governanceState: true,
+      isPinned: true,
+      isDisabled: true,
+      disabledReason: true,
+      chunks: {
+        orderBy: {
+          chunkIndex: "asc",
+        },
+        select: {
+          chunkIndex: true,
+          sectionTitle: true,
+          body: true,
+          summary: true,
+          searchText: true,
+          keywordTerms: true,
+          roleScope: true,
+          tokenCount: true,
+          contentHash: true,
+        },
+      },
+      revisions: {
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 2,
+        select: {
+          id: true,
+          title: true,
+          sourcePath: true,
+          sourceType: true,
+          governanceState: true,
+          isPinned: true,
+          isDisabled: true,
+          disabledReason: true,
+          href: true,
+          featureDomain: true,
+          routeScope: true,
+          roleScope: true,
+          contentHash: true,
+          chunkSnapshot: true,
+        },
+      },
+    },
+  });
+
+  if (!document) {
+    throw new Error("The selected assistant knowledge source no longer exists.");
+  }
+
+  const rollbackRevision = document.revisions[1];
+
+  if (!rollbackRevision) {
+    throw new Error("No earlier assistant knowledge revision is available for rollback.");
+  }
+
+  const chunkSnapshot = parseRevisionChunkSnapshot(rollbackRevision.chunkSnapshot);
+  const embeddingQueue: PendingEmbeddingChunk[] = [];
+
+  await prisma.$transaction(async (tx) => {
+    await createAssistantDocumentRevision(tx, {
+      documentId: document.id,
+      createdById: input.actorId,
+      title: document.title,
+      sourcePath: document.sourcePath,
+      sourceType: document.sourceType,
+      href: document.href,
+      featureDomain: document.featureDomain,
+      routeScope: document.routeScope,
+      roleScope: document.roleScope,
+      contentHash: document.contentHash,
+      controlState: {
+        governanceState: document.governanceState,
+        isPinned: document.isPinned,
+        isDisabled: document.isDisabled,
+        disabledReason: document.disabledReason,
+      },
+      chunks: document.chunks,
+    });
+
+    await tx.assistantKnowledgeDocument.update({
+      where: {
+        id: document.id,
+      },
+      data: {
+        title: rollbackRevision.title,
+        sourcePath: rollbackRevision.sourcePath,
+        sourceType: rollbackRevision.sourceType,
+        governanceState: rollbackRevision.governanceState,
+        isPinned: rollbackRevision.isPinned,
+        isDisabled: rollbackRevision.isDisabled,
+        disabledReason: rollbackRevision.disabledReason,
+        href: rollbackRevision.href,
+        featureDomain: rollbackRevision.featureDomain,
+        routeScope: rollbackRevision.routeScope,
+        roleScope: rollbackRevision.roleScope,
+        contentHash: rollbackRevision.contentHash,
+        lastReviewedAt: new Date(),
+        lastReviewedById: input.actorId,
+        lastIngestedAt: new Date(),
+      },
+    });
+
+    for (const chunk of chunkSnapshot) {
+      const persistedChunk = await tx.assistantKnowledgeChunk.upsert({
+        where: {
+          documentId_chunkIndex: {
+            documentId: document.id,
+            chunkIndex: chunk.chunkIndex,
+          },
+        },
+        update: {
+          sectionTitle: chunk.sectionTitle,
+          body: chunk.body,
+          summary: chunk.summary,
+          searchText: chunk.searchText,
+          keywordTerms: chunk.keywordTerms,
+          roleScope: chunk.roleScope,
+          tokenCount: chunk.tokenCount,
+          contentHash: chunk.contentHash,
+          embeddingUpdatedAt: null,
+          embeddingModel: null,
+          embeddingDimensions: null,
+          embeddingContentHash: null,
+        },
+        create: {
+          documentId: document.id,
+          chunkIndex: chunk.chunkIndex,
+          sectionTitle: chunk.sectionTitle,
+          body: chunk.body,
+          summary: chunk.summary,
+          searchText: chunk.searchText,
+          keywordTerms: chunk.keywordTerms,
+          roleScope: chunk.roleScope,
+          tokenCount: chunk.tokenCount,
+          contentHash: chunk.contentHash,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      embeddingQueue.push({
+        id: persistedChunk.id,
+        body: chunk.body,
+        contentHash: chunk.contentHash,
+      });
+    }
+
+    await tx.assistantKnowledgeChunk.deleteMany({
+      where: {
+        documentId: document.id,
+        chunkIndex: {
+          notIn: chunkSnapshot.map((chunk) => chunk.chunkIndex),
+        },
+      },
+    });
+  });
+
+  await refreshChunkEmbeddings(embeddingQueue);
+}
+
 export async function persistAssistantConversation({
   userId,
   query,
@@ -1060,7 +1835,14 @@ export async function persistAssistantConversation({
   userId: string;
   query: string;
   answer: string;
-  citations: PersistedChunkHit[];
+  citations: Array<{
+    id: string;
+    title: string;
+    sectionTitle: string | null;
+    sourcePath: string;
+    sourceType: "memory-bank" | "workflow-guide" | "live-record";
+    href: string | null;
+  }>;
   conversationId?: string | null;
 }) {
   const existingConversation = conversationId

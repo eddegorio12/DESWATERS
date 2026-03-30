@@ -103,6 +103,8 @@ model User {
   recordedMeterReplacements MeterReplacementHistory[] @relation("MeterReplacementRecordedBy")
   assistantConversations AssistantConversation[] @relation("AssistantConversationOwner")
   assistantIngestionRuns AssistantIngestionRun[] @relation("AssistantIngestionTriggeredBy")
+  reviewedAssistantKnowledgeDocuments AssistantKnowledgeDocument[] @relation("AssistantKnowledgeDocumentReviewedBy")
+  assistantKnowledgeDocumentRevisions AssistantKnowledgeDocumentRevision[] @relation("AssistantKnowledgeDocumentRevisionCreatedBy")
   assistantResponseLogs AssistantResponseLog[] @relation("AssistantResponseLogUser")
   assistantEvaluationRuns AssistantEvaluationRun[] @relation("AssistantEvaluationTriggeredBy")
   finalizedBills Bill[] @relation("BillFinalizedBy")
@@ -595,23 +597,31 @@ enum BackupSnapshotStatus {
 }
 
 model AssistantKnowledgeDocument {
-  id             String                  @id @default(uuid())
-  sourceKey      String                  @unique
+  id             String                           @id @default(uuid())
+  sourceKey      String                           @unique
   title          String
   sourcePath     String
   sourceType     AssistantSourceType
-  governanceState AssistantSourceGovernanceState @default(APPROVED)
+  governanceState AssistantSourceGovernanceState  @default(APPROVED)
+  isPinned       Boolean                          @default(false)
+  isDisabled     Boolean                          @default(false)
+  disabledReason String?
   href           String?
   featureDomain  String?
   routeScope     String?
-  roleScope      Role[]                  @default([])
+  roleScope      Role[]                           @default([])
   contentHash    String
-  lastIngestedAt DateTime                @default(now())
+  lastIngestedAt DateTime                         @default(now())
+  lastReviewedAt DateTime?
+  lastReviewedById String?
+  lastReviewedBy User?                            @relation("AssistantKnowledgeDocumentReviewedBy", fields: [lastReviewedById], references: [id])
   chunks         AssistantKnowledgeChunk[]
-  createdAt      DateTime                @default(now())
-  updatedAt      DateTime                @updatedAt
+  revisions      AssistantKnowledgeDocumentRevision[]
+  createdAt      DateTime                         @default(now())
+  updatedAt      DateTime                         @updatedAt
 
   @@index([sourceType, sourcePath])
+  @@index([isDisabled, isPinned])
 }
 
 model AssistantKnowledgeChunk {
@@ -650,10 +660,41 @@ model AssistantIngestionRun {
   errorMessage  String?
   startedAt     DateTime                  @default(now())
   completedAt   DateTime?
+  revisions     AssistantKnowledgeDocumentRevision[]
   createdAt     DateTime                  @default(now())
   updatedAt     DateTime                  @updatedAt
 
   @@index([status, startedAt(sort: Desc)])
+}
+
+model AssistantKnowledgeDocumentRevision {
+  id              String                           @id @default(uuid())
+  documentId      String
+  document        AssistantKnowledgeDocument       @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  ingestionRunId  String?
+  ingestionRun    AssistantIngestionRun?           @relation(fields: [ingestionRunId], references: [id])
+  createdById     String?
+  createdBy       User?                            @relation("AssistantKnowledgeDocumentRevisionCreatedBy", fields: [createdById], references: [id])
+  revisionHash    String
+  title           String
+  sourcePath      String
+  sourceType      AssistantSourceType
+  governanceState AssistantSourceGovernanceState
+  isPinned        Boolean                          @default(false)
+  isDisabled      Boolean                          @default(false)
+  disabledReason  String?
+  href            String?
+  featureDomain   String?
+  routeScope      String?
+  roleScope       Role[]                           @default([])
+  contentHash     String
+  chunkCount      Int
+  chunkSnapshot   Json
+  createdAt       DateTime                         @default(now())
+
+  @@unique([documentId, revisionHash])
+  @@index([documentId, createdAt(sort: Desc)])
+  @@index([ingestionRunId])
 }
 
 model AssistantConversation {

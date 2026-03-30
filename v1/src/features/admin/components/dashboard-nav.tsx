@@ -60,18 +60,24 @@ function SidebarNavItem({
       href={item.href}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "group flex cursor-pointer items-start gap-3 rounded-[1.15rem] border px-3.5 py-3 text-left transition-colors duration-200",
+        "group relative flex cursor-pointer items-start gap-3 px-3 py-3 text-left transition-colors duration-200",
         isActive
-          ? "border-white/12 bg-white text-[#13253f] shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]"
-          : "border-transparent bg-white/[0.03] text-white/80 hover:border-white/10 hover:bg-white/8 hover:text-white"
+          ? "bg-primary/6 text-foreground"
+          : "text-muted-foreground hover:bg-secondary/46 hover:text-foreground"
       )}
     >
+      <span
+        className={cn(
+          "absolute bottom-2 left-0 top-2 w-px rounded-full transition-colors duration-200",
+          isActive ? "bg-primary" : "bg-transparent group-hover:bg-border"
+        )}
+      />
       <div
         className={cn(
-          "mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-[0.95rem] border transition-colors duration-200",
+          "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-[0.8rem] border transition-colors duration-200",
           isActive
-            ? "border-[#bdeee5] bg-[#dff8f1] text-[#11645e]"
-            : "border-white/8 bg-white/7 text-white/82 group-hover:border-white/14 group-hover:bg-white/10"
+            ? "border-primary/14 bg-primary/8 text-primary"
+            : "border-border/70 bg-white/35 text-muted-foreground group-hover:border-primary/12 group-hover:bg-white/58 group-hover:text-foreground"
         )}
       >
         <Icon className="size-[1.05rem]" />
@@ -79,8 +85,8 @@ function SidebarNavItem({
       <div className="min-w-0">
         <p
           className={cn(
-            "text-[0.95rem] font-semibold tracking-[-0.01em]",
-            isActive ? "text-[#13253f]" : "text-white"
+            "text-[0.93rem] font-semibold tracking-[-0.01em]",
+            isActive ? "text-foreground" : "text-foreground/92"
           )}
         >
           {item.label}
@@ -88,7 +94,7 @@ function SidebarNavItem({
         <p
           className={cn(
             "mt-1 line-clamp-2 text-[0.72rem] leading-5",
-            isActive ? "text-[#4a627e]" : "text-white/60 group-hover:text-white/74"
+            isActive ? "text-muted-foreground" : "text-muted-foreground/88"
           )}
         >
           {item.description}
@@ -102,7 +108,7 @@ export function DashboardNav({ items }: { items: readonly DashboardNavItem[] }) 
   const pathname = usePathname();
 
   return (
-    <nav className="grid gap-1.5">
+    <nav className="grid gap-1">
       {items.map((item) => {
         const isActive = pathname === item.href;
 

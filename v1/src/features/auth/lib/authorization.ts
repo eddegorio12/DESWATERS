@@ -32,6 +32,7 @@ export type StaffCapability =
   | "meters:transfer"
   | "tariffs:create"
   | "system:backup:log"
+  | "assistant:knowledge:manage"
   | "readings:create"
   | "readings:approve"
   | "readings:delete:any"
@@ -93,6 +94,7 @@ const capabilityAccess: Record<StaffCapability, readonly Role[]> = {
   "meters:transfer": [Role.SUPER_ADMIN, Role.ADMIN, Role.TECHNICIAN],
   "tariffs:create": [Role.SUPER_ADMIN, Role.ADMIN],
   "system:backup:log": [Role.SUPER_ADMIN, Role.ADMIN],
+  "assistant:knowledge:manage": [Role.SUPER_ADMIN, Role.ADMIN],
   "readings:create": [Role.SUPER_ADMIN, Role.ADMIN, Role.METER_READER],
   "readings:approve": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
   "readings:delete:any": [Role.SUPER_ADMIN, Role.ADMIN],
@@ -139,6 +141,7 @@ const capabilityLabels: Record<StaffCapability, string> = {
   "meters:transfer": "transfer meter holders",
   "tariffs:create": "change tariff rules",
   "system:backup:log": "record backup snapshots",
+  "assistant:knowledge:manage": "manage assistant knowledge sources",
   "readings:create": "encode meter readings",
   "readings:approve": "approve meter readings",
   "readings:delete:any": "delete pending readings",

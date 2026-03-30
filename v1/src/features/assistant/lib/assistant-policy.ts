@@ -42,12 +42,19 @@ const mutationPatterns = [
   /\b(reset|clear|unlock)\b.*\b(password|lockout|account)\b/i,
 ];
 
-const liveRecordPatterns = [
-  /\b(account number|account no\.?|customer id|meter id|meter number|bill number|receipt number)\b/i,
+const liveRecordBroadPatterns = [
   /\bshow me\b.*\b(customer|account|bill|payment|balance|overdue)\b/i,
   /\blist\b.*\b(customer|account|bill|payment|balance|overdue)\b/i,
   /\bwho\b.*\b(overdue|disconnected|unpaid)\b/i,
 ];
+
+const liveRecordIdentifierPatterns = [
+  /\b(account number|account no\.?|customer id|meter id|meter number|bill id|bill number|receipt number|route code)\b/i,
+  /\b[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\b/i,
+];
+
+const liveRecordExplanationSignals =
+  /\b(why|status|showing|shown|explain|reason|meaning|next step|pressure|severity)\b/i;
 
 const suspiciousSourcePatterns = [
   /\bignore (all|previous|prior) instructions\b/i,
@@ -127,15 +134,19 @@ export function evaluateAssistantPolicy(input: {
     };
   }
 
-  if (liveRecordPatterns.some((pattern) => pattern.test(normalizedQuery))) {
+  if (
+    liveRecordBroadPatterns.some((pattern) => pattern.test(normalizedQuery)) ||
+    (liveRecordIdentifierPatterns.some((pattern) => pattern.test(normalizedQuery)) &&
+      !liveRecordExplanationSignals.test(normalizedQuery))
+  ) {
     return {
       disposition: "escalation-required",
       answer:
-        "I cannot inspect live customer-specific or transaction-specific records in this EH15 slice. Open the relevant DWDS module and review the record there instead.",
+        "I can only explain one visible DWDS record at a time in EH15.5. Use a specific bill ID, receipt number, route code, meter number, or account number and ask why it shows that status.",
       basis:
-        "Live-record explainers remain deferred until a later assistant maturity phase, so this assistant stays documentation-first and read-only.",
+        "EH15.5 allows narrow read-only explainers, but broad record lookup and record discovery still remain outside the assistant scope.",
       uncertainty:
-        "If you need a real account, bill, or payment answer, verify it directly in the protected module instead of chat.",
+        "For bulk review or record discovery, use the protected DWDS module directly instead of chat.",
       allowDraftSources: false,
       allowModelSynthesis: false,
     };

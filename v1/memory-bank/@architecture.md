@@ -129,7 +129,7 @@
 - `src/features/marketing/`
   - Shared public-site layout, navigation, footer, trust/conversion panels, site metadata helpers, brand lockup, screenshot showcase components, and centralized site content
 - `src/features/assistant/`
-  - EH15 assistant domain for retrieval ingestion, stored knowledge chunks, answer assembly, conversation history, and protected assistant UI
+  - EH15 assistant domain for retrieval ingestion, stored knowledge chunks, answer assembly, conversation history, protected assistant UI, and admin-facing knowledge-operations controls
 - `src/features/admin/components/admin-surface-panel.tsx`
   - Shared lighter-weight protected-surface framing for summary-heavy admin boards that do not need the full dashboard-console card treatment
 - `src/app/layout.tsx`
@@ -205,10 +205,14 @@
 - The first assistant slice should retrieve from `memory-bank` documentation plus curated in-app workflow guidance before broader transactional data is considered.
 - The assistant is now also available as a protected shell-level popup so staff can ask for help without leaving the active module.
 - Assistant retrieval storage now persists documentation sources and chunks inside PostgreSQL through dedicated assistant knowledge and ingestion-run tables.
+- Assistant knowledge operations now also persist review state, pin or disable controls, and revision snapshots for managed assistant documents so admin curation and rollback stay server-authoritative.
 - Assistant history now persists per signed-in user through dedicated assistant conversation and message tables exposed only on the protected workspace.
 - Any live-record explanation path should stay narrow, read-only, and role-aware, answering only explicitly requested record questions that the signed-in user already has module access to view.
+- The implemented EH15.5 live-record path now explains one visible bill ID, receipt number, route code, or targeted exception/follow-up record at a time through server-side lookups that reuse existing module authorization instead of bypassing it.
+- Broad record discovery, list-all, and show-me live-data requests still escalate rather than widening the assistant into unrestricted transactional search.
 - Answer generation should include source citations, uncertainty handling, and next-module guidance where appropriate.
 - Retrieval data should stay inside the existing PostgreSQL architecture, preferably through `pgvector`, instead of adding a separate vector service in the first slice.
+- `/admin/assistant` now also exposes an admin-only knowledge-operations layer for source sync review, diff visibility, source-level curation, and revision-backed rollback without leaving the protected assistant domain.
 
 ### Overdue & Disconnection Workflow
 - Open bills now carry explicit receivables follow-up states separate from printed bill wording.
@@ -258,10 +262,13 @@
 - Enterprise-grade assistant maturity now depends on five explicit architectural layers: retrieval hardening, trust/safety governance, evaluation-plus-observability, knowledge operations, and only then narrow live-record explanation helpers.
 - EH15.1 is now implemented as the retrieval-hardening layer: section-aware chunking, incremental corpus sync, deterministic source-priority reranking, and a hybrid lexical-plus-semantic retrieval path that can use embeddings without requiring `pgvector` to exist in the local runtime.
 - EH15.1 has now been validated as the retrieval-hardening baseline.
+- EH15.3 is now implemented and validated as the evaluation-plus-observability layer: persisted assistant response telemetry, fixed regression runs, stored evaluation outcomes, and an admin-visible quality view inside the protected assistant workspace.
+- EH15.4 is now implemented and validated as the assistant knowledge-operations layer: admin-reviewed source governance, pin or disable controls, revision-backed rollback, and expanded workflow-guide coverage inside the protected assistant workspace.
+- EH15.5 is now implemented and validated as the narrow live-record explainer layer: one visible record at a time, server-authorized lookups, minimal live citations, and continued refusal of broad transactional search.
 - EH12 route analytics now also include a revenue-loss watchlist derived from recent billed-versus-collected gaps plus current overdue exposure, while route-linked complaint hotspot visibility is now backed by a first-class `Complaint` domain in the schema rather than inferred proxies.
 - The current architecture-level public-surface baseline now includes canonical/social metadata support, crawler-ready route metadata, generated share previews, and clearer CTA wiring without splitting the marketing surface into a separate app.
 - The next public-surface architecture task is continued manual accessibility QA while the current route structure and shared marketing primitives stay intact.
-- The next assistant-related architecture task is EH15.2 trust/safety/governance on top of the validated EH15.1 retrieval baseline.
+- The next assistant-related architecture task is continued scope discipline on the validated EH15.5 live-record explainers, while the assistant remains read-only and documentation-first outside those narrow record helpers.
 
 ## Usability Architecture Targets
 
@@ -467,7 +474,7 @@ Current long-lived schema domains include:
 - Recovery readiness: `BackupSnapshot`
 - Staff assistant retrieval and history: `AssistantKnowledgeDocument`, `AssistantKnowledgeChunk`, `AssistantIngestionRun`, `AssistantConversation`, and `AssistantConversationMessage`
 - Staff assistant retrieval and history: `AssistantKnowledgeDocument`, `AssistantKnowledgeChunk`, `AssistantIngestionRun`, `AssistantConversation`, and `AssistantConversationMessage`, now with JSONB embedding storage plus optional `embeddingVector` acceleration when the database exposes `pgvector`
-- Planned assistant follow-on governance and observability domains: source-governance state, answer-evaluation data, and assistant telemetry/audit records
+- Staff assistant governance and observability now also include source-governance state, managed source controls, `AssistantKnowledgeDocumentRevision`, `AssistantResponseLog`, `AssistantEvaluationRun`, and `AssistantEvaluationResult`
 
 When updating architecture notes after a schema change, prefer summarizing the affected domains here and keep the canonical field-level detail in `prisma/schema.prisma`.
 

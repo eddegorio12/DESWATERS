@@ -8,9 +8,9 @@ import {
   FileSpreadsheet,
   Gauge,
   MapPinned,
-  ShieldAlert,
   ReceiptText,
   Server,
+  ShieldAlert,
   TriangleAlert,
   Users,
   WalletCards,
@@ -44,7 +44,6 @@ import {
 } from "@/features/auth/lib/two-factor";
 import { formatCurrency } from "@/features/billing/lib/billing-calculations";
 import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
-import { BrandLockup } from "@/features/marketing/components/brand-lockup";
 import { getTodayCollectionRange } from "@/features/reports/lib/collections";
 import { prisma } from "@/lib/prisma";
 import { cn } from "@/lib/utils";
@@ -268,7 +267,7 @@ export default async function AdminDashboardPage() {
     {
       label: "Active routes",
       value: activeRouteCount.toString(),
-      detail: `${routedMeterCount} meters already mapped into route coverage`,
+      detail: `${routedMeterCount} meters mapped into route coverage`,
       accent: "emerald",
     },
     {
@@ -278,6 +277,7 @@ export default async function AdminDashboardPage() {
       accent: "rose",
     },
   ] as const;
+
   const workflowBoard = [
     {
       module: "routeOperations" as const,
@@ -318,7 +318,7 @@ export default async function AdminDashboardPage() {
     {
       module: "exceptions" as const,
       title: "Operational exceptions",
-      summary: "Monitor anomalies that need office review before they become billing or service issues.",
+      summary: "Monitor anomalies before they become billing or service issues.",
       count: "Alerts workspace",
       href: "/admin/exceptions",
       action: "Open exceptions",
@@ -334,6 +334,7 @@ export default async function AdminDashboardPage() {
       icon: ShieldAlert,
     },
   ].filter((item) => accessibleModules.has(item.module));
+
   const roleCapabilities = getRoleCapabilities(localUser.role);
   const pendingTwoFactorSetup = localUser.twoFactorPendingSecretCiphertext
     ? await (async () => {
@@ -356,204 +357,288 @@ export default async function AdminDashboardPage() {
         };
       })()
     : null;
+
   const dateFormatter = new Intl.DateTimeFormat("en-PH", {
     dateStyle: "medium",
     timeStyle: "short",
   });
 
   return (
-    <section className="bg-transparent">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <section className="dwds-panel-dark overflow-hidden">
-          <div className="grid gap-6 px-5 py-5 sm:px-6 sm:py-6 lg:grid-cols-[1.22fr_0.78fr] lg:gap-8 lg:px-8 lg:py-8">
-            <div className="space-y-5">
-              <BrandLockup inverse size="lg" className="w-fit max-sm:max-w-[10rem]" />
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="dwds-kicker border-white/14 bg-white/8 text-white/78">
-                  Operations Workspace
-                </span>
-                <span className="dwds-kicker border-[#8ce1d5]/25 bg-[#8ce1d5]/12 text-[#d9fff6]">
-                  DWDS
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                <h1 className="max-w-3xl font-heading text-3xl leading-tight tracking-[-0.03em] sm:text-4xl xl:text-5xl">
-                  Run daily DWDS work from one control room.
-                </h1>
-                <p className="max-w-2xl text-sm leading-6 text-white/76 sm:text-base sm:leading-7">
-                  See what needs action now, then jump straight into the queue, module, or
-                  report that moves the workflow forward.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3 border-t border-white/10 pt-4 sm:flex-row sm:flex-wrap">
-                {accessibleModules.has("readings") ? (
-                  <Link
-                    href="/admin/readings"
-                    className={cn(
-                      buttonVariants({
-                        className:
-                          "h-11 w-full rounded-full bg-white px-6 text-primary hover:bg-white/90",
-                      })
-                    )}
-                  >
-                    Open reading queue
-                  </Link>
-                ) : null}
-                {accessibleModules.has("collections") ? (
-                  <Link
-                    href="/admin/collections"
-                    className={cn(
-                      buttonVariants({
-                        variant: "outline",
-                        className:
-                          "h-11 w-full rounded-full border-white/18 bg-white/8 px-6 text-white hover:bg-white/12 hover:text-white",
-                      })
-                    )}
-                  >
-                    Open collections
-                  </Link>
-                ) : null}
-              </div>
+    <section className="min-h-dvh bg-transparent">
+      <div className="flex min-h-dvh flex-col">
+        <header className="border-b border-border/70 px-5 py-4 sm:px-7 lg:px-8">
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-[0.72rem] font-semibold uppercase tracking-[0.24em] text-primary/72">
+                Operations Workspace
+              </p>
+              <h1 className="mt-3 font-heading text-[2rem] leading-tight tracking-[-0.05em] text-foreground sm:text-[2.5rem]">
+                Daily utility work, aligned into one composed operating surface.
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
+                Review queue pressure, move into the next operational module,
+                and keep finance and route context visible without scanning a
+                wall of dashboard cards.
+              </p>
             </div>
 
-            <div className="self-start overflow-hidden rounded-[1.65rem] border border-white/12 bg-white/7">
-              <div className="grid gap-0 sm:grid-cols-2 lg:grid-cols-1">
-                <article className="border-b border-white/10 p-5 sm:border-r sm:border-white/10 lg:border-r-0">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
-                    Signed-in staff
-                  </p>
-                  <p className="mt-3 text-xl font-semibold tracking-tight">{localUser.name}</p>
-                  <p className="mt-2 text-sm text-white/72">
-                    {roleDisplayName[localUser.role]} with active internal admin access
-                  </p>
-                </article>
-
-                <article className="border-b border-white/10 p-5 lg:border-b lg:border-white/10">
-                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
-                    Today&apos;s collections
-                  </p>
-                  <p className="mt-3 text-3xl font-semibold tracking-tight">
-                    {formatCurrency(todayCollections)}
-                  </p>
-                  <p className="mt-2 text-sm text-white/72">
-                    {todayPayments.length} completed payment
-                    {todayPayments.length === 1 ? "" : "s"} posted in the current operating
-                    day
-                  </p>
-                </article>
-
-                <div className="flex flex-col gap-4 p-5 sm:col-span-2 lg:col-span-1">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">
-                      Role coverage
-                    </p>
-                    <p className="mt-2 max-w-[18rem] text-sm font-medium text-white">
-                      {roleSummaries[localUser.role]}
-                    </p>
-                    <p className="mt-2 text-xs leading-6 text-white/72">
-                      {roleCapabilities.length
-                        ? roleCapabilities.join(" | ")
-                        : "No operational capabilities are currently assigned."}
-                    </p>
-                  </div>
-                  <div className="border-t border-white/10 pt-4">
-                    <AdminSessionButton />
-                  </div>
-                </div>
-              </div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              {accessibleModules.has("readings") ? (
+                <Link
+                  href="/admin/readings"
+                  className={cn(
+                    buttonVariants({
+                      className:
+                        "h-10 rounded-full bg-[linear-gradient(135deg,#163154,#15527a_56%,#10938d)] px-5 text-white hover:brightness-105",
+                    })
+                  )}
+                >
+                  Open reading queue
+                </Link>
+              ) : null}
+              {accessibleModules.has("collections") ? (
+                <Link
+                  href="/admin/collections"
+                  className={cn(
+                    buttonVariants({
+                      variant: "outline",
+                      className:
+                        "h-10 rounded-full border-border/80 bg-white/70 px-5 text-foreground hover:bg-white",
+                    })
+                  )}
+                >
+                  Open collections
+                </Link>
+              ) : null}
             </div>
           </div>
-        </section>
+        </header>
 
-        <section className="dwds-section overflow-hidden">
-          <div className="grid gap-0 md:grid-cols-2 xl:grid-cols-6">
-            {operationsSnapshot.map((item) => (
-              <DashboardMetricCard
-                key={item.label}
-                label={item.label}
-                value={item.value}
-                detail={item.detail}
-                accent={item.accent}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
-          <DashboardPanel className="p-0">
-            <div className="border-b border-border/75 px-5 py-5 sm:px-6">
-              <SectionHeader
-                eyebrow="Operational Pulse"
-                title="What needs attention next"
-                description="The workflow stays staged by urgency so staff can move from live queue pressure into the next operational action without re-scanning the full system."
-                icon={Activity}
-              />
-            </div>
-
-            <div className="divide-y divide-border/75 overflow-hidden">
-              {workflowBoard.length ? (
-                workflowBoard.map((item) => (
-                  <ActionRow
-                    key={item.title}
-                    href={item.href}
-                    title={item.title}
-                    summary={item.summary}
-                    meta={item.count}
-                    actionLabel={item.action}
-                    icon={item.icon}
+        <div className="grid min-h-0 flex-1 gap-0 xl:grid-cols-[minmax(0,1fr)_320px]">
+          <main className="min-w-0">
+            <section className="border-b border-border/70">
+              <div className="grid gap-0 md:grid-cols-2 2xl:grid-cols-6">
+                {operationsSnapshot.map((item) => (
+                  <DashboardMetricCard
+                    key={item.label}
+                    label={item.label}
+                    value={item.value}
+                    detail={item.detail}
+                    accent={item.accent}
                   />
-                ))
+                ))}
+              </div>
+            </section>
+
+            <section className="grid gap-0 border-b border-border/70 2xl:grid-cols-[1.08fr_0.92fr]">
+              <DashboardPanel className="border-0 border-r-0 bg-transparent">
+                <div className="border-b border-border/70 px-5 py-5 sm:px-7">
+                  <SectionHeader
+                    eyebrow="Operational Pulse"
+                    title="What needs attention next"
+                    description="The central workspace stays staged by urgency so staff can move from live queue pressure into the next action without re-scanning the whole system."
+                    icon={Activity}
+                  />
+                </div>
+
+                <div className="divide-y divide-border/70">
+                  {workflowBoard.length ? (
+                    workflowBoard.map((item) => (
+                      <ActionRow
+                        key={item.title}
+                        href={item.href}
+                        title={item.title}
+                        summary={item.summary}
+                        meta={item.count}
+                        actionLabel={item.action}
+                        icon={item.icon}
+                        className="px-5 sm:px-7"
+                      />
+                    ))
+                  ) : (
+                    <div className="px-5 py-5 text-sm leading-6 text-muted-foreground sm:px-7">
+                      No downstream workflow modules are assigned to this role yet.
+                    </div>
+                  )}
+                </div>
+              </DashboardPanel>
+
+              <DashboardPanel className="border-0 border-t bg-transparent 2xl:border-l 2xl:border-t-0">
+                <div className="border-b border-border/70 px-5 py-5 sm:px-7">
+                  <SectionHeader
+                    eyebrow="Module Directory"
+                    title="Open the responsibility area you need"
+                    description="The module list is flatter and denser on purpose. Use it as a direct operational directory instead of a second dashboard full of cards."
+                  />
+                </div>
+
+                <div className="divide-y divide-border/70">
+                  {visibleModuleCards.map((item) => (
+                    <ActionRow
+                      key={item.href}
+                      href={item.href}
+                      title={item.title}
+                      summary={item.description}
+                      actionLabel={item.action}
+                      icon={item.icon}
+                      className="px-5 sm:px-7"
+                    />
+                  ))}
+                </div>
+              </DashboardPanel>
+            </section>
+
+            <section className="grid gap-0 border-b border-border/70 xl:grid-cols-2">
+              <div className="border-b border-border/70 xl:border-b-0 xl:border-r">
+                <ChangePasswordPanel />
+              </div>
+              {localUser.role === "SUPER_ADMIN" ? (
+                <div>
+                  <SuperAdminTwoFactorPanel
+                    email={localUser.email}
+                    isEnabled={localUser.twoFactorEnabled}
+                    enabledAt={
+                      localUser.twoFactorEnabledAt
+                        ? dateFormatter.format(localUser.twoFactorEnabledAt)
+                        : null
+                    }
+                    lastVerifiedAt={
+                      localUser.twoFactorLastVerifiedAt
+                        ? dateFormatter.format(localUser.twoFactorLastVerifiedAt)
+                        : null
+                    }
+                    recoveryCodeCount={localUser.twoFactorRecoveryCodeHashes.length}
+                    pendingSetup={pendingTwoFactorSetup}
+                  />
+                </div>
               ) : (
-                <div className="px-5 py-5 text-sm leading-6 text-muted-foreground sm:px-6">
-                  No downstream workflow modules are assigned to this role yet.
+                <div className="flex items-center px-5 py-8 text-sm leading-6 text-muted-foreground sm:px-7">
+                  Two-factor setup tools are limited to SUPER_ADMIN accounts.
                 </div>
               )}
-            </div>
-          </DashboardPanel>
+            </section>
+          </main>
 
-          <DashboardPanel className="p-0">
-            <div className="border-b border-border/75 px-5 py-5 sm:px-6">
-              <SectionHeader
-                eyebrow="Modules"
-                title="Open the module you need"
-                description="The directory stays compact on purpose. Use it to move straight into the responsibility area you need instead of scanning a second dashboard grid."
-              />
-            </div>
+          <aside className="border-t border-border/70 xl:border-l xl:border-t-0">
+            <div className="xl:sticky xl:top-0 xl:max-h-dvh xl:overflow-auto">
+              <section className="border-b border-border/70 px-5 py-5">
+                <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-primary/72">
+                  Support Rail
+                </p>
+                <h2 className="mt-3 font-heading text-[1.45rem] tracking-[-0.03em] text-foreground">
+                  Operator context
+                </h2>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                  Keep user state, collection status, and role coverage visible
+                  while the main workspace stays focused on action.
+                </p>
+              </section>
 
-            <div className="divide-y divide-border/75 overflow-hidden">
-              {visibleModuleCards.map((item) => (
-                <ActionRow
-                  key={item.href}
-                  href={item.href}
-                  title={item.title}
-                  summary={item.description}
-                  actionLabel={item.action}
-                  icon={item.icon}
-                />
-              ))}
-            </div>
-          </DashboardPanel>
-        </section>
+              <section className="border-b border-border/70 px-5 py-5">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-primary/72">
+                  Signed-in staff
+                </p>
+                <p className="mt-3 text-lg font-semibold text-foreground">
+                  {localUser.name}
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {roleDisplayName[localUser.role]}
+                </p>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                  {roleSummaries[localUser.role]}
+                </p>
+              </section>
 
-        <ChangePasswordPanel />
-        {localUser.role === "SUPER_ADMIN" ? (
-          <SuperAdminTwoFactorPanel
-            email={localUser.email}
-            isEnabled={localUser.twoFactorEnabled}
-            enabledAt={
-              localUser.twoFactorEnabledAt ? dateFormatter.format(localUser.twoFactorEnabledAt) : null
-            }
-            lastVerifiedAt={
-              localUser.twoFactorLastVerifiedAt
-                ? dateFormatter.format(localUser.twoFactorLastVerifiedAt)
-                : null
-            }
-            recoveryCodeCount={localUser.twoFactorRecoveryCodeHashes.length}
-            pendingSetup={pendingTwoFactorSetup}
-          />
-        ) : null}
+              <section className="border-b border-border/70 px-5 py-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-primary/72">
+                      Today&apos;s collections
+                    </p>
+                    <p className="mt-3 font-heading text-[2rem] tracking-[-0.05em] text-foreground">
+                      {formatCurrency(todayCollections)}
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                      {todayPayments.length} completed payment
+                      {todayPayments.length === 1 ? "" : "s"} in the current
+                      operating day.
+                    </p>
+                  </div>
+                  <div className="inline-flex size-10 items-center justify-center rounded-[0.9rem] border border-primary/12 bg-primary/8 text-primary">
+                    <BanknoteArrowDown className="size-4" />
+                  </div>
+                </div>
+              </section>
+
+              <section className="border-b border-border/70 px-5 py-5">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-primary/72">
+                  Role coverage
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {roleCapabilities.length ? (
+                    roleCapabilities.map((capability) => (
+                      <span
+                        key={capability}
+                        className="inline-flex rounded-full border border-border/70 bg-white/56 px-3 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.14em] text-foreground/80"
+                      >
+                        {capability}
+                      </span>
+                    ))
+                  ) : (
+                    <p className="text-sm leading-6 text-muted-foreground">
+                      No operational capabilities are currently assigned.
+                    </p>
+                  )}
+                </div>
+              </section>
+
+              <section className="border-b border-border/70 px-5 py-5">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-primary/72">
+                  Quick links
+                </p>
+                <div className="mt-4 space-y-2">
+                  {accessibleModules.has("payments") ? (
+                    <Link
+                      href="/admin/payments"
+                      className="flex items-center justify-between border border-border/70 bg-white/42 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-white/70"
+                    >
+                      <span>Cashier posting</span>
+                      <WalletCards className="size-4 text-primary" />
+                    </Link>
+                  ) : null}
+                  {accessibleModules.has("billing") ? (
+                    <Link
+                      href="/admin/billing"
+                      className="flex items-center justify-between border border-border/70 bg-white/42 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-white/70"
+                    >
+                      <span>Billing queue</span>
+                      <ReceiptText className="size-4 text-primary" />
+                    </Link>
+                  ) : null}
+                  {accessibleModules.has("systemReadiness") ? (
+                    <Link
+                      href="/admin/system-readiness"
+                      className="flex items-center justify-between border border-border/70 bg-white/42 px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-white/70"
+                    >
+                      <span>System readiness</span>
+                      <Server className="size-4 text-primary" />
+                    </Link>
+                  ) : null}
+                </div>
+              </section>
+
+              <section className="px-5 py-5">
+                <div className="flex flex-col gap-3">
+                  <AdminSessionButton className="w-full border-border/80 bg-white/70 text-foreground hover:bg-white hover:text-foreground" />
+                  <p className="text-xs leading-5 text-muted-foreground">
+                    Internal sign-out remains available without leaving the
+                    workspace.
+                  </p>
+                </div>
+              </section>
+            </div>
+          </aside>
+        </div>
       </div>
     </section>
   );

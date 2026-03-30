@@ -140,6 +140,28 @@ function normalizeDispositionLabel(value: PrismaAssistantDisposition) {
   }
 }
 
+function isPrismaKnownRequestWithModelName(
+  error: unknown
+): error is { code: string; meta?: { modelName?: string } } {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    typeof (error as { code?: unknown }).code === "string"
+  );
+}
+
+function isMissingAssistantObservabilityTableError(error: unknown) {
+  return (
+    isPrismaKnownRequestWithModelName(error) &&
+    error.code === "P2021" &&
+    typeof error.meta?.modelName === "string" &&
+    ["AssistantResponseLog", "AssistantEvaluationRun", "AssistantEvaluationResult"].includes(
+      error.meta.modelName
+    )
+  );
+}
+
 export async function recordAssistantResponseLog(input: AssistantResponseLogInput) {
   try {
     await prisma.assistantResponseLog.create({
@@ -187,124 +209,139 @@ export async function getAssistantQualityOverview(role: Role) {
 
   const since = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000);
 
-  const [
-    interactionCount,
-    noHitCount,
-    lowConfidenceCount,
-    failureCount,
-    recentFlaggedLogs,
-    latestEvaluationRun,
-  ] = await Promise.all([
-    prisma.assistantResponseLog.count({
-      where: {
-        interactionSource: "USER_CHAT",
-        createdAt: {
-          gte: since,
+  let interactionCount;
+  let noHitCount;
+  let lowConfidenceCount;
+  let failureCount;
+  let recentFlaggedLogs;
+  let latestEvaluationRun;
+
+  try {
+    [
+      interactionCount,
+      noHitCount,
+      lowConfidenceCount,
+      failureCount,
+      recentFlaggedLogs,
+      latestEvaluationRun,
+    ] = await Promise.all([
+      prisma.assistantResponseLog.count({
+        where: {
+          interactionSource: "USER_CHAT",
+          createdAt: {
+            gte: since,
+          },
         },
-      },
-    }),
-    prisma.assistantResponseLog.count({
-      where: {
-        interactionSource: "USER_CHAT",
-        noHits: true,
-        createdAt: {
-          gte: since,
+      }),
+      prisma.assistantResponseLog.count({
+        where: {
+          interactionSource: "USER_CHAT",
+          noHits: true,
+          createdAt: {
+            gte: since,
+          },
         },
-      },
-    }),
-    prisma.assistantResponseLog.count({
-      where: {
-        interactionSource: "USER_CHAT",
-        lowConfidence: true,
-        createdAt: {
-          gte: since,
+      }),
+      prisma.assistantResponseLog.count({
+        where: {
+          interactionSource: "USER_CHAT",
+          lowConfidence: true,
+          createdAt: {
+            gte: since,
+          },
         },
-      },
-    }),
-    prisma.assistantResponseLog.count({
-      where: {
-        interactionSource: "USER_CHAT",
-        failureState: {
-          not: "NONE",
+      }),
+      prisma.assistantResponseLog.count({
+        where: {
+          interactionSource: "USER_CHAT",
+          failureState: {
+            not: "NONE",
+          },
+          createdAt: {
+            gte: since,
+          },
         },
-        createdAt: {
-          gte: since,
+      }),
+      prisma.assistantResponseLog.findMany({
+        where: {
+          interactionSource: "USER_CHAT",
+          createdAt: {
+            gte: since,
+          },
+          OR: [
+            { noHits: true },
+            { lowConfidence: true },
+            {
+              failureState: {
+                not: "NONE",
+              },
+            },
+          ],
         },
-      },
-    }),
-    prisma.assistantResponseLog.findMany({
-      where: {
-        interactionSource: "USER_CHAT",
-        createdAt: {
-          gte: since,
+        orderBy: {
+          createdAt: "desc",
         },
-        OR: [
-          { noHits: true },
-          { lowConfidence: true },
-          {
-            failureState: {
-              not: "NONE",
+        take: 8,
+        select: {
+          id: true,
+          query: true,
+          disposition: true,
+          failureState: true,
+          noHits: true,
+          lowConfidence: true,
+          retrievalHitCount: true,
+          citedHitCount: true,
+          latencyMs: true,
+          createdAt: true,
+          user: {
+            select: {
+              name: true,
+              role: true,
             },
           },
-        ],
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-      take: 8,
-      select: {
-        id: true,
-        query: true,
-        disposition: true,
-        failureState: true,
-        noHits: true,
-        lowConfidence: true,
-        retrievalHitCount: true,
-        citedHitCount: true,
-        latencyMs: true,
-        createdAt: true,
-        user: {
-          select: {
-            name: true,
-            role: true,
+        },
+      }),
+      prisma.assistantEvaluationRun.findFirst({
+        where: {
+          status: "SUCCEEDED",
+        },
+        orderBy: {
+          startedAt: "desc",
+        },
+        select: {
+          id: true,
+          status: true,
+          caseCount: true,
+          passedCount: true,
+          averageScore: true,
+          startedAt: true,
+          completedAt: true,
+          summary: true,
+          results: {
+            where: {
+              passed: false,
+            },
+            orderBy: [{ score: "asc" }, { createdAt: "desc" }],
+            take: 5,
+            select: {
+              caseKey: true,
+              caseLabel: true,
+              category: true,
+              score: true,
+              failureState: true,
+              notes: true,
+            },
           },
         },
-      },
-    }),
-    prisma.assistantEvaluationRun.findFirst({
-      where: {
-        status: "SUCCEEDED",
-      },
-      orderBy: {
-        startedAt: "desc",
-      },
-      select: {
-        id: true,
-        status: true,
-        caseCount: true,
-        passedCount: true,
-        averageScore: true,
-        startedAt: true,
-        completedAt: true,
-        summary: true,
-        results: {
-          where: {
-            passed: false,
-          },
-          orderBy: [{ score: "asc" }, { createdAt: "desc" }],
-          take: 5,
-          select: {
-            caseKey: true,
-            caseLabel: true,
-            category: true,
-            score: true,
-            failureState: true,
-            notes: true,
-          },
-        },
-      },
-    }),
-  ]);
+      }),
+    ]);
+  } catch (error) {
+    if (isMissingAssistantObservabilityTableError(error)) {
+      return null;
+    }
+
+    throw error;
+  }
 
   return {
     recentWindowDays: 14,

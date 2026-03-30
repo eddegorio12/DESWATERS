@@ -26,6 +26,7 @@ Add a protected, staff-facing AI assistant that helps DWDS operators understand 
 - Assistant searches now run against that stored corpus rather than rebuilding the retrieval set only in memory for each request.
 - Each submitted assistant question now creates or extends a user-owned conversation thread with saved user and assistant messages plus citation metadata.
 - The UI now exposes recent saved threads and stored-corpus sync state in the protected assistant workspace.
+- The assistant can now also explain one visible live record at a time for supported domains such as bill status, receipt settlement state, receivables follow-up stage, route pressure, and targeted exception severity.
 
 ### Supported Question Types
 - “How do I do this in DWDS?”
@@ -152,6 +153,8 @@ Exit target:
 - Log response metadata such as latency, model used, retrieval hits, cited hits, fallback path, refusal reason, and failure state.
 - Add an admin-visible quality view for low-hit, low-confidence, and failed-answer patterns.
 - Treat regression checks as part of the assistant release path instead of ad hoc manual spot checks.
+- The repo now implements this slice through assistant response-log storage, a fixed evaluation suite, evaluation-run persistence, and an admin-visible quality panel on `/admin/assistant`.
+- EH15.3 is now implemented in the repo and has been user-tested and validated.
 
 Exit target:
 - Retrieval and answer quality can be measured, compared, and gated before broader rollout.
@@ -160,6 +163,8 @@ Exit target:
 - Add admin-facing ingestion and curation controls instead of leaving knowledge updates as a code-only workflow.
 - Support source review, sync status, ingestion diffs, rollback, and document-level disable/pin controls.
 - Expand curated workflow-guide coverage so each protected module has an operator-safe guidance layer that is clearer than raw roadmap text.
+- The repo now implements this slice through admin-only knowledge-operations controls on `/admin/assistant`, persisted source pin/disable plus review state, revision-backed rollback, and expanded module workflow-guide summaries.
+- EH15.4 has now been user-tested and validated.
 
 Exit target:
 - The assistant knowledge base becomes governable product content rather than a passive dump of ingested docs.
@@ -169,6 +174,12 @@ Exit target:
 - Keep record helpers scoped to specific entities and current module permissions.
 - Minimize returned data to status explanation, next-step reasoning, and directly relevant fields only.
 - Start with high-value explanatory paths such as billing status, payment settlement state, receivables follow-up state, route pressure, and exceptions severity.
+- Current implementation notes:
+- The repo now supports protected live-record explainers for specific bill IDs, receipt numbers, route codes, and targeted exception or follow-up records shown in DWDS.
+- Server-side authorization now gates each live explainer by the existing module boundary before any record lookup runs.
+- Broad list-all or show-me live-record requests still escalate instead of turning the assistant into a general transaction search tool.
+- The assistant now cites minimal live-record summaries for these explainers and keeps related-module next-step links visible in the protected chat UI.
+- EH15.5 has now been user-tested and validated.
 
 Exit target:
 - Staff can ask why a visible record shows a given status without opening unrestricted live-data querying.
@@ -186,6 +197,6 @@ Exit target:
 ### Recommended Enterprise Sequence
 1. Finish `EH15.1` retrieval hardening.
 2. Add `EH15.2` policy and governance controls.
-3. Add `EH15.3` evaluation plus observability.
+3. Add and validate `EH15.3` evaluation plus observability.
 4. Add `EH15.4` admin knowledge operations.
 5. Add `EH15.5` narrow live-record explanations.

@@ -53,7 +53,7 @@ type PopupResponse = {
     summary: string;
     sectionTitle: string | null;
     sourcePath: string;
-    sourceType: "memory-bank" | "workflow-guide";
+    sourceType: "memory-bank" | "workflow-guide" | "live-record";
     href: string | null;
     matchingTerms: string[];
     score: number;
@@ -65,6 +65,7 @@ type PopupResponse = {
 const starterPrompts = [
   "How do I check overdue accounts?",
   "Where do I record a payment?",
+  "Why is receipt number OR-0001 still not fully settled?",
   "Which page should I use for meter readings?",
   "Where can I see route complaints?",
 ];

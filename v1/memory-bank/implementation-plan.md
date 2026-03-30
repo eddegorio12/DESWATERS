@@ -714,8 +714,8 @@ Current recommendation:
 - Use hybrid retrieval with metadata-aware filtering instead of pure semantic search.
 - The repo now includes an OpenRouter model-config layer that defaults to `openrouter/free` and falls back to `stepfun/step-3.5-flash:free` then `nvidia/nemotron-3-super-120b-a12b:free` when model-backed answer synthesis is switched on.
 - EH15.1 is now validated.
-- The immediate enterprise-grade next step is now `EH15.2`, focused on trust, safety, and governance on top of the validated retrieval baseline.
-- After EH15.2, the assistant should move through `EH15.3` evaluation-plus-observability before any `EH15.5` live-record explanation helpers are expanded.
+- EH15.2 is now validated as the trust, safety, and governance baseline on top of the validated retrieval path.
+- EH15.3 evaluation-plus-observability is now implemented and user-validated in the repo, and `EH15.4` knowledge operations are now implemented and user-validated in the repo.
 
 Current progress:
 - `/admin/assistant` is now live as a protected staff workspace with role-aware guidance search, visible citations, and starter prompts.
@@ -727,7 +727,17 @@ Current progress:
 - The EH15.1 embedding path now persists embeddings in JSONB so local Postgres works without `pgvector`, while the same retrieval path can also populate an optional `embeddingVector` column whenever the database exposes the `vector` extension.
 - Local EH15.1 validation has now completed through Prisma client generation, targeted linting on the touched assistant files, successful migration deployment, and a successful full production `npm run build`.
 - EH15.1 has now been user-tested and validated.
-- The next EH15 implementation target is EH15.2 trust/safety/governance.
+- EH15.2 trust/safety/governance has now been user-tested and validated.
+- EH15.3 evaluation-plus-observability is now implemented through fixed regression cases, persisted response telemetry, persisted evaluation runs/results, and an admin-visible quality panel on `/admin/assistant`.
+- Local EH15.3 validation has now completed through targeted assistant linting and a successful full `tsc --noEmit` pass.
+- EH15.3 has now been user-tested and validated.
+- EH15.4 knowledge operations are now implemented through admin-facing sync plus curation controls, source diff review, document pin/disable controls, revision-backed rollback, and richer workflow-guide summaries in the protected assistant workspace.
+- Local EH15.4 validation has now completed through Prisma client generation, targeted assistant linting, and a successful full `tsc --noEmit` pass.
+- EH15.4 has now been user-tested and validated.
+- EH15.5 is now implemented through protected live-record explainers for specific bill IDs, receipt numbers, route codes, and targeted exception or follow-up records.
+- Broad record-discovery or bulk live-data requests still escalate instead of turning the assistant into an unrestricted transaction search surface.
+- Local EH15.5 validation has now completed through targeted assistant linting and a successful full `tsc --noEmit` pass.
+- EH15.5 has now been user-tested and validated.
 
 ### EH15.1: Retrieval Quality Hardening
 **Priority:** Highest within EH15
@@ -783,11 +793,11 @@ Exit criteria:
   - Server-side answer assembly now refuses weakly supported responses, requires citation-backed retrieval, and narrows operational answers when only planning-oriented material matches.
   - Local validation has now completed through Prisma generation, targeted assistant-file linting, successful migration deployment, and a successful full production build.
   - EH15.2 has now been user-tested and validated.
-  - EH15.3 is now the next allowed step, but should only start when explicitly requested.
+  - EH15.3 has now started, been implemented in the repo, and is now user-validated as the next assistant maturity layer.
 
 ### EH15.3: Evaluation and Observability
 **Priority:** High within EH15 after EH15.2
-**Status:** Planned
+**Status:** Validated
 **Depends on:** EH15.1 and EH15.2
 
 Scope:
@@ -801,10 +811,18 @@ Exit criteria:
 - Retrieval and answer regressions can be detected before shipping.
 - The product can identify which question types still fail and why.
 
+Current progress:
+- `AssistantResponseLog`, `AssistantEvaluationRun`, and `AssistantEvaluationResult` now persist telemetry plus regression outcomes in PostgreSQL.
+- `src/features/assistant/lib/assistant-knowledge.ts` now records latency, disposition, hit counts, cited hit counts, fallback path, refusal reason, and failure state for both user-chat and evaluation-triggered assistant responses.
+- `src/features/assistant/lib/assistant-evaluation.ts` now defines a fixed regression set covering workflow routing, policy explanation, role boundaries, ambiguity, multilingual prompts, and safety/escalation cases.
+- `/admin/assistant` now exposes an admin-visible quality view with recent flagged prompts, latest suite outcome, and failing evaluation cases.
+- Local validation has now completed through targeted assistant linting and a successful full `tsc --noEmit` pass.
+- EH15.3 has now been user-tested and validated.
+
 ### EH15.4: Knowledge Operations
 **Priority:** Medium within EH15 after EH15.3
-**Status:** Planned
-**Depends on:** EH15.2 governance baseline
+**Status:** Validated
+**Depends on:** EH15.3 validated
 
 Scope:
 1. Add admin-facing ingestion and curation controls for assistant knowledge.
@@ -816,9 +834,18 @@ Exit criteria:
 - Assistant knowledge can be reviewed and controlled without code edits alone.
 - Operators see more direct workflow-safe guidance and less planning-heavy language.
 
+Current progress:
+- `/admin/assistant` now exposes an admin-only knowledge-operations panel with current sync status, pending-source counts, pinned or disabled source counts, and one-click knowledge sync.
+- Assistant knowledge sources now support admin-reviewed governance state, document-level pinning, explicit disable with reason capture, and recorded review timestamps without requiring direct code edits.
+- The assistant now stores revision snapshots for managed knowledge documents so admins can compare diff summaries and roll a source back to its previous stored revision from the protected assistant workspace.
+- Removed live-corpus sources are now preserved as disabled managed records instead of being silently dropped, so review and rollback remain possible.
+- Curated workflow-guide summaries have now been expanded across the protected modules so retrieval can rely more on operator-safe guidance and less on planning-heavy memory-bank text.
+- Local validation has now completed through Prisma client generation, targeted assistant linting, and a successful full `tsc --noEmit` pass.
+- EH15.4 has now been user-tested and validated.
+
 ### EH15.5: Narrow Live-Record Explanations
 **Priority:** Medium within EH15 after EH15.4
-**Status:** Planned
+**Status:** Validated
 **Depends on:** EH15.1 through EH15.4
 
 Scope:
@@ -830,6 +857,13 @@ Scope:
 Exit criteria:
 - Staff can ask why a visible record shows a given state without broad transactional-data querying.
 - Live-record answers remain explanatory, narrow, and auditable.
+
+Current progress:
+- The assistant now supports narrow read-only explainers for specific bill IDs, receipt numbers, route codes, and targeted exception or follow-up records shown in the protected DWDS UI.
+- Each explainer now runs through explicit server-side module checks before reading live data, so the assistant inherits existing billing, payments, route, follow-up, and exceptions boundaries instead of bypassing them.
+- Returned live context is minimized to the status reason, a few supporting facts, visible citation metadata, and related-module next steps rather than dumping raw record payloads.
+- The request-policy layer still escalates broad record discovery, list-all, and show-me queries, so EH15.5 expands explanation depth without opening unrestricted live transactional search.
+- The assistant evaluation suite now keeps a broad live-record safety case and can also add dynamic live-record explanation cases from the current database when representative records exist.
 
 ### EH12 Follow-On Analytics: Loss-Risk Watchlist
 **Priority:** High after the current validated route analytics baseline

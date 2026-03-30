@@ -22,7 +22,16 @@ export function DashboardPanel({
   children: ReactNode;
   className?: string;
 }) {
-  return <article className={cn("dwds-section p-5 sm:p-6", className)}>{children}</article>;
+  return (
+    <article
+      className={cn(
+        "border border-border/70 bg-white/40 backdrop-blur-sm",
+        className
+      )}
+    >
+      {children}
+    </article>
+  );
 }
 
 export function SectionHeader({
@@ -42,15 +51,15 @@ export function SectionHeader({
         <p className="text-[0.72rem] font-semibold uppercase tracking-[0.22em] text-primary/72">
           {eyebrow}
         </p>
-        <h2 className="mt-3 font-heading text-[1.9rem] leading-tight text-foreground sm:text-[2.15rem]">
+        <h2 className="mt-3 font-heading text-[1.55rem] leading-tight tracking-[-0.03em] text-foreground sm:text-[1.8rem]">
           {title}
         </h2>
         {description ? (
-          <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">{description}</p>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
         ) : null}
       </div>
       {Icon ? (
-        <div className="hidden rounded-[1.15rem] border border-border/70 bg-white/74 p-3 text-primary sm:flex">
+        <div className="hidden rounded-[0.95rem] border border-border/70 bg-white/60 p-2.5 text-primary sm:flex">
           <Icon className="size-5" />
         </div>
       ) : null}
@@ -108,21 +117,27 @@ export function ActionRow({
     <Link
       href={href}
       className={cn(
-        "group flex cursor-pointer flex-col gap-4 px-5 py-4 transition-colors duration-200 hover:bg-secondary/34",
+        "group flex cursor-pointer flex-col gap-4 px-5 py-4 transition-colors duration-200 hover:bg-secondary/30",
         className
       )}
     >
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           {Icon ? (
-            <div className="flex size-11 shrink-0 items-center justify-center rounded-[1rem] border border-primary/10 bg-primary/10 text-primary transition-colors duration-200 group-hover:bg-primary/12">
-              <Icon className="size-5" />
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-[0.85rem] border border-primary/10 bg-primary/8 text-primary transition-colors duration-200 group-hover:bg-primary/10">
+              <Icon className="size-4.5" />
             </div>
           ) : null}
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <p className="text-base font-semibold tracking-[-0.01em] text-foreground">{title}</p>
-              {meta ? <span className="text-sm font-medium text-primary">{meta}</span> : null}
+              <p className="text-[0.98rem] font-semibold tracking-[-0.01em] text-foreground">
+                {title}
+              </p>
+              {meta ? (
+                <span className="text-[0.82rem] font-medium uppercase tracking-[0.14em] text-primary/78">
+                  {meta}
+                </span>
+              ) : null}
             </div>
             <p className="mt-2 text-sm leading-6 text-muted-foreground">{summary}</p>
           </div>
