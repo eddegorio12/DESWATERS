@@ -72,7 +72,8 @@
 - EH15.5 local validation has now completed through targeted assistant linting and a successful full `tsc --noEmit` pass.
 - EH15.5 has now been tested and validated.
 - EH15 should now be treated as complete at the parent-lane level because its documented maturity slices through EH15.5 are implemented and validated.
-- EH16 has now started as the next AI lane: supervised staff automation built on the validated EH15 baseline, with follow-up triage implemented as the first worker, proposal-only review, and no direct action execution.
+- EH16 has now started as the next AI lane: supervised staff automation built on the validated EH15 baseline, with follow-up triage implemented as the first worker and exception summarization now added as the second worker.
+- The next AI contribution path is now explicitly split into EH17 through EH21 so approval-based execution, Telegram-first cashiering, OpenClaw integration, specialized worker lanes, and production hardening do not collapse into one oversized EH16 scope.
 - `/admin/routes` now also includes a clearly labeled loss-risk watchlist that ranks routes by recent billed-versus-collected gap plus current overdue exposure, plus a route-linked complaint hotspot view based on first-class complaint records.
 - Dedicated admin-management audit logging is now implemented, tested, and validated through a first-class Prisma event table plus a visible audit trail on `/admin/staff-access` for account creation, role changes, activation changes, lockout clearing, temporary-password resets, and self-service password changes.
 - The deferred EH9 field-service expansion has now been implemented, tested, and validated with complaint-driven field work orders on `/admin/exceptions`, including technician assignment, dispatch notes, scheduled visits, in-progress tracking, completion logging, and complaint auto-resolution on completed work.
@@ -295,7 +296,7 @@
 
 ### EH16: Staff Automation & AI Workers
 - Status: `in progress`
-- Notes: EH16 is now in progress as the follow-on AI lane after the validated EH15.5 baseline. The first implemented slice is EH16.1: a proposal-only follow-up triage worker inside `/admin/follow-up`, with persisted automation runs, ranked proposals, dismissal support, and no direct action execution. Worker output remains advisory, and the current OpenClaw adapter stays behind a protected server-side boundary while deterministic local triage logic drives the active baseline. The concrete implementation design lives in `memory-bank/eh16.1-follow-up-triage-design.md`. Broader worker types, approved action paths, queue infrastructure, and direct database-write autonomy remain deferred.
+- Notes: EH16 is now in progress as the follow-on AI lane after the validated EH15.5 baseline. The implemented slices are EH16.1 follow-up triage on `/admin/follow-up` and EH16.2 exception summarization on `/admin/exceptions`. Both workers persist bounded run history, ranked proposals, and dismissal reviews while remaining advisory only. Worker output remains proposal-first, the current OpenClaw adapter stays behind a protected server-side boundary, and deterministic local ranking or summarization logic remains the active baseline. The concrete EH16.1 design still lives in `memory-bank/eh16.1-follow-up-triage-design.md`. Approval-based execution, Telegram-first cashiering, OpenClaw-backed planning, specialized worker lanes, and production hardening are now tracked separately under EH17 through EH21 instead of being folded back into EH16. Broad autonomous execution, unrestricted database-write authority, and silent workflow mutation remain deferred.
 - EH16.1 implementation notes for future developers:
   1. Prisma schema now includes `AutomationRun`, `AutomationProposal`, and `AutomationReview` so proposal-only worker state is persisted in the core PostgreSQL database instead of held in memory.
   2. `src/features/automation/lib/automation-store.ts` owns worker-run persistence primitives only: create pending run, complete a run with proposals, and mark a run failed.
@@ -314,11 +315,13 @@
   7. Initial operator feedback on the refined seeded local cases is now positive: the current ordering and wording feel right enough to keep EH16.1 in active validation without reopening its scope.
 
 ## Current Next-Step Recommendation
-The current AI and automation baseline is EH16.1 follow-up triage. The next future worker slice is EH16.2 exception summarization.
+The current AI and automation baseline is EH16.1 follow-up triage plus EH16.2 exception summarization. The next planned lane is EH17 approval-based automation foundation.
 
 The next step is now:
-1. keep EH16.1 as the current realistic follow-up-triage baseline
-2. treat EH16.2 exception summarization as the next worker slice when AI automation work resumes
+1. keep EH16.1 follow-up triage and EH16.2 exception summarization as the current bounded worker baseline
+2. implement EH17 as the approval-based automation foundation with action intents, approval requests, execution logs, and Telegram approval transport
+3. implement EH18 as the Telegram-first cashier assistant with `PAYMENT_POST` as the first approved action path
+4. defer real OpenClaw runtime integration to EH19 so the approval and execution model can be proven first with a provider-agnostic planner boundary
 
 Standing guardrails:
 1. keep EH15 closed as the stable assistant baseline unless there is a regression or an explicitly approved scope change

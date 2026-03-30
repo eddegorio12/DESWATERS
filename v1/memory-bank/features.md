@@ -214,22 +214,28 @@ Add a supervised staff-automation layer that helps DWDS operators prepare and re
 ### Recommended V1 Scope
 - Protected in-app worker runs only
 - Proposal-first output for staff review
-- Follow-up triage as the first and only EH16 V1 worker
-- `/admin/follow-up` as the first worker surface
+- Follow-up triage and exception summarization as the current proposal-only worker baseline
+- `/admin/follow-up` and `/admin/exceptions` as the current worker surfaces
 - No direct database mutations by workers
 - No direct action execution from worker output in V1
 - No autonomous billing, payment, disconnection, tariff, route, or admin-security actions
-- Bounded workflow context limited to follow-up triage in V1
+- Bounded workflow context limited to explicit module-scoped workers in V1
 - Persisted worker-run history, proposal state, and review outcome
 
 ### Recommended First Worker Types
 - Follow-up triage worker: rank overdue or at-risk accounts and suggest the next review step
 
 ### Deferred Worker Types
-- Exceptions worker: summarize why a case is severe and what evidence or module should be checked next
 - Route worker: produce a route-pressure or risk briefing from existing route analytics
 - Notice worker: draft a printable or reviewable notice body from authoritative DWDS data before staff approval
 - Knowledge worker: flag stale workflow guidance, summarize diffs, or prepare assistant-source update proposals
+
+### Approved Follow-On Direction
+- EH17 should introduce approval-based execution, not silent execution.
+- OpenClaw should act as the bounded planner, conversation coordinator, and approval-escalation engine behind DWDS.
+- Telegram should be treated as the approval transport only, not as the execution authority or system of record.
+- DWDS must remain responsible for final validation, role enforcement, payment posting, receipts, and audit logging.
+- The recommended first approved-action path is cashier-assist `PAYMENT_POST`, where a staff-confirmed onsite payment can move through OpenClaw planning and Telegram approval before DWDS posts the payment.
 
 ### Disallowed V1 Behavior
 - No silent actions
@@ -237,6 +243,13 @@ Add a supervised staff-automation layer that helps DWDS operators prepare and re
 - No bulk transactional-data discovery outside the approved task context
 - No authority to post payments, generate bills, disconnect service, change tariffs, reassign routes, or modify admin-access state
 - No bypass of existing role authorization or server-side workflow rules
+
+### Disallowed Even In Later EH16 Slices Unless Explicitly Approved
+- No unrestricted OpenClaw database-write authority
+- No silent billing mutation
+- No silent payment posting
+- No broad autonomous disconnection or reinstatement
+- No admin-security or staff-access mutation by workers
 
 ### Worker Contract
 Each worker result should:
@@ -274,7 +287,52 @@ Before EH16 is treated as validated, test:
 
 ### Current Implemented Baseline
 - EH16.1 is now live as a proposal-only follow-up triage worker on `/admin/follow-up`.
+- EH16.2 is now live as a proposal-only exception summarization worker on `/admin/exceptions`.
 - The current slice stores bounded worker runs, ranked proposals, and dismissal reviews in PostgreSQL.
 - The active implementation uses deterministic local triage logic behind the same protected server-side boundary where a later OpenClaw integration can attach.
 - The current EH16 baseline does not execute any workflow mutation and should still be treated as advisory only.
-- Initial seeded local validation feedback is now positive: the refined ranking and operator-facing wording feel right enough to keep EH16.1 in active validation without opening EH16.2 yet.
+- Initial seeded local validation feedback on EH16.1 was positive enough to keep proposal-first worker expansion viable, and EH16.2 now follows the same advisory-only pattern on the exceptions module.
+- EH16 should now be treated as the advisory worker baseline rather than the lane that also absorbs approval execution, Telegram-first cashiering, OpenClaw runtime integration, and future multi-lane worker orchestration.
+
+## EH17: Approval-Based Automation Foundation
+
+### Goal
+Add the shared approval, intent, and execution framework needed before any worker can move from advisory output to approved action.
+
+### Product Position
+- EH17 is the execution foundation lane, not the planner lane.
+- DWDS remains the only authority for validation, role checks, mutation, receipts, and audit logs.
+- Telegram is the approval transport, not the source of truth.
+
+## EH18: Telegram-First Cashier Assistant
+
+### Goal
+Let authorized onsite staff initiate a cashier-assist payment workflow through Telegram while DWDS remains the backend system of record.
+
+### Product Position
+- Telegram becomes the field entry surface for the first approved-action workflow.
+- The first supported approved action should be single-bill `PAYMENT_POST`.
+- Partial payments may be supported, but only through explicit confirmation.
+
+## EH19: OpenClaw Integration
+
+### Goal
+Connect OpenClaw to the existing planner boundary after the approval and execution framework already works with a deterministic or stub planner.
+
+### Product Position
+- OpenClaw is the bounded planner and conversation coordinator.
+- It should not become the mutation authority or audit authority.
+
+## EH20: Specialized Worker Lanes
+
+### Goal
+Support future follow-up queue management, exception investigation, and other domain-specific worker lanes only when they actually need different tools, latency, or approval rules.
+
+### Product Position
+- Design for multi-agent readiness.
+- Do not assume separate long-running worker lanes are required on day one.
+
+## EH21: Autonomous Operations Hardening
+
+### Goal
+Add the observability, queue control, retry behavior, and supervisory safety needed before broader autonomous operations are considered production-ready.

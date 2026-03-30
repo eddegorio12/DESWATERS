@@ -1,4 +1,5 @@
 import {
+  AutomationWorkerType,
   BillStatus,
   ComplaintCategory,
   ComplaintStatus,
@@ -19,6 +20,7 @@ import {
   canPerformCapability,
   getModuleAccess,
 } from "@/features/auth/lib/authorization";
+import { ExceptionSummaryPanel } from "@/features/exceptions/components/exception-summary-panel";
 import { ExceptionsBoard } from "@/features/exceptions/components/exceptions-board";
 import {
   buildOperationalExceptionAlerts,
@@ -508,6 +510,45 @@ export default async function AdminExceptionsPage({
       }),
     ]);
 
+  const latestSummaryRun = await prisma.automationRun.findFirst({
+    where: {
+      workerType: "EXCEPTION_SUMMARIZATION" as AutomationWorkerType,
+    },
+    orderBy: [{ startedAt: "desc" }],
+    select: {
+      id: true,
+      status: true,
+      startedAt: true,
+      completedAt: true,
+      proposalCount: true,
+      failureReason: true,
+      triggeredBy: {
+        select: {
+          name: true,
+          role: true,
+        },
+      },
+      proposals: {
+        orderBy: [{ rank: "asc" }],
+        select: {
+          id: true,
+          rank: true,
+          summary: true,
+          recommendedReviewStep: true,
+          rationale: true,
+          confidenceLabel: true,
+          targetId: true,
+          dismissedAt: true,
+          dismissedBy: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
   const alerts = buildOperationalExceptionAlerts({
     meters,
     disconnectionRiskBills,
@@ -555,6 +596,48 @@ export default async function AdminExceptionsPage({
   ).size;
   const canDispatch = canPerformCapability(access.user.role, "exceptions:dispatch");
   const canUpdateWorkOrders = canPerformCapability(access.user.role, "workorders:update");
+  const alertById = new Map(alerts.map((alert) => [alert.id, alert]));
+  const summaryRun = latestSummaryRun
+    ? {
+        id: latestSummaryRun.id,
+        status: latestSummaryRun.status,
+        startedAtLabel: latestSummaryRun.startedAt.toLocaleString("en-PH"),
+        completedAtLabel: latestSummaryRun.completedAt
+          ? latestSummaryRun.completedAt.toLocaleString("en-PH")
+          : null,
+        proposalCount: latestSummaryRun.proposalCount,
+        failureReason: latestSummaryRun.failureReason,
+        triggeredByName: latestSummaryRun.triggeredBy.name,
+        triggeredByRole: latestSummaryRun.triggeredBy.role.replaceAll("_", " "),
+      }
+    : null;
+  const summaryProposals = latestSummaryRun
+    ? latestSummaryRun.proposals.map((proposal) => {
+        const alert = alertById.get(proposal.targetId);
+
+        return {
+          id: proposal.id,
+          rank: proposal.rank,
+          summary: proposal.summary,
+          recommendedReviewStep: proposal.recommendedReviewStep,
+          rationale: proposal.rationale,
+          confidenceLabel: proposal.confidenceLabel,
+          targetId: proposal.targetId,
+          alertTitle: alert?.title ?? "Unavailable alert",
+          category: alert?.category ?? "service_status_mismatch",
+          severity: alert?.severity ?? "medium",
+          customerName: alert?.customerName ?? null,
+          accountNumber: alert?.accountNumber ?? null,
+          meterNumber: alert?.meterNumber ?? null,
+          metric: alert?.metric ?? "Unknown metric",
+          href: alert?.href ?? "/admin/exceptions",
+          dismissedAtLabel: proposal.dismissedAt
+            ? proposal.dismissedAt.toLocaleString("en-PH")
+            : null,
+          dismissedByName: proposal.dismissedBy?.name ?? null,
+        };
+      })
+    : [];
 
   return (
     <AdminPageShell
@@ -590,6 +673,7 @@ export default async function AdminExceptionsPage({
         },
       ]}
     >
+      <ExceptionSummaryPanel run={summaryRun} proposals={summaryProposals} />
       <ExceptionsBoard
         alerts={filteredAlerts}
         totalCount={alerts.length}

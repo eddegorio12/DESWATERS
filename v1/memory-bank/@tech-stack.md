@@ -104,6 +104,14 @@ This is the simplest robust default because it avoids self-hosted database work,
 - Keep assistant answers read-only and role-aware in the first release
 - Persist assistant knowledge chunks, ingestion runs, and per-user conversation history in PostgreSQL before adding broader model-backed behavior
 
+### Staff Automation And Approval Workflows
+- Keep OpenClaw behind the current app-native server boundary as the planner or orchestrator, not as the mutation authority
+- Keep approval-request, action-intent, and execution-log records in PostgreSQL with Prisma rather than in Telegram or a provider-side state store
+- Use Telegram only as the approval transport for bounded actions that need owner or supervisor confirmation
+- Keep payment posting, receipt issuance, and audit logging inside the current Next.js server-action plus Prisma path even when OpenClaw coordinates the cashier interaction
+- Do not add multi-agent runtime complexity before a single bounded OpenClaw approval flow proves its value
+- Keep the first Telegram-first cashier flow provider-agnostic so a deterministic or stub planner can validate the workflow before OpenClaw setup exists
+
 ### Workflow Usability
 - Prefer reusable search/filter/status-chip controls implemented inside the current React/Tailwind/shadcn stack
 - Avoid introducing heavy grid frameworks or admin-template dependencies just to compensate for weak page-level UX

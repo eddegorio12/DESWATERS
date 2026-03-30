@@ -1,9 +1,23 @@
 "use server";
 
-import { WorkOrderStatus } from "@prisma/client";
+import {
+  AutomationProposalDecision,
+  AutomationWorkerType,
+  BillStatus,
+  CustomerStatus,
+  PaymentStatus,
+  WorkOrderStatus,
+} from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
-import { requireStaffCapability } from "@/features/auth/lib/authorization";
+import {
+  getModuleAccess,
+  requireStaffCapability,
+} from "@/features/auth/lib/authorization";
+import {
+  buildExceptionSummaryCandidates,
+  generateExceptionSummaryProposals,
+} from "@/features/exceptions/lib/exception-summarization";
 import {
   FIELD_PROOF_ACCEPTED_TYPES,
   FIELD_PROOF_MAX_FILE_SIZE_BYTES,
@@ -12,15 +26,37 @@ import {
   persistPreparedFieldProofs,
   removeStoredFieldProofs,
 } from "@/features/exceptions/lib/field-proof-storage";
+import { buildOperationalExceptionAlerts } from "@/features/exceptions/lib/monitoring";
 import {
   createFieldWorkOrderSchema,
   updateFieldWorkOrderSchema,
 } from "@/features/exceptions/lib/work-order-schema";
+import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
+import {
+  completeAutomationRunWithProposals,
+  createPendingAutomationRun,
+  failAutomationRun,
+} from "@/features/automation/lib/automation-store";
 import { prisma } from "@/lib/prisma";
 
 function revalidateExceptionWorkflows() {
+  revalidatePath("/admin/dashboard");
   revalidatePath("/admin/exceptions");
   revalidatePath("/admin/routes");
+}
+
+async function requireExceptionModuleAccess() {
+  const access = await getModuleAccess("exceptions");
+
+  if (access.status !== "authorized") {
+    throw new Error("You are not authorized to review operational exceptions.");
+  }
+
+  return access.user;
+}
+
+function getDaysAgo(days: number, now = new Date()) {
+  return new Date(now.getTime() - days * 86_400_000);
 }
 
 function parseFieldProofUploadFiles(formData: FormData) {
@@ -150,6 +186,248 @@ export async function createFieldWorkOrder(formData: FormData) {
   });
 
   revalidateExceptionWorkflows();
+}
+
+export async function runExceptionSummarization() {
+  const staffUser = await requireExceptionModuleAccess();
+  const now = new Date();
+  await syncReceivableStatuses(now);
+
+  const startedAt = Date.now();
+  const run = await createPendingAutomationRun({
+    workerType: "EXCEPTION_SUMMARIZATION" as AutomationWorkerType,
+    scopeType: "EXCEPTIONS_VISIBLE_QUEUE",
+    triggeredById: staffUser.id,
+    provider: "DWDS_INTERNAL",
+    model: "exception-summary-heuristic-v1",
+  });
+
+  try {
+    const [meters, disconnectionRiskBills, recentPayments, statusMismatchReadings] =
+      await Promise.all([
+        prisma.meter.findMany({
+          where: {
+            status: "ACTIVE",
+          },
+          orderBy: [{ meterNumber: "asc" }],
+          select: {
+            id: true,
+            meterNumber: true,
+            installDate: true,
+            customer: {
+              select: {
+                accountNumber: true,
+                name: true,
+                status: true,
+              },
+            },
+            readings: {
+              orderBy: [{ readingDate: "desc" }],
+              take: 4,
+              select: {
+                id: true,
+                readingDate: true,
+                consumption: true,
+                status: true,
+              },
+            },
+          },
+        }),
+        prisma.bill.findMany({
+          where: {
+            status: {
+              in: [BillStatus.UNPAID, BillStatus.PARTIALLY_PAID, BillStatus.OVERDUE],
+            },
+            followUpStatus: {
+              in: ["FINAL_NOTICE_SENT", "DISCONNECTION_REVIEW"],
+            },
+          },
+          orderBy: [{ dueDate: "asc" }],
+          select: {
+            id: true,
+            billingPeriod: true,
+            dueDate: true,
+            totalCharges: true,
+            followUpStatus: true,
+            customer: {
+              select: {
+                accountNumber: true,
+                name: true,
+              },
+            },
+            reading: {
+              select: {
+                meter: {
+                  select: {
+                    meterNumber: true,
+                  },
+                },
+              },
+            },
+            payments: {
+              where: {
+                status: PaymentStatus.COMPLETED,
+              },
+              select: {
+                amount: true,
+              },
+            },
+          },
+        }),
+        prisma.payment.findMany({
+          where: {
+            status: PaymentStatus.COMPLETED,
+            paymentDate: {
+              gte: getDaysAgo(45, now),
+            },
+          },
+          orderBy: [{ paymentDate: "desc" }],
+          select: {
+            id: true,
+            amount: true,
+            paymentDate: true,
+            method: true,
+            referenceId: true,
+            billId: true,
+            bill: {
+              select: {
+                billingPeriod: true,
+                customer: {
+                  select: {
+                    id: true,
+                    accountNumber: true,
+                    name: true,
+                    status: true,
+                  },
+                },
+              },
+            },
+          },
+        }),
+        prisma.reading.findMany({
+          where: {
+            readingDate: {
+              gte: getDaysAgo(45, now),
+            },
+            meter: {
+              customer: {
+                status: {
+                  in: [CustomerStatus.INACTIVE, CustomerStatus.DISCONNECTED],
+                },
+              },
+            },
+          },
+          orderBy: [{ readingDate: "desc" }],
+          select: {
+            id: true,
+            readingDate: true,
+            consumption: true,
+            status: true,
+            meter: {
+              select: {
+                meterNumber: true,
+                customer: {
+                  select: {
+                    accountNumber: true,
+                    name: true,
+                    status: true,
+                  },
+                },
+              },
+            },
+          },
+        }),
+      ]);
+
+    const alerts = buildOperationalExceptionAlerts({
+      meters,
+      disconnectionRiskBills,
+      recentPayments,
+      statusMismatchReadings,
+      now,
+    });
+    const candidates = buildExceptionSummaryCandidates(alerts);
+    const proposals = await generateExceptionSummaryProposals(candidates);
+
+    await completeAutomationRunWithProposals({
+      runId: run.id,
+      latencyMs: Date.now() - startedAt,
+      proposals: proposals.map((proposal) => ({
+        rank: proposal.rank,
+        targetType: "EXCEPTION_ALERT",
+        targetId: proposal.alertId,
+        summary: proposal.summary,
+        recommendedReviewStep: proposal.recommendedReviewStep,
+        rationale: proposal.rationale,
+        confidenceLabel: proposal.confidenceLabel,
+        sourceMetadata: proposal.sourceMetadata,
+      })),
+    });
+  } catch (error) {
+    await failAutomationRun({
+      runId: run.id,
+      latencyMs: Date.now() - startedAt,
+      failureReason:
+        error instanceof Error ? error.message : "The exception summary worker failed.",
+    });
+
+    throw error;
+  }
+
+  revalidateExceptionWorkflows();
+}
+
+export async function dismissExceptionSummaryProposal(proposalId: string) {
+  const staffUser = await requireExceptionModuleAccess();
+
+  const proposal = await prisma.automationProposal.findUnique({
+    where: {
+      id: proposalId,
+    },
+    select: {
+      id: true,
+      runId: true,
+      dismissedAt: true,
+      run: {
+        select: {
+          workerType: true,
+        },
+      },
+    },
+  });
+
+  if (
+    !proposal ||
+    proposal.run.workerType !== ("EXCEPTION_SUMMARIZATION" as AutomationWorkerType)
+  ) {
+    throw new Error("That exception summary proposal no longer exists.");
+  }
+
+  if (proposal.dismissedAt) {
+    return;
+  }
+
+  await prisma.$transaction([
+    prisma.automationProposal.update({
+      where: {
+        id: proposal.id,
+      },
+      data: {
+        dismissedAt: new Date(),
+        dismissedById: staffUser.id,
+      },
+    }),
+    prisma.automationReview.create({
+      data: {
+        runId: proposal.runId,
+        proposalId: proposal.id,
+        reviewedById: staffUser.id,
+        decision: AutomationProposalDecision.DISMISSED,
+      },
+    }),
+  ]);
+
+  revalidatePath("/admin/exceptions");
 }
 
 export async function updateFieldWorkOrder(formData: FormData) {

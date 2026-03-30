@@ -2,7 +2,7 @@ import { AutomationRunStatus, AutomationWorkerType, Prisma } from "@prisma/clien
 
 import { prisma } from "@/lib/prisma";
 
-type FollowUpTriageProposalInput = {
+type AutomationProposalInput = {
   rank: number;
   targetType: string;
   targetId: string;
@@ -37,7 +37,7 @@ export async function createPendingAutomationRun(input: {
 export async function completeAutomationRunWithProposals(input: {
   runId: string;
   latencyMs: number;
-  proposals: FollowUpTriageProposalInput[];
+  proposals: AutomationProposalInput[];
 }) {
   return prisma.$transaction(async (tx) => {
     await tx.automationProposal.deleteMany({

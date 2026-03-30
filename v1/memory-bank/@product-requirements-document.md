@@ -59,6 +59,12 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH15 now also includes tested and validated narrow live-record explainers for specific visible bill, payment, route, follow-up, and exception questions inside existing role scope.
 - EH16 is now in progress as a supervised staff-automation lane built on top of the validated EH15 assistant baseline rather than as an unrestricted autonomous-agent layer.
 - EH16.1 is now implemented as a proposal-only follow-up triage worker on `/admin/follow-up`, with persisted worker runs and no direct action execution.
+- EH16.2 is now implemented as a proposal-only exception summarization worker on `/admin/exceptions`.
+- EH16 should now remain the advisory worker baseline only.
+- EH17 is now defined as the approval-based automation foundation.
+- EH18 is now defined as the Telegram-first cashier assistant lane.
+- EH19 is now defined as the OpenClaw integration lane.
+- EH20 and EH21 are now reserved for specialized worker lanes and production hardening.
 - EH12 now also includes a route-level loss-risk watchlist on `/admin/routes`, framed explicitly as a revenue-loss proxy from recent billed-versus-collected gaps plus overdue exposure, alongside route-linked complaint hotspot visibility from first-class complaint records.
 - Dedicated admin-management audit logging is now implemented, tested, and validated through a first-class account-management event log and a visible audit trail on `/admin/staff-access`.
 
@@ -357,6 +363,8 @@ Current status:
 1. Extend EH12 again only if management asks for another route-analytics layer beyond the current loss-risk and complaint-hotspot baseline.
 2. Revisit later EH11 security refinements only if priorities move beyond the now-implemented `SUPER_ADMIN` 2FA baseline.
 3. Continue EH16 only if the goal remains supervised staff automation on top of the validated EH15 baseline, not general autonomous control.
+4. Treat OpenClaw as the bounded planner and conversation coordinator, not as the financial or operational source of truth.
+5. Treat Telegram-first cashiering as a separate lane from the approval foundation so field workflow, planner runtime, and execution safety can be validated in stages.
 
 ### Visual-Composition Refinement Direction
 Goal: make DWDS feel intentionally designed rather than template-assembled by reducing repeated card patterns and letting hierarchy come more from layout, typography, and state emphasis.
@@ -417,7 +425,7 @@ Current status:
 2. Broader EH12 management analytics.
 3. Optional later EH11 security and backup refinements.
 4. Optional later EH9 field-service expansion beyond the new proof baseline only if richer media or storage workflows are explicitly approved.
-5. Supervised EH16 staff automation should stay governance-first and bounded, with EH16.1 kept proposal-only while later slices are evaluated.
+6. Supervised staff automation should stay governance-first and bounded across EH16 through EH21, with DWDS remaining the execution authority for any approved financial or operational mutation.
 
 ## Rule of Thumb for Developers
 Always read [@architecture.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\@architecture.md) before changing schema or architecture. Every major addition must map either to the implemented MVP surface or to a named enhancement phase in [implementation-plan.md](C:\Users\eddeg\OneDrive\Documents\GitHub\DESWATERS\v1\memory-bank\implementation-plan.md).

@@ -875,7 +875,7 @@ Scope:
 1. Add supervised worker runs for bounded internal tasks, with follow-up triage defined as the first EH16 implementation slice.
 2. Keep worker output proposal-first and read-only in V1: summaries, recommendations, and ranked queues that staff can review before any action is taken.
 3. Persist worker-run, proposal, review, and execution-log records so every automation output remains inspectable and auditable.
-4. Defer any approved operational change path until a later EH16 slice instead of allowing workers to mutate records directly.
+4. Keep EH16 advisory-only and move approved operational change paths into a later dedicated lane rather than letting workers mutate records directly inside EH16.
 5. Support a pluggable worker runtime or orchestration adapter such as OpenClaw only behind the protected app boundary.
 6. Defer broad autonomous multi-step execution, unrestricted record search, payment or billing mutation, and admin-security actions.
 
@@ -891,7 +891,7 @@ Recommended implementation order:
 2. Ship one read-only worker lane for follow-up triage inside `/admin/follow-up`.
 3. Add UI for proposal review, dismissal, and run history in the protected follow-up module.
 4. Add observability, evaluation, and refusal rules for out-of-scope worker requests.
-5. Only after that, consider a later EH16 slice for a staff-approved draft-to-action path.
+5. Only after that, hand off approved execution to a separate follow-on lane instead of broadening EH16 itself.
 
 Technical design note:
 - Treat `memory-bank/eh16.1-follow-up-triage-design.md` as the concrete implementation design for the first EH16 slice.
@@ -900,8 +900,8 @@ Current recommendation:
 - Treat EH16 as supervised orchestration, not autonomous agency.
 - Use EH15 retrieval, policy, evaluation, and knowledge-governance primitives as the base context layer for any worker reasoning.
 - Keep the first OpenClaw integration behind a server-side adapter so DWDS remains the authority for auth, data access, and mutation rules.
-- Start with follow-up triage as the only EH16 V1 worker.
-- Keep EH16 V1 proposal-only, with no direct action execution path.
+- Keep EH16.1 and EH16.2 as the current proposal-only worker baseline.
+- Freeze EH16 as the advisory baseline and move approved execution into EH17 and later lanes.
 - Avoid queue infrastructure, background daemons, or direct database write privileges until a narrow production need proves they are required.
 
 Current progress:
@@ -911,7 +911,110 @@ Current progress:
 - The current OpenClaw adapter remains a protected server-side boundary and intentionally falls back to deterministic local triage logic until a real integration is explicitly approved.
 - Local validation has now covered Prisma client regeneration, a successful full `tsc --noEmit` pass, realistic sample-data seeding, seeded staff sign-in, in-app triage runs, persisted dismissal behavior, and manual confirmation that workflow mutations remain blocked.
 - Initial operator feedback on the refined seeded local cases is now positive, so EH16.1 should remain in active validation as the current bounded worker baseline.
-- EH16.2 exception summarization remains deferred until EH16.1 has deeper validation across more real-world usage and edge cases.
+- EH16.2 exception summarization is now implemented in the repo as a proposal-only worker on `/admin/exceptions`.
+- The new slice reuses the shared `AutomationRun`, `AutomationProposal`, and `AutomationReview` persistence path, adds `EXCEPTION_SUMMARIZATION` as a worker type, and keeps the current OpenClaw adapter behind the same protected server-side boundary.
+- `/admin/exceptions` now exposes an `AI Summary` panel that can run the bounded worker, show ranked exception-review proposals, and dismiss proposals without dispatching field work or mutating billing or service records.
+- The active fallback ranks visible alerts by severity plus category priority and generates operator-facing summary notes, suggested review steps, rationale text, and confidence labels while preserving existing module links for human follow-through.
+- EH16 should now be treated as complete enough at the advisory-worker level for the currently approved scope.
+- The next approved architecture target is EH17 approval-based automation foundation rather than a broader EH16 expansion.
+
+### EH17: Approval-Based Automation Foundation
+**Priority:** High after the validated EH16 advisory baseline
+**Status:** Planned
+**Depends on:** EH16.1 and EH16.2 in place, EH2 role boundaries, EH15 governance baseline
+
+Scope:
+1. Add bounded worker action intents such as `PAYMENT_POST`, `FOLLOW_UP_SEND_REMINDER`, or later approved equivalents.
+2. Add approval-request persistence with pending, approved, rejected, expired, and executed states.
+3. Use Telegram as the approval transport for high-risk or owner-review-required actions.
+4. Add execution-log persistence, expiry handling, and replay protection for approved actions.
+5. Keep DWDS as the only execution authority for validation, role checks, record mutation, receipts, and audit logs.
+6. Keep the planner boundary provider-agnostic so a deterministic or stub planner can prove the workflow before OpenClaw is connected.
+
+Exit criteria:
+- A bounded worker can prepare one exact action intent and stop for approval instead of mutating records immediately.
+- Telegram can deliver the approval request and return a secure approve or reject signal tied to one exact intent.
+- DWDS can execute the approved action through its normal server-authoritative workflow and store the full audit trail.
+- Rejected, expired, or mismatched approval requests do not execute anything.
+
+Recommended implementation order:
+1. Add action-intent and approval-request schema plus execution-log support.
+2. Add Telegram outbound request delivery and secure callback handling.
+3. Add deterministic or stub planner plumbing behind the protected adapter.
+4. Add observability, expiry handling, replay protection, and refusal behavior before enabling the first execution path.
+
+### EH18: Telegram-First Cashier Assistant
+**Priority:** High after EH17
+**Status:** Planned
+**Depends on:** EH17 approval foundation, EH4 cashiering baseline, EH2 role boundaries
+
+Scope:
+1. Let authorized onsite staff initiate cashier-assist flows from Telegram instead of requiring the web app.
+2. Parse free-text payment intake such as payer name plus claimed amount into a bounded `PAYMENT_POST` intent.
+3. Ask follow-up questions when multiple bills, ambiguous customers, or partial-payment conditions exist.
+4. Support explicit onsite confirmation that payment was physically received before DWDS posts anything.
+5. Keep the web app as the audit and monitoring surface for Telegram-originated payment intents and results.
+
+Exit criteria:
+- Authorized staff can initiate a payment-intent flow from Telegram.
+- The flow can identify one exact bill or request clarification when the input is ambiguous.
+- DWDS can post one approved single-bill payment from the Telegram-assisted intent path and return the receipt outcome.
+- Partial payments remain explicit and cannot be silently inferred.
+
+Recommended implementation order:
+1. Add Telegram user-to-staff identity mapping and conversation-session state.
+2. Add free-text payment-intent parsing with deterministic fallback behavior.
+3. Add single-bill matching, ambiguity questions, and partial-payment confirmation prompts.
+4. Execute approved `PAYMENT_POST` through the existing DWDS payment workflow.
+5. Surface Telegram-originated cashier activity inside `/admin/payments` or a linked audit view.
+
+### EH19: OpenClaw Integration
+**Priority:** Medium after EH18
+**Status:** Planned
+**Depends on:** EH17 and EH18 foundations, OpenClaw environment availability
+
+Scope:
+1. Replace the deterministic or stub planner with OpenClaw behind the existing protected adapter boundary.
+2. Let OpenClaw coordinate bounded clarification, intent preparation, and approval-escalation decisions.
+3. Keep provider output constrained to approved intent schemas and never let it call business mutations directly.
+4. Support module-specific tools and policy rules while preserving one shared execution authority in DWDS.
+
+Exit criteria:
+- OpenClaw can prepare bounded intents and clarification steps without becoming the system of record.
+- The same approval, execution, and audit flows continue working if the planner is swapped from stub logic to OpenClaw.
+- Provider unavailability still degrades safely to the deterministic fallback where required.
+
+### EH20: Specialized Worker Lanes
+**Priority:** Medium after EH19
+**Status:** Planned
+**Depends on:** EH17 through EH19 foundations
+
+Scope:
+1. Split long-running or highly specialized work into dedicated worker lanes only when justified by tooling, latency, or approval differences.
+2. Support future long-running follow-up queue management.
+3. Support future exception investigation workflows with isolated tool access and ownership.
+4. Allow different worker policies, queue rules, and approval requirements without giving any worker direct mutation authority.
+
+Exit criteria:
+- DWDS can support multiple specialized worker lanes with isolated ownership and policy controls.
+- Parallel worker activity does not bypass approval, locking, or audit requirements.
+- Multi-lane behavior remains explainable and debuggable from stored run history.
+
+### EH21: Autonomous Operations Hardening
+**Priority:** Medium after EH20
+**Status:** Planned
+**Depends on:** EH17 through EH20 foundations
+
+Scope:
+1. Add lease handling, retries, supervisor controls, and dead-letter behavior for bounded autonomous operations.
+2. Add observability, evaluation, and operational dashboards for intent quality, approvals, execution success, and failure causes.
+3. Add stronger replay protection, stale-intent invalidation, and queue ownership controls for parallel worker activity.
+4. Prove that bounded background reasoning can run safely before any broader autonomous expansion is considered.
+
+Exit criteria:
+- Worker execution quality and failure causes are measurable.
+- Long-running or parallel worker operations can be supervised without hidden mutations.
+- Operational hardening is in place before any broader autonomous behavior is approved.
 
 ### EH12 Follow-On Analytics: Loss-Risk Watchlist
 **Priority:** High after the current validated route analytics baseline
