@@ -45,7 +45,7 @@ These rules define how any AI agent should behave when working in the DWDS codeb
 - EH14.5 is now validated through skip-link support, focus-visible treatment, active-route semantics, semantic list cleanup, decorative-icon hiding, and reduced-motion-safe marketing reveal behavior.
 - Dedicated admin-management audit logging is now implemented through `AuthAdminManagementEvent` and the `/admin/staff-access` audit trail.
 - EH16 is now in progress after the validated EH15.5 baseline, with EH16.1 proposal-only follow-up triage and EH16.2 proposal-only exception summarization as the current advisory worker baseline.
-- EH17 through EH21 now define the next AI roadmap: approval foundation, Telegram-first cashiering, OpenClaw integration, specialized worker lanes, and production hardening.
+- EH17 through EH21 now define the next AI roadmap: validated approval foundation, Telegram-first cashiering, OpenClaw integration, specialized worker lanes, and production hardening.
 - EH14.1 is now implemented as the dashboard-only enterprise-console refinement pass. Preserve that current DWDS dashboard concept and shared console primitives when extending adjacent admin surfaces; do not redesign the dashboard from scratch unless the user explicitly changes scope.
 - EH14.2 is now validated as the landing-page proof pass. Preserve that sharper homepage narrative when refining adjacent marketing routes: one operational promise, screenshot-led workflow proof, early readiness/trust signals, tighter CTA vocabulary, and explicit staff-facing positioning over broad feature-grid enumeration.
 - The next public-site contribution inside EH14 should now be explicit accessibility verification on top of that stronger website baseline, not a repeat metadata/crawler pass.
@@ -73,7 +73,7 @@ When the requested work is UI/UX-oriented:
 - Recommend the active EH14 composition rollout plus the now-implemented EH12 complaint-area visibility baseline before later deferred EH9/EH11 refinements unless the user explicitly reprioritizes.
 - If the user explicitly asks to continue the former deferred-next-step lane, treat EH9 field-work-order validation plus leak/repair persistence, meter-replacement history, field-proof upload, and the now-implemented optional `SUPER_ADMIN` 2FA as complete before proposing later EH11 security refinements.
 - Use the recorded EH13 task IDs (`EH13.2a` through `EH13.5`) when breaking down or sequencing the current usability lane.
-- For AI planning, treat EH15 as the validated assistant baseline and EH16 as the current advisory worker lane. EH16.1 follow-up triage and EH16.2 exception summarization are now implemented. The next allowed sequence is EH17 approval foundation, EH18 Telegram-first cashiering, EH19 OpenClaw integration, then later EH20 and EH21 for specialized lanes and hardening, not unrestricted autonomous agents, direct database writes, or broad transactional search.
+- For AI planning, treat EH15 as the validated assistant baseline and EH16 as the current advisory worker lane. EH16.1 follow-up triage and EH16.2 exception summarization are now implemented, and EH17 approval foundation is now validated on the bounded follow-up slice. The next allowed sequence is EH18 Telegram-first cashiering, EH19 OpenClaw integration, then later EH20 and EH21 for specialized lanes and hardening, not unrestricted autonomous agents, direct database writes, or broad transactional search.
 
 ## 7. GitHub and MCP Guidance
 - A special skill is not required just to inspect or edit the local repository.

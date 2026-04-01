@@ -5,7 +5,7 @@ const globalForPrisma = globalThis as typeof globalThis & {
   prisma?: PrismaClient;
   prismaSchemaVersion?: string;
 };
-const PRISMA_SCHEMA_VERSION = "20260330_eh15_knowledge_operations";
+const PRISMA_SCHEMA_VERSION = "20260402_eh18_telegram_cashier_assistant";
 
 const connectionString = process.env.DATABASE_URL;
 

@@ -9,7 +9,11 @@ import {
   AdminSurfacePanel,
 } from "@/features/admin/components/admin-surface-panel";
 import { StatusPill } from "@/features/admin/components/status-pill";
-import { dismissFollowUpTriageProposal, runFollowUpTriage } from "@/features/follow-up/actions";
+import {
+  dismissFollowUpTriageProposal,
+  requestFollowUpProposalApproval,
+  runFollowUpTriage,
+} from "@/features/follow-up/actions";
 import { cn } from "@/lib/utils";
 
 type FollowUpTriagePanelProps = {
@@ -40,8 +44,23 @@ type FollowUpTriagePanelProps = {
     queueFocus: string;
     daysPastDue: number;
     outstandingBalanceLabel: string;
+    approvalEligible: boolean;
     dismissedAtLabel: string | null;
     dismissedByName: string | null;
+    approval:
+      | {
+          requestId: string;
+          actionType: string;
+          status: "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED" | "EXECUTED";
+          transport: string;
+          deliveryError: string | null;
+          requestedAtLabel: string;
+          expiresAtLabel: string;
+          decidedAtLabel: string | null;
+          decidedByLabel: string | null;
+          executedAtLabel: string | null;
+        }
+      | null;
   }[];
 };
 
@@ -55,6 +74,31 @@ function getConfidencePriority(label: string) {
   }
 
   return "attention" as const;
+}
+
+function getApprovalPriority(status: string) {
+  if (status === "EXECUTED") {
+    return "ready" as const;
+  }
+
+  if (status === "REJECTED" || status === "EXPIRED") {
+    return "attention" as const;
+  }
+
+  return "pending" as const;
+}
+
+function getApprovalActionLabel(actionType: string) {
+  switch (actionType) {
+    case "FOLLOW_UP_SEND_REMINDER":
+      return "First reminder";
+    case "FOLLOW_UP_SEND_FINAL_NOTICE":
+      return "Final notice";
+    case "FOLLOW_UP_ESCALATE_DISCONNECTION_REVIEW":
+      return "Disconnection review";
+    default:
+      return actionType.replaceAll("_", " ");
+  }
 }
 
 export function FollowUpTriagePanel({ run, proposals }: FollowUpTriagePanelProps) {
@@ -206,30 +250,101 @@ export function FollowUpTriagePanel({ run, proposals }: FollowUpTriagePanelProps
                         {proposal.dismissedByName ? ` by ${proposal.dismissedByName}` : ""}.
                       </p>
                     ) : null}
+                    {proposal.approval ? (
+                      <div className="rounded-2xl border border-border/65 bg-background/70 px-4 py-3 text-sm">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <StatusPill priority={getApprovalPriority(proposal.approval.status)}>
+                            {proposal.approval.status.toLowerCase()}
+                          </StatusPill>
+                          <StatusPill priority="readonly">
+                            {getApprovalActionLabel(proposal.approval.actionType)}
+                          </StatusPill>
+                          <StatusPill priority="readonly">
+                            {proposal.approval.transport.toLowerCase()}
+                          </StatusPill>
+                        </div>
+                        <p className="mt-2 text-muted-foreground">
+                          Requested {proposal.approval.requestedAtLabel}. Expires {proposal.approval.expiresAtLabel}.
+                        </p>
+                        {proposal.approval.decidedAtLabel ? (
+                          <p className="mt-1 text-muted-foreground">
+                            Decision recorded {proposal.approval.decidedAtLabel}
+                            {proposal.approval.decidedByLabel
+                              ? ` by ${proposal.approval.decidedByLabel}`
+                              : ""}.
+                          </p>
+                        ) : null}
+                        {proposal.approval.executedAtLabel ? (
+                          <p className="mt-1 text-muted-foreground">
+                            Executed {proposal.approval.executedAtLabel}.
+                          </p>
+                        ) : null}
+                        {proposal.approval.deliveryError ? (
+                          <p className="mt-2 text-destructive">
+                            Telegram delivery: {proposal.approval.deliveryError}
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
                   <div className="w-full lg:max-w-xs">
-                    <button
-                      type="button"
-                      className={cn(
-                        buttonVariants({
-                          variant: "outline",
-                          size: "sm",
-                          className: "w-full rounded-xl px-3 justify-center",
-                        })
-                      )}
-                      disabled={isPending || isDismissed}
-                      onClick={() =>
-                        runAction(`dismiss-${proposal.id}`, () =>
-                          dismissFollowUpTriageProposal(proposal.id)
-                        )
-                      }
-                    >
-                      {pendingKey === `dismiss-${proposal.id}`
-                        ? "Dismissing..."
-                        : isDismissed
-                          ? "Dismissed"
-                          : "Dismiss proposal"}
-                    </button>
+                    <div className="space-y-2">
+                      <button
+                        type="button"
+                        className={cn(
+                          buttonVariants({
+                            variant: "outline",
+                            size: "sm",
+                            className: "w-full rounded-xl px-3 justify-center",
+                          })
+                        )}
+                        disabled={
+                          isPending ||
+                          isDismissed ||
+                          !proposal.approvalEligible ||
+                          proposal.approval?.status === "PENDING" ||
+                          proposal.approval?.status === "APPROVED" ||
+                          proposal.approval?.status === "EXECUTED"
+                        }
+                        onClick={() =>
+                          runAction(`request-${proposal.id}`, () =>
+                            requestFollowUpProposalApproval(proposal.id)
+                          )
+                        }
+                      >
+                        {pendingKey === `request-${proposal.id}`
+                          ? "Requesting..."
+                          : proposal.approval?.status === "PENDING"
+                            ? "Approval requested"
+                            : proposal.approval?.status === "EXECUTED"
+                              ? "Approved and executed"
+                              : proposal.approvalEligible
+                                ? "Request Telegram approval"
+                                : "No exact action yet"}
+                      </button>
+                      <button
+                        type="button"
+                        className={cn(
+                          buttonVariants({
+                            variant: "outline",
+                            size: "sm",
+                            className: "w-full rounded-xl px-3 justify-center",
+                          })
+                        )}
+                        disabled={isPending || isDismissed}
+                        onClick={() =>
+                          runAction(`dismiss-${proposal.id}`, () =>
+                            dismissFollowUpTriageProposal(proposal.id)
+                          )
+                        }
+                      >
+                        {pendingKey === `dismiss-${proposal.id}`
+                          ? "Dismissing..."
+                          : isDismissed
+                            ? "Dismissed"
+                            : "Dismiss proposal"}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </article>

@@ -110,6 +110,9 @@ model User {
   automationRuns AutomationRun[] @relation("AutomationRunTriggeredBy")
   dismissedAutomationProposals AutomationProposal[] @relation("AutomationProposalDismissedBy")
   automationReviews AutomationReview[] @relation("AutomationReviewReviewedBy")
+  createdAutomationActionIntents AutomationActionIntent[] @relation("AutomationActionIntentCreatedBy")
+  requestedAutomationApprovals AutomationApprovalRequest[] @relation("AutomationApprovalRequestRequestedBy")
+  telegramStaffIdentity TelegramStaffIdentity?
   finalizedBills Bill[] @relation("BillFinalizedBy")
   printedBills Bill[] @relation("BillPrintedBy")
   distributedBills Bill[] @relation("BillDistributedBy")
@@ -842,6 +845,7 @@ model AutomationProposal {
   dismissedById        String?
   dismissedBy          User?                @relation("AutomationProposalDismissedBy", fields: [dismissedById], references: [id])
   reviews              AutomationReview[]
+  actionIntents        AutomationActionIntent[]
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
@@ -865,6 +869,115 @@ model AutomationReview {
   @@index([runId, createdAt(sort: Desc)])
   @@index([proposalId, createdAt(sort: Desc)])
   @@index([reviewedById, createdAt(sort: Desc)])
+}
+
+model AutomationActionIntent {
+  id              String                     @id @default(uuid())
+  proposalId      String?
+  proposal        AutomationProposal?        @relation(fields: [proposalId], references: [id], onDelete: SetNull)
+  workerType      AutomationWorkerType?
+  actionType      AutomationActionType
+  targetType      String
+  targetId        String
+  summary         String
+  rationale       String?
+  payload         Json
+  createdById     String
+  createdBy       User                       @relation("AutomationActionIntentCreatedBy", fields: [createdById], references: [id])
+  approvalRequests AutomationApprovalRequest[]
+  executionLogs   AutomationExecutionLog[]
+  createdAt       DateTime                   @default(now())
+  updatedAt       DateTime                   @updatedAt
+
+  @@index([proposalId, createdAt(sort: Desc)])
+  @@index([actionType, createdAt(sort: Desc)])
+  @@index([targetType, targetId, createdAt(sort: Desc)])
+  @@index([createdById, createdAt(sort: Desc)])
+}
+
+model AutomationApprovalRequest {
+  id                 String                     @id @default(uuid())
+  intentId           String
+  intent             AutomationActionIntent     @relation(fields: [intentId], references: [id], onDelete: Cascade)
+  transport          AutomationApprovalTransport
+  status             AutomationApprovalStatus   @default(PENDING)
+  callbackTokenHash  String                     @unique
+  transportMessageId String?
+  deliveryError      String?
+  requestedById      String
+  requestedBy        User                       @relation("AutomationApprovalRequestRequestedBy", fields: [requestedById], references: [id])
+  requestedAt        DateTime                   @default(now())
+  expiresAt          DateTime
+  decidedAt          DateTime?
+  decidedByLabel     String?
+  lastDeliveredAt    DateTime?
+  executedAt         DateTime?
+  executionLogs      AutomationExecutionLog[]
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+
+  @@index([intentId, createdAt(sort: Desc)])
+  @@index([status, expiresAt])
+  @@index([requestedById, createdAt(sort: Desc)])
+}
+
+model AutomationExecutionLog {
+  id                String                    @id @default(uuid())
+  intentId          String
+  intent            AutomationActionIntent    @relation(fields: [intentId], references: [id], onDelete: Cascade)
+  approvalRequestId String?
+  approvalRequest   AutomationApprovalRequest? @relation(fields: [approvalRequestId], references: [id], onDelete: SetNull)
+  actionType        AutomationActionType
+  status            AutomationExecutionStatus
+  resultSummary     String
+  errorMessage      String?
+  resultMetadata    Json?
+  createdAt         DateTime                  @default(now())
+
+  @@index([intentId, createdAt(sort: Desc)])
+  @@index([approvalRequestId, createdAt(sort: Desc)])
+  @@index([status, createdAt(sort: Desc)])
+}
+
+model TelegramStaffIdentity {
+  id                String                  @id @default(uuid())
+  userId            String                  @unique
+  user              User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  telegramUserId    String                  @unique
+  telegramChatId    String?
+  telegramUsername  String?
+  telegramFirstName String?
+  telegramLastName  String?
+  isActive          Boolean                 @default(true)
+  lastSeenAt        DateTime?
+  sessions          TelegramCashierSession[]
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+
+  @@index([isActive, updatedAt(sort: Desc)])
+}
+
+model TelegramCashierSession {
+  id                 String                     @id @default(uuid())
+  staffIdentityId    String
+  staffIdentity      TelegramStaffIdentity      @relation(fields: [staffIdentityId], references: [id], onDelete: Cascade)
+  actionType         AutomationActionType       @default(PAYMENT_POST)
+  status             TelegramConversationStatus @default(ACTIVE)
+  stage              TelegramCashierSessionStage @default(AWAITING_PAYMENT_DETAILS)
+  parsedIntent       Json?
+  lastInboundText    String?
+  lastBotReply       String?
+  approvalRequestId  String?                    @unique
+  completedPaymentId String?                    @unique
+  completedPayment   Payment?                   @relation(fields: [completedPaymentId], references: [id], onDelete: SetNull)
+  expiresAt          DateTime?
+  completedAt        DateTime?
+  cancelledAt        DateTime?
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+
+  @@index([staffIdentityId, createdAt(sort: Desc)])
+  @@index([status, updatedAt(sort: Desc)])
 }
 
 enum AssistantSourceType {
@@ -931,6 +1044,13 @@ enum AutomationWorkerType {
   EXCEPTION_SUMMARIZATION
 }
 
+enum AutomationActionType {
+  FOLLOW_UP_SEND_REMINDER
+  FOLLOW_UP_SEND_FINAL_NOTICE
+  FOLLOW_UP_ESCALATE_DISCONNECTION_REVIEW
+  PAYMENT_POST
+}
+
 enum AutomationRunStatus {
   PENDING
   COMPLETED
@@ -940,6 +1060,44 @@ enum AutomationRunStatus {
 enum AutomationProposalDecision {
   KEPT
   DISMISSED
+}
+
+enum AutomationApprovalTransport {
+  TELEGRAM
+}
+
+enum AutomationApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+  EXECUTED
+}
+
+enum AutomationExecutionStatus {
+  SUCCEEDED
+  FAILED
+  REJECTED
+  EXPIRED
+  REPLAY_BLOCKED
+}
+
+enum TelegramConversationStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+  EXPIRED
+}
+
+enum TelegramCashierSessionStage {
+  AWAITING_PAYMENT_DETAILS
+  AWAITING_BILL_SELECTION
+  AWAITING_PARTIAL_CONFIRMATION
+  AWAITING_CASH_CONFIRMATION
+  AWAITING_APPROVAL
+  COMPLETED
+  CANCELLED
+  EXPIRED
 }
 
 model ServiceZone {
@@ -1229,6 +1387,7 @@ model Payment {
   
   billId        String
   bill          Bill     @relation(fields: [billId], references: [id])
+  telegramCashierSession TelegramCashierSession?
   
   status        PaymentStatus @default(COMPLETED)
   

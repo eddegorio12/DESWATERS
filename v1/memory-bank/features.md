@@ -314,6 +314,13 @@ Let authorized onsite staff initiate a cashier-assist payment workflow through T
 - The first supported approved action should be single-bill `PAYMENT_POST`.
 - Partial payments may be supported, but only through explicit confirmation.
 
+### Current Implemented Baseline
+- Linked cashier accounts can now initiate a Telegram cashier session through `/api/automation/telegram`.
+- Telegram-originated cashier sessions now persist identity, bounded conversation state, approval linkage, and resulting payment linkage in PostgreSQL.
+- The active EH18 baseline uses deterministic payer-plus-amount parsing, open-bill lookup, numbered clarification, explicit partial-payment confirmation, and explicit cash-received confirmation before approval is requested.
+- Approved `PAYMENT_POST` intents now execute through the existing DWDS payment workflow and return the resulting receipt outcome back into the Telegram-originated session.
+- `/admin/payments` now acts as the web audit and setup surface for Telegram cashier identity linking plus recent Telegram cashier session review.
+
 ## EH19: OpenClaw Integration
 
 ### Goal

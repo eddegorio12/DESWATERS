@@ -65,6 +65,9 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH18 is now defined as the Telegram-first cashier assistant lane.
 - EH19 is now defined as the OpenClaw integration lane.
 - EH20 and EH21 are now reserved for specialized worker lanes and production hardening.
+- EH17 has now started with exact action-intent, approval-request, and execution-log persistence plus Telegram transport and callback handling for one bounded follow-up approval path.
+- EH17 is now validated for its current bounded follow-up approval scope, including real Telegram delivery, approved execution, rejected-request behavior, and replay blocking.
+- EH18 is now the next active lane.
 - EH12 now also includes a route-level loss-risk watchlist on `/admin/routes`, framed explicitly as a revenue-loss proxy from recent billed-versus-collected gaps plus overdue exposure, alongside route-linked complaint hotspot visibility from first-class complaint records.
 - Dedicated admin-management audit logging is now implemented, tested, and validated through a first-class account-management event log and a visible audit trail on `/admin/staff-access`.
 
@@ -363,8 +366,9 @@ Current status:
 1. Extend EH12 again only if management asks for another route-analytics layer beyond the current loss-risk and complaint-hotspot baseline.
 2. Revisit later EH11 security refinements only if priorities move beyond the now-implemented `SUPER_ADMIN` 2FA baseline.
 3. Continue EH16 only if the goal remains supervised staff automation on top of the validated EH15 baseline, not general autonomous control.
-4. Treat OpenClaw as the bounded planner and conversation coordinator, not as the financial or operational source of truth.
-5. Treat Telegram-first cashiering as a separate lane from the approval foundation so field workflow, planner runtime, and execution safety can be validated in stages.
+4. Start EH18 on top of the validated EH17 approval foundation rather than reopening follow-up approval-core work.
+5. Treat OpenClaw as the bounded planner and conversation coordinator, not as the financial or operational source of truth.
+6. Treat Telegram-first cashiering as a separate lane from the approval foundation so field workflow, planner runtime, and execution safety can be validated in stages.
 
 ### Visual-Composition Refinement Direction
 Goal: make DWDS feel intentionally designed rather than template-assembled by reducing repeated card patterns and letting hierarchy come more from layout, typography, and state emphasis.

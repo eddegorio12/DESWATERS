@@ -16,6 +16,7 @@ import {
   createPendingAutomationRun,
   failAutomationRun,
 } from "@/features/automation/lib/automation-store";
+import { requestTelegramApprovalForFollowUpProposal } from "@/features/automation/lib/approval-store";
 import { type FollowUpTriageCandidate } from "@/features/automation/lib/openclaw-adapter";
 import { requireStaffCapability } from "@/features/auth/lib/authorization";
 import {
@@ -24,20 +25,11 @@ import {
   syncReceivableStatuses,
 } from "@/features/follow-up/lib/workflow";
 import { getDaysPastDue } from "@/features/follow-up/lib/workflow";
+import { advanceReceivableFollowUp, getDefaultFollowUpNote } from "@/features/follow-up/lib/follow-up-operations";
 import { generateFollowUpTriageProposals } from "@/features/follow-up/lib/follow-up-triage";
 import { dispatchFollowUpNotifications } from "@/features/notifications/lib/dispatch";
 import { createPrintedNoticeLog } from "@/features/notices/lib/logging";
 import { prisma } from "@/lib/prisma";
-
-const followUpProgression: Record<
-  Exclude<ReceivableFollowUpStatus, "DISCONNECTED" | "RESOLVED">,
-  number
-> = {
-  CURRENT: 0,
-  REMINDER_SENT: 1,
-  FINAL_NOTICE_SENT: 2,
-  DISCONNECTION_REVIEW: 3,
-};
 
 function revalidateOperationalSurfaces() {
   revalidatePath("/admin/dashboard");
@@ -210,21 +202,16 @@ export async function dismissFollowUpTriageProposal(proposalId: string) {
   revalidatePath("/admin/follow-up");
 }
 
-function getDefaultFollowUpNote(status: ReceivableFollowUpStatus) {
-  switch (status) {
-    case ReceivableFollowUpStatus.CURRENT:
-      return "Receivables follow-up was reset to the current monitoring stage.";
-    case ReceivableFollowUpStatus.REMINDER_SENT:
-      return "A first overdue reminder was recorded from the receivables follow-up workspace.";
-    case ReceivableFollowUpStatus.FINAL_NOTICE_SENT:
-      return "A final overdue notice was recorded from the receivables follow-up workspace.";
-    case ReceivableFollowUpStatus.DISCONNECTION_REVIEW:
-      return "The overdue balance was escalated for disconnection review.";
-    case ReceivableFollowUpStatus.DISCONNECTED:
-      return "Service disconnection was recorded against the overdue account.";
-    case ReceivableFollowUpStatus.RESOLVED:
-      return "The receivables follow-up case was resolved.";
-  }
+export async function requestFollowUpProposalApproval(proposalId: string) {
+  const staffUser = await requireStaffCapability("followup:update");
+
+  await requestTelegramApprovalForFollowUpProposal({
+    proposalId,
+    requestedById: staffUser.id,
+    requestedByName: staffUser.name,
+  });
+
+  revalidatePath("/admin/follow-up");
 }
 
 export async function updateReceivableFollowUp(
@@ -232,130 +219,11 @@ export async function updateReceivableFollowUp(
   nextStatus: Exclude<ReceivableFollowUpStatus, "DISCONNECTED" | "RESOLVED">
 ) {
   const staffUser = await requireStaffCapability("followup:update");
-  await syncReceivableStatuses();
-
-  const bill = await prisma.bill.findUnique({
-    where: {
-      id: billId,
-    },
-    select: {
-      id: true,
-      billingPeriod: true,
-      dueDate: true,
-      totalCharges: true,
-      status: true,
-      followUpStatus: true,
-      customer: {
-        select: {
-          id: true,
-          name: true,
-          accountNumber: true,
-          status: true,
-          email: true,
-          contactNumber: true,
-        },
-      },
-      payments: {
-        where: {
-          status: PaymentStatus.COMPLETED,
-        },
-        select: {
-          amount: true,
-        },
-      },
-    },
+  await advanceReceivableFollowUp({
+    billId,
+    nextStatus,
+    actorId: staffUser.id,
   });
-
-  if (!bill) {
-    throw new Error("That bill no longer exists.");
-  }
-
-  const operationalStatus = getOperationalBillStatus(bill);
-  const outstandingBalance = getOutstandingBalance(bill.totalCharges, bill.payments);
-
-  if (outstandingBalance <= 0) {
-    throw new Error("This bill is already fully settled.");
-  }
-
-  if (bill.customer.status === CustomerStatus.DISCONNECTED) {
-    throw new Error("Disconnected accounts must be reinstated by a manager or admin.");
-  }
-
-  if (operationalStatus !== BillStatus.OVERDUE && nextStatus !== ReceivableFollowUpStatus.CURRENT) {
-    throw new Error("Only overdue bills can move into reminder or escalation stages.");
-  }
-
-  if (
-    bill.followUpStatus === ReceivableFollowUpStatus.DISCONNECTED ||
-    bill.followUpStatus === ReceivableFollowUpStatus.RESOLVED
-  ) {
-    throw new Error("This bill can no longer be changed from the current follow-up stage.");
-  }
-
-  if (nextStatus !== ReceivableFollowUpStatus.CURRENT) {
-    const currentStage =
-      followUpProgression[
-        bill.followUpStatus as Exclude<ReceivableFollowUpStatus, "DISCONNECTED" | "RESOLVED">
-      ];
-    const nextStage = followUpProgression[nextStatus];
-
-    if (nextStage - currentStage > 1) {
-      throw new Error("Advance receivables follow-up one stage at a time.");
-    }
-  }
-
-  await prisma.bill.update({
-    where: {
-      id: bill.id,
-    },
-    data: {
-      status: operationalStatus,
-      followUpStatus: nextStatus,
-      followUpStatusUpdatedAt: new Date(),
-      followUpUpdatedById: staffUser.id,
-      followUpNote: getDefaultFollowUpNote(nextStatus),
-    },
-  });
-
-  if (nextStatus === ReceivableFollowUpStatus.REMINDER_SENT) {
-    await dispatchFollowUpNotifications({
-      customer: {
-        id: bill.customer.id,
-        name: bill.customer.name,
-        accountNumber: bill.customer.accountNumber,
-        email: bill.customer.email,
-        contactNumber: bill.customer.contactNumber,
-      },
-      bill: {
-        id: bill.id,
-        billingPeriod: bill.billingPeriod,
-        dueDate: bill.dueDate,
-        outstandingBalance,
-      },
-      template: NotificationTemplate.FOLLOW_UP_REMINDER,
-      triggeredById: staffUser.id,
-    }).catch(() => undefined);
-  }
-
-  if (nextStatus === ReceivableFollowUpStatus.FINAL_NOTICE_SENT) {
-    await dispatchFollowUpNotifications({
-      customer: {
-        id: bill.customer.id,
-        name: bill.customer.name,
-        accountNumber: bill.customer.accountNumber,
-        email: bill.customer.email,
-        contactNumber: bill.customer.contactNumber,
-      },
-      bill: {
-        id: bill.id,
-        billingPeriod: bill.billingPeriod,
-        dueDate: bill.dueDate,
-        outstandingBalance,
-      },
-      template: NotificationTemplate.FINAL_NOTICE,
-      triggeredById: staffUser.id,
-    }).catch(() => undefined);
-  }
 
   revalidateOperationalSurfaces();
 }

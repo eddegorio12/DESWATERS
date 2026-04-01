@@ -74,6 +74,9 @@
 - EH15 should now be treated as complete at the parent-lane level because its documented maturity slices through EH15.5 are implemented and validated.
 - EH16 has now started as the next AI lane: supervised staff automation built on the validated EH15 baseline, with follow-up triage implemented as the first worker and exception summarization now added as the second worker.
 - The next AI contribution path is now explicitly split into EH17 through EH21 so approval-based execution, Telegram-first cashiering, OpenClaw integration, specialized worker lanes, and production hardening do not collapse into one oversized EH16 scope.
+- EH17 has now started as the approval-based automation foundation, with first-class action intents, approval requests, execution logs, Telegram transport, and replay-safe callback handling implemented in the repo.
+- The first EH17 execution path now stays inside `/admin/follow-up`, where exact reminder, final-notice, and disconnection-review approvals can execute through the existing DWDS follow-up rules after Telegram approval.
+- EH18 has now started as the Telegram-first cashier assistant lane, with cashier-owned Telegram identity linking, bounded Telegram payment sessions, deterministic payment-intent parsing, explicit partial-payment plus cash-received confirmations, approved `PAYMENT_POST` execution through the existing DWDS payment workflow, and a visible Telegram cashier audit panel on `/admin/payments`.
 - `/admin/routes` now also includes a clearly labeled loss-risk watchlist that ranks routes by recent billed-versus-collected gap plus current overdue exposure, plus a route-linked complaint hotspot view based on first-class complaint records.
 - Dedicated admin-management audit logging is now implemented, tested, and validated through a first-class Prisma event table plus a visible audit trail on `/admin/staff-access` for account creation, role changes, activation changes, lockout clearing, temporary-password resets, and self-service password changes.
 - The deferred EH9 field-service expansion has now been implemented, tested, and validated with complaint-driven field work orders on `/admin/exceptions`, including technician assignment, dispatch notes, scheduled visits, in-progress tracking, completion logging, and complaint auto-resolution on completed work.
@@ -314,14 +317,23 @@
   6. Proposal summaries and rationale text were tightened to read as operator review notes, with billing period, account number, follow-up stage, customer disconnect state, and queue focus made more explicit in the visible explanation or stored source metadata.
   7. Initial operator feedback on the refined seeded local cases is now positive: the current ordering and wording feel right enough to keep EH16.1 in active validation without reopening its scope.
 
+### EH17: Approval-Based Automation Foundation
+- Status: `validated`
+- Notes: EH17 is now validated on top of the EH16 advisory baseline. Prisma now persists `AutomationActionIntent`, `AutomationApprovalRequest`, and `AutomationExecutionLog`, so exact approved-action metadata no longer has to live inside worker proposals or provider-side transport state. The validated EH17 slice stays on `/admin/follow-up`, where eligible triage proposals can request Telegram approval for exact reminder, final-notice, or disconnection-review advancement. Telegram now acts as the delivery and callback transport only through a protected `/api/automation/telegram` path, while DWDS remains the execution authority for follow-up validation, status updates, notifications, and audit-state persistence. End-to-end validation has now covered local schema deployment, real Telegram delivery, approved execution through the existing DWDS follow-up rules, rejected-request behavior, and replay blocking after a link is reused. EH18 is now the next allowed lane.
+
+### EH18: Telegram-First Cashier Assistant
+- Status: `implemented, pending user validation`
+- Notes: EH18 is now implemented on top of the validated EH17 approval foundation. Prisma now persists `TelegramStaffIdentity` and `TelegramCashierSession`, so Telegram-originated cashier identity, bounded conversation state, and payment outcome linkage no longer have to live in memory or inside approval payloads alone. `/api/automation/telegram` now accepts inbound Telegram webhook messages for linked cashier accounts, keeps the existing approval callback path, and runs a deterministic cashier assistant that can parse payer-plus-amount text, narrow to one exact open bill, ask numbered clarification questions, require explicit partial-payment confirmation, and require explicit cash-in-hand confirmation before a `PAYMENT_POST` approval request is sent. Approved `PAYMENT_POST` intents now execute through the existing DWDS payment workflow and return the receipt outcome, while `/admin/payments` now exposes both cashier-owned Telegram identity linking and a visible Telegram-origin audit panel for recent sessions, approval state, and resulting receipts. Local validation has now covered Prisma client regeneration, `tsc --noEmit`, `eslint`, and successful migration deployment on the local PostgreSQL database. User validation is still required before EH19 begins.
+
 ## Current Next-Step Recommendation
-The current AI and automation baseline is EH16.1 follow-up triage plus EH16.2 exception summarization. The next planned lane is EH17 approval-based automation foundation.
+The current AI and automation baseline is EH16.1 follow-up triage, EH16.2 exception summarization, a validated EH17 approval foundation, and an implemented EH18 Telegram cashier-assist slice awaiting user validation.
 
 The next step is now:
 1. keep EH16.1 follow-up triage and EH16.2 exception summarization as the current bounded worker baseline
-2. implement EH17 as the approval-based automation foundation with action intents, approval requests, execution logs, and Telegram approval transport
-3. implement EH18 as the Telegram-first cashier assistant with `PAYMENT_POST` as the first approved action path
-4. defer real OpenClaw runtime integration to EH19 so the approval and execution model can be proven first with a provider-agnostic planner boundary
+2. validate EH18 as the Telegram-first cashier assistant with `PAYMENT_POST` as the first cashier-specific approved action path
+3. keep EH18 scoped to Telegram-originated cashier intent handling, approval, and audited execution on top of the validated EH17 foundation until that validation is complete
+4. do not start EH19 until the EH18 Telegram cashier test is user-validated
+5. defer real OpenClaw runtime integration to EH19 so the approval and execution model can be proven first with a provider-agnostic planner boundary
 
 Standing guardrails:
 1. keep EH15 closed as the stable assistant baseline unless there is a regression or an explicitly approved scope change

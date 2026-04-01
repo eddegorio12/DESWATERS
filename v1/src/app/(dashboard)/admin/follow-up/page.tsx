@@ -177,6 +177,28 @@ export default async function AdminFollowUpPage({
                 name: true,
               },
             },
+            actionIntents: {
+              orderBy: [{ createdAt: "desc" }],
+              take: 1,
+              select: {
+                actionType: true,
+                approvalRequests: {
+                  orderBy: [{ createdAt: "desc" }],
+                  take: 1,
+                  select: {
+                    id: true,
+                    status: true,
+                    transport: true,
+                    deliveryError: true,
+                    requestedAt: true,
+                    expiresAt: true,
+                    decidedAt: true,
+                    decidedByLabel: true,
+                    executedAt: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -392,6 +414,13 @@ export default async function AdminFollowUpPage({
   const triageProposals = latestTriageRun
     ? latestTriageRun.proposals.map((proposal: (typeof latestTriageRun.proposals)[number]) => {
         const queueEntry = queueByBillId.get(proposal.targetId);
+        const approvalEligible =
+          (queueEntry?.queueFocus === "NEEDS_REMINDER" &&
+            queueEntry.followUpStatus === "CURRENT") ||
+          (queueEntry?.queueFocus === "NEEDS_FINAL_NOTICE" &&
+            queueEntry.followUpStatus === "REMINDER_SENT") ||
+          (queueEntry?.queueFocus === "READY_FOR_DISCONNECTION" &&
+            queueEntry.followUpStatus === "FINAL_NOTICE_SENT");
 
         return {
           id: proposal.id,
@@ -411,10 +440,33 @@ export default async function AdminFollowUpPage({
             style: "currency",
             currency: "PHP",
           }).format(queueEntry?.outstandingBalance ?? 0),
+          approvalEligible,
           dismissedAtLabel: proposal.dismissedAt
             ? proposal.dismissedAt.toLocaleString("en-PH")
             : null,
           dismissedByName: proposal.dismissedBy?.name ?? null,
+          approval:
+            proposal.actionIntents[0]?.approvalRequests[0] !== undefined
+              ? {
+                  requestId: proposal.actionIntents[0].approvalRequests[0].id,
+                  actionType: proposal.actionIntents[0].actionType,
+                  status: proposal.actionIntents[0].approvalRequests[0].status,
+                  transport: proposal.actionIntents[0].approvalRequests[0].transport,
+                  deliveryError: proposal.actionIntents[0].approvalRequests[0].deliveryError,
+                  requestedAtLabel:
+                    proposal.actionIntents[0].approvalRequests[0].requestedAt.toLocaleString("en-PH"),
+                  expiresAtLabel:
+                    proposal.actionIntents[0].approvalRequests[0].expiresAt.toLocaleString("en-PH"),
+                  decidedAtLabel: proposal.actionIntents[0].approvalRequests[0].decidedAt
+                    ? proposal.actionIntents[0].approvalRequests[0].decidedAt.toLocaleString("en-PH")
+                    : null,
+                  decidedByLabel:
+                    proposal.actionIntents[0].approvalRequests[0].decidedByLabel ?? null,
+                  executedAtLabel: proposal.actionIntents[0].approvalRequests[0].executedAt
+                    ? proposal.actionIntents[0].approvalRequests[0].executedAt.toLocaleString("en-PH")
+                    : null,
+                }
+              : null,
         };
       })
     : [];

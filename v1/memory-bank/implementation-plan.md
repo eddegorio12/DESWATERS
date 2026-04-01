@@ -920,7 +920,7 @@ Current progress:
 
 ### EH17: Approval-Based Automation Foundation
 **Priority:** High after the validated EH16 advisory baseline
-**Status:** Planned
+**Status:** Validated
 **Depends on:** EH16.1 and EH16.2 in place, EH2 role boundaries, EH15 governance baseline
 
 Scope:
@@ -943,9 +943,19 @@ Recommended implementation order:
 3. Add deterministic or stub planner plumbing behind the protected adapter.
 4. Add observability, expiry handling, replay protection, and refusal behavior before enabling the first execution path.
 
+Current progress:
+- Prisma now includes `AutomationActionIntent`, `AutomationApprovalRequest`, and `AutomationExecutionLog` plus enums for approved action type, approval transport, approval status, and execution status.
+- The first EH17 execution path is now wired on `/admin/follow-up`, where eligible AI triage proposals can request Telegram approval for exact bounded follow-up actions without broadening into cashier workflows.
+- The approval foundation now hashes callback tokens, stores pending-versus-approved-versus-rejected-versus-expired-versus-executed request state, records execution outcomes, and blocks replay after an approval link has already been used.
+- Telegram delivery now stays transport-only through `src/features/automation/lib/telegram-transport.ts`, while the callback route at `/api/automation/telegram` returns the decision to DWDS for server-authoritative execution.
+- The first approved action path intentionally stays inside receivables follow-up, using the existing DWDS follow-up mutation rules for reminder, final-notice, and disconnection-review advancement instead of starting the later EH18 cashier lane.
+- Local validation has now covered Prisma client regeneration, a successful full `tsc --noEmit` pass, and a successful full `eslint` run.
+- End-to-end validation has now also covered local schema deployment on the repo Postgres container, real Telegram message delivery, approved follow-up execution through DWDS server rules, rejected-request behavior, and replay blocking on a reused approval link.
+- EH17 should now be treated as validated and closed for its current scope, with EH18 as the next active lane.
+
 ### EH18: Telegram-First Cashier Assistant
 **Priority:** High after EH17
-**Status:** Planned
+**Status:** Implemented, pending user validation
 **Depends on:** EH17 approval foundation, EH4 cashiering baseline, EH2 role boundaries
 
 Scope:
@@ -967,6 +977,15 @@ Recommended implementation order:
 3. Add single-bill matching, ambiguity questions, and partial-payment confirmation prompts.
 4. Execute approved `PAYMENT_POST` through the existing DWDS payment workflow.
 5. Surface Telegram-originated cashier activity inside `/admin/payments` or a linked audit view.
+
+Current progress:
+- Prisma now includes `TelegramStaffIdentity` and `TelegramCashierSession`, so linked cashier identities, bounded Telegram conversation state, approval linkage, and payment outcome linkage are persisted in PostgreSQL.
+- `/api/automation/telegram` now accepts inbound Telegram webhook messages for linked cashier accounts while preserving the existing approval callback path from EH17.
+- The active EH18 baseline now uses deterministic parsing for payer-plus-amount text, open-bill matching, numbered clarification prompts, explicit partial-payment confirmation, and explicit cash-received confirmation before approval is requested.
+- Approved `PAYMENT_POST` intents now execute through the existing DWDS payment-posting workflow rather than a second cashier mutation path, and the Telegram origin chat now receives success, rejection, expiry, or failure follow-up messages.
+- `/admin/payments` now exposes cashier-owned Telegram identity linking plus a visible Telegram cashier audit panel for recent sessions, approval state, and receipt outcomes.
+- Local validation has now covered Prisma client generation, a successful full `tsc --noEmit` pass, a successful full `eslint` run, and successful migration deployment on the local PostgreSQL database.
+- EH18 should now be treated as implemented but still pending user validation. EH19 must not start until that validation is complete.
 
 ### EH19: OpenClaw Integration
 **Priority:** Medium after EH18

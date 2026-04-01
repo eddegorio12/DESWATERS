@@ -234,6 +234,10 @@
 - Payment posting, receipt issuance, and audit logging must remain DWDS responsibilities even if OpenClaw coordinates the cashier conversation.
 - Broad autonomous multi-step execution, unrestricted record discovery, or hidden background retries should remain out of scope until a later phase proves the need and adds explicit safety plus audit controls.
 - Later worker lanes may include exception summarization, route-pressure briefings, notice drafting, and assistant knowledge-maintenance support after the follow-up triage baseline proves useful.
+- The implemented EH17 baseline now persists `AutomationActionIntent`, `AutomationApprovalRequest`, and `AutomationExecutionLog` in PostgreSQL, keeping exact action payloads, approval state, and execution outcomes inside DWDS rather than inside Telegram or provider-side runtime state.
+- The first EH17 execution path now attaches to `/admin/follow-up`, where eligible AI triage proposals can request Telegram approval for exact reminder, final-notice, or disconnection-review advancement while the underlying bill mutation still runs through the normal DWDS follow-up rules.
+- `/api/automation/telegram` is now the protected callback seam for Telegram approval links. It validates a hashed callback token, enforces expiry, records rejected or expired outcomes, blocks replay after execution, and returns the final execution decision to DWDS server code rather than letting the transport mutate records directly.
+- The EH17 follow-up approval slice is now validated for real delivery, approved execution, rejected-request handling, and replay blocking, so EH18 cashier-assist `PAYMENT_POST` can now build on that foundation without reopening the approval-core architecture first.
 
 #### EH16.1 File Responsibilities
 - `prisma/schema.prisma`: defines the durable worker-state contract through `AutomationRun`, `AutomationProposal`, and `AutomationReview`. This keeps proposal history, dismissal state, and run metadata inside the same PostgreSQL authority already used by the rest of DWDS.
