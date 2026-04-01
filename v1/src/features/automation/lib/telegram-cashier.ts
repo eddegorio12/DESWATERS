@@ -436,7 +436,9 @@ async function getOrCreateSession(identityId: string, text: string) {
   });
 }
 
-function buildHelpText(telegramUserId?: string) {
+function buildHelpText(input?: { telegramUserId?: string; telegramChatId?: string }) {
+  const telegramUserId = input?.telegramUserId;
+  const telegramChatId = input?.telegramChatId;
   const setupSuffix = telegramUserId
     ? ` Ask an authorized DWDS cashier to link Telegram user ID ${telegramUserId} on /admin/payments first.`
     : "";
@@ -444,6 +446,8 @@ function buildHelpText(telegramUserId?: string) {
   return [
     "DWDS cashier assistant is available for linked cashier accounts only.",
     setupSuffix.trim(),
+    telegramUserId ? `Telegram user ID: ${telegramUserId}` : null,
+    telegramChatId ? `Telegram chat ID: ${telegramChatId}` : null,
     "When linked, send a message like: pay DWDS-SMP-1001 350",
     "Current EH18 scope supports cash-only onsite posting, exact bill matching or numbered clarification, explicit partial-payment confirmation, and a final cash-received confirmation before approval.",
   ]
@@ -772,13 +776,19 @@ export async function processTelegramCashierUpdate(update: TelegramMessageUpdate
     const identity = await getLinkedIdentity(message);
     return identity
       ? `DWDS cashier assistant is linked to ${identity.user.name}.\nSend a message like: pay DWDS-SMP-1001 350\nUse /cancel to stop the current cashier session.`
-      : buildHelpText(message?.from?.id ? String(message.from.id) : undefined);
+      : buildHelpText({
+          telegramUserId: message?.from?.id ? String(message.from.id) : undefined,
+          telegramChatId: message?.chat?.id ? String(message.chat.id) : undefined,
+        });
   }
 
   const identity = await getLinkedIdentity(message);
 
   if (!identity) {
-    return buildHelpText(message?.from?.id ? String(message.from.id) : undefined);
+    return buildHelpText({
+      telegramUserId: message?.from?.id ? String(message.from.id) : undefined,
+      telegramChatId: message?.chat?.id ? String(message.chat.id) : undefined,
+    });
   }
 
   const currentSession = await getOrCreateSession(identity.id, text);
