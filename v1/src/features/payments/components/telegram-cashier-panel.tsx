@@ -56,9 +56,11 @@ function formatApprovalStatus(status: AutomationApprovalStatus | null) {
 }
 
 export function TelegramCashierPanel({
+  unavailableReason,
   currentLink,
   recentSessions,
 }: {
+  unavailableReason?: string | null;
   currentLink: {
     telegramUserId: string;
     telegramChatId: string | null;
@@ -113,6 +115,12 @@ export function TelegramCashierPanel({
         description="EH18 lets an authorized cashier start a cash payment intent from Telegram, clarify one bill, confirm partial settlement explicitly, and queue a bounded PAYMENT_POST approval before DWDS records anything."
       />
 
+      {unavailableReason ? (
+        <p className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          {unavailableReason}
+        </p>
+      ) : null}
+
       <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
         <div className="space-y-4 rounded-[1.35rem] border border-border/70 bg-background/90 p-5">
           <div className="grid gap-3 sm:grid-cols-2">
@@ -145,6 +153,7 @@ export function TelegramCashierPanel({
                 defaultValue={currentLink?.telegramUserId ?? ""}
                 placeholder="Example: 123456789"
                 className={fieldClassName}
+                disabled={Boolean(unavailableReason)}
                 required
               />
             </div>
@@ -158,6 +167,7 @@ export function TelegramCashierPanel({
                 defaultValue={currentLink?.telegramChatId ?? ""}
                 placeholder="Optional until the first inbound message arrives"
                 className={fieldClassName}
+                disabled={Boolean(unavailableReason)}
               />
               <p className="mt-2 text-xs leading-6 text-muted-foreground">
                 Link your own Telegram account here once. After that, the bot can accept payment
@@ -168,7 +178,7 @@ export function TelegramCashierPanel({
             <button
               type="submit"
               className="h-11 rounded-2xl bg-primary px-5 text-sm font-medium text-primary-foreground"
-              disabled={savePending}
+              disabled={savePending || Boolean(unavailableReason)}
             >
               {savePending ? "Saving Telegram link..." : currentLink ? "Update Telegram link" : "Save Telegram link"}
             </button>
@@ -180,7 +190,7 @@ export function TelegramCashierPanel({
               <button
                 type="submit"
                 className="h-11 rounded-2xl border border-border bg-background px-5 text-sm font-medium text-foreground"
-                disabled={togglePending}
+                disabled={togglePending || Boolean(unavailableReason)}
               >
                 {togglePending
                   ? "Updating assistant status..."

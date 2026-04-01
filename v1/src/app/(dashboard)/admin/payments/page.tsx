@@ -1,4 +1,4 @@
-import { BillStatus } from "@prisma/client";
+import { BillStatus, Prisma } from "@prisma/client";
 
 import { AdminPageActions } from "@/features/admin/components/admin-page-actions";
 import { AdminPageShell } from "@/features/admin/components/admin-page-shell";
@@ -19,6 +19,120 @@ type PaymentsPageProps = {
   searchParams: Promise<Record<string, SearchParamValue>>;
 };
 
+async function loadTelegramCashierData(userId: string) {
+  try {
+    const telegramSessions = await prisma.telegramCashierSession.findMany({
+      orderBy: [{ createdAt: "desc" }],
+      take: 6,
+      select: {
+        id: true,
+        status: true,
+        stage: true,
+        lastInboundText: true,
+        lastBotReply: true,
+        createdAt: true,
+        completedAt: true,
+        staffIdentity: {
+          select: {
+            telegramUserId: true,
+            telegramUsername: true,
+            user: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        completedPayment: {
+          select: {
+            id: true,
+            receiptNumber: true,
+            amount: true,
+          },
+        },
+        approvalRequestId: true,
+      },
+    });
+
+    const [telegramLink, telegramApprovalRequests] = await Promise.all([
+      prisma.telegramStaffIdentity.findUnique({
+        where: {
+          userId,
+        },
+        select: {
+          telegramUserId: true,
+          telegramChatId: true,
+          telegramUsername: true,
+          isActive: true,
+          lastSeenAt: true,
+        },
+      }),
+      telegramSessions.some((session) => session.approvalRequestId)
+        ? prisma.automationApprovalRequest.findMany({
+            where: {
+              id: {
+                in: telegramSessions
+                  .map((session) => session.approvalRequestId)
+                  .filter((value): value is string => Boolean(value)),
+              },
+            },
+            select: {
+              id: true,
+              status: true,
+            },
+          })
+        : [],
+    ]);
+
+    const approvalStatusById = new Map(
+      telegramApprovalRequests.map((request) => [request.id, request.status])
+    );
+
+    return {
+      unavailableReason: null,
+      currentLink: telegramLink
+        ? {
+            telegramUserId: telegramLink.telegramUserId,
+            telegramChatId: telegramLink.telegramChatId,
+            telegramUsername: telegramLink.telegramUsername,
+            isActive: telegramLink.isActive,
+            lastSeenAt: telegramLink.lastSeenAt?.toLocaleString() ?? null,
+          }
+        : null,
+      recentSessions: telegramSessions.map((session) => ({
+        id: session.id,
+        status: session.status,
+        stage: session.stage,
+        lastInboundText: session.lastInboundText,
+        lastBotReply: session.lastBotReply,
+        createdAt: session.createdAt.toLocaleString(),
+        completedAt: session.completedAt?.toLocaleString() ?? null,
+        approvalStatus: session.approvalRequestId
+          ? approvalStatusById.get(session.approvalRequestId) ?? null
+          : null,
+        cashierName: session.staffIdentity.user.name,
+        telegramUserId: session.staffIdentity.telegramUserId,
+        telegramUsername: session.staffIdentity.telegramUsername,
+        payment: session.completedPayment,
+      })),
+    };
+  } catch (error) {
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      (error.code === "P2021" || error.code === "P2022")
+    ) {
+      return {
+        unavailableReason:
+          "Telegram cashier data is unavailable because the EH18 database migration has not been applied in this environment yet.",
+        currentLink: null,
+        recentSessions: [],
+      };
+    }
+
+    throw error;
+  }
+}
+
 export default async function AdminPaymentsPage({ searchParams }: PaymentsPageProps) {
   const access = await getModuleAccess("payments");
 
@@ -28,7 +142,7 @@ export default async function AdminPaymentsPage({ searchParams }: PaymentsPagePr
 
   await syncReceivableStatuses();
 
-  const [openBills, payments, telegramLink, telegramSessions] = await Promise.all([
+  const [openBills, payments, telegramData] = await Promise.all([
     prisma.bill.findMany({
       where: {
         status: {
@@ -100,70 +214,8 @@ export default async function AdminPaymentsPage({ searchParams }: PaymentsPagePr
         },
       },
     }),
-    prisma.telegramStaffIdentity.findUnique({
-      where: {
-        userId: access.user.id,
-      },
-      select: {
-        telegramUserId: true,
-        telegramChatId: true,
-        telegramUsername: true,
-        isActive: true,
-        lastSeenAt: true,
-      },
-    }),
-    prisma.telegramCashierSession.findMany({
-      orderBy: [{ createdAt: "desc" }],
-      take: 6,
-      select: {
-        id: true,
-        status: true,
-        stage: true,
-        lastInboundText: true,
-        lastBotReply: true,
-        createdAt: true,
-        completedAt: true,
-        staffIdentity: {
-          select: {
-            telegramUserId: true,
-            telegramUsername: true,
-            user: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
-        completedPayment: {
-          select: {
-            id: true,
-            receiptNumber: true,
-            amount: true,
-          },
-        },
-        approvalRequestId: true,
-      },
-    }),
+    loadTelegramCashierData(access.user.id),
   ]);
-
-  const telegramApprovalRequests = telegramSessions.some((session) => session.approvalRequestId)
-    ? await prisma.automationApprovalRequest.findMany({
-        where: {
-          id: {
-            in: telegramSessions
-              .map((session) => session.approvalRequestId)
-              .filter((value): value is string => Boolean(value)),
-          },
-        },
-        select: {
-          id: true,
-          status: true,
-        },
-      })
-    : [];
-  const approvalStatusById = new Map(
-    telegramApprovalRequests.map((request) => [request.id, request.status])
-  );
 
   const billOptions = openBills
     .map((bill) => {
@@ -261,33 +313,9 @@ export default async function AdminPaymentsPage({ searchParams }: PaymentsPagePr
         />
       </section>
       <TelegramCashierPanel
-        currentLink={
-          telegramLink
-            ? {
-                telegramUserId: telegramLink.telegramUserId,
-                telegramChatId: telegramLink.telegramChatId,
-                telegramUsername: telegramLink.telegramUsername,
-                isActive: telegramLink.isActive,
-                lastSeenAt: telegramLink.lastSeenAt?.toLocaleString() ?? null,
-              }
-            : null
-        }
-        recentSessions={telegramSessions.map((session) => ({
-          id: session.id,
-          status: session.status,
-          stage: session.stage,
-          lastInboundText: session.lastInboundText,
-          lastBotReply: session.lastBotReply,
-          createdAt: session.createdAt.toLocaleString(),
-          completedAt: session.completedAt?.toLocaleString() ?? null,
-          approvalStatus: session.approvalRequestId
-            ? approvalStatusById.get(session.approvalRequestId) ?? null
-            : null,
-          cashierName: session.staffIdentity.user.name,
-          telegramUserId: session.staffIdentity.telegramUserId,
-          telegramUsername: session.staffIdentity.telegramUsername,
-          payment: session.completedPayment,
-        }))}
+        unavailableReason={telegramData.unavailableReason}
+        currentLink={telegramData.currentLink}
+        recentSessions={telegramData.recentSessions}
       />
     </AdminPageShell>
   );
