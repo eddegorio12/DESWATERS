@@ -20,16 +20,13 @@ export function ProductShowcase({
   items: readonly ProductShowcaseItem[];
 }) {
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {items.map((item, index) => (
-        <article
-          key={item.title}
-          className="dwds-section overflow-hidden"
-        >
+        <article key={item.title} className="dwds-section overflow-hidden">
           <div className="grid gap-0 lg:grid-cols-[1.08fr_0.92fr]">
             <div
               className={cn(
-                "border-b border-border/70 bg-[linear-gradient(180deg,rgba(224,239,249,0.92),rgba(243,248,252,0.84))] p-4 lg:border-b-0",
+                "border-b border-border/70 bg-[linear-gradient(180deg,rgba(228,223,214,0.86),rgba(225,234,238,0.78))] p-3 lg:border-b-0",
                 index % 2 === 1 ? "lg:order-2 lg:border-l" : "lg:border-r"
               )}
             >
@@ -38,15 +35,15 @@ export function ProductShowcase({
                 alt={item.imageAlt}
                 width={1200}
                 height={840}
-                className="h-auto w-full rounded-[1.4rem] border border-border/60"
+                className="h-auto w-full rounded-[0.8rem] border border-border/60"
               />
             </div>
-            <div className="flex flex-col justify-between p-6 lg:p-8">
+            <div className="flex flex-col justify-between p-5 lg:p-6">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary/72">
+                <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-primary/72">
                   Product view {index + 1}
                 </p>
-                <h3 className="mt-4 font-heading text-3xl text-foreground">{item.title}</h3>
+                <h3 className="mt-3 font-heading text-[1.8rem] text-foreground">{item.title}</h3>
                 <p className="mt-4 max-w-xl text-sm leading-7 text-muted-foreground">
                   {item.description}
                 </p>

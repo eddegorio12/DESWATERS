@@ -8,19 +8,20 @@ export function SiteFooter() {
   const contactEmail = getContactEmail();
 
   return (
-    <footer className="mx-auto mt-10 w-full max-w-7xl px-5 pb-8 sm:px-8">
-      <div className="dwds-section overflow-hidden px-6 py-8 sm:px-8">
+    <footer className="mt-10 w-full px-4 pb-8 sm:px-6 lg:px-8">
+      <div className="dwds-section dwds-atlas-card overflow-hidden px-6 py-8 sm:px-8">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-xl">
-            <div className="dwds-kicker border-primary/10 bg-primary/6 text-primary/76">
+            <div className="dwds-kicker border-[rgba(20,89,129,0.18)] bg-[rgba(20,89,129,0.08)] text-primary">
               Water Utility Operations Platform
             </div>
             <div className="mt-5">
               <BrandLockup size="sm" />
             </div>
             <p className="mt-4 max-w-lg text-sm leading-7 text-muted-foreground">
-              DWDS centralizes customer records, meter operations, billing, cashiering,
-              and collections review in one controlled operating system for utility teams.
+              DWDS centralizes customer records, meter operations, billing,
+              cashiering, routes, notices, and supervision in one operating
+              system for utility teams.
             </p>
             <p className="mt-4 text-sm leading-6 text-muted-foreground">
               Public rollout requests:{" "}

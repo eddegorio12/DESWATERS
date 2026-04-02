@@ -231,8 +231,8 @@
 - EH17 should introduce the shared approval-intent and execution framework.
 - EH18 should introduce Telegram-first cashier-assist flows on top of that foundation.
 - EH19 is now validated as the real OpenClaw integration behind the existing planner boundary.
-- EH20 is now validated as the specialized-worker-lane layer on top of that validated planner boundary, and EH21 is now the active production-hardening lane on top of that baseline.
-- EH21 has now started as the production-hardening lane on top of the validated EH20 baseline, with the first slice focused on supervision and bounded retry handling rather than broader autonomous authority.
+- EH20 is now validated as the specialized-worker-lane layer on top of that validated planner boundary, and EH21 is now the validated production-hardening lane on top of that baseline.
+- EH21 has now been tested and validated as the production-hardening lane on top of the validated EH20 baseline, with the first slice focused on supervision and bounded retry handling rather than broader autonomous authority.
 - Telegram should remain a transport plus callback surface only. It must not become the system of record for the action or the final audit trail.
 - Payment posting, receipt issuance, and audit logging must remain DWDS responsibilities even if OpenClaw coordinates the cashier conversation.
 - The validated EH19 seam now keeps OpenClaw behind `src/features/automation/lib/openclaw-gateway.ts` and `src/features/automation/lib/openclaw-adapter.ts`, where bearer-authenticated gateway calls hit the `responses` endpoint, return bounded structured output, and are validated by DWDS before any worker or Telegram flow can use them.

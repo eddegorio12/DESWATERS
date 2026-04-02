@@ -7,12 +7,12 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Lexend", "Aptos", "Segoe UI Variable", "Segoe UI", ui-sans-serif,
-    system-ui, sans-serif;
+  --font-sans: var(--font-public-sans), "Aptos", "Segoe UI Variable", "Segoe UI",
+    ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, "Liberation Mono",
     monospace;
-  --font-heading: "Sora", "Lexend", "Aptos Display", "Segoe UI Variable",
-    ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-newsreader), "Iowan Old Style", "Times New Roman",
+    ui-serif, serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -52,43 +52,50 @@
 }
 
 :root {
-  --background: oklch(0.978 0.006 205);
-  --foreground: oklch(0.258 0.042 245);
-  --card: oklch(0.996 0.002 180);
-  --card-foreground: oklch(0.258 0.042 245);
-  --popover: oklch(0.996 0.002 180);
-  --popover-foreground: oklch(0.258 0.042 245);
-  --primary: oklch(0.385 0.075 235);
-  --primary-foreground: oklch(0.988 0.003 200);
-  --secondary: oklch(0.944 0.014 210);
-  --secondary-foreground: oklch(0.258 0.042 245);
-  --muted: oklch(0.955 0.01 210);
-  --muted-foreground: oklch(0.47 0.028 235);
-  --accent: oklch(0.9 0.06 190);
-  --accent-foreground: oklch(0.258 0.042 245);
+  --background: oklch(0.972 0.012 210);
+  --foreground: oklch(0.245 0.033 244);
+  --card: oklch(0.985 0.008 208);
+  --card-foreground: oklch(0.245 0.033 244);
+  --popover: oklch(0.985 0.008 208);
+  --popover-foreground: oklch(0.245 0.033 244);
+  --primary: oklch(0.355 0.082 233);
+  --primary-foreground: oklch(0.987 0.005 202);
+  --secondary: oklch(0.936 0.015 204);
+  --secondary-foreground: oklch(0.245 0.033 244);
+  --muted: oklch(0.947 0.012 204);
+  --muted-foreground: oklch(0.48 0.03 240);
+  --accent: oklch(0.79 0.1 178);
+  --accent-foreground: oklch(0.24 0.03 235);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.882 0.014 220);
-  --input: oklch(0.882 0.014 220);
-  --ring: oklch(0.56 0.12 225);
-  --chart-1: oklch(0.69 0.13 210);
-  --chart-2: oklch(0.75 0.13 180);
-  --chart-3: oklch(0.73 0.14 80);
-  --chart-4: oklch(0.63 0.16 35);
-  --chart-5: oklch(0.58 0.11 275);
-  --radius: 0.9rem;
-  --sidebar: oklch(0.23 0.036 247);
-  --sidebar-foreground: oklch(0.975 0.005 200);
-  --sidebar-primary: oklch(0.75 0.14 184);
-  --sidebar-primary-foreground: oklch(0.19 0.03 245);
-  --sidebar-accent: oklch(0.29 0.03 242);
-  --sidebar-accent-foreground: oklch(0.975 0.005 200);
-  --sidebar-border: oklch(0.34 0.02 238);
-  --sidebar-ring: oklch(0.7 0.12 190);
-  --dwds-hero: linear-gradient(140deg, #12263f 0%, #143a5c 50%, #0f8c87 100%);
+  --border: oklch(0.86 0.02 214);
+  --input: oklch(0.86 0.02 214);
+  --ring: oklch(0.55 0.092 237);
+  --chart-1: oklch(0.63 0.1 235);
+  --chart-2: oklch(0.76 0.09 170);
+  --chart-3: oklch(0.79 0.11 80);
+  --chart-4: oklch(0.66 0.14 38);
+  --chart-5: oklch(0.56 0.09 285);
+  --radius: 0.6rem;
+  --sidebar: oklch(0.23 0.028 239);
+  --sidebar-foreground: oklch(0.976 0.006 88);
+  --sidebar-primary: oklch(0.79 0.086 75);
+  --sidebar-primary-foreground: oklch(0.22 0.024 235);
+  --sidebar-accent: oklch(0.29 0.025 238);
+  --sidebar-accent-foreground: oklch(0.976 0.006 88);
+  --sidebar-border: oklch(0.34 0.018 238);
+  --sidebar-ring: oklch(0.74 0.08 75);
+  --dwds-hero: linear-gradient(145deg, #15314d 0%, #1d4f72 100%);
   --dwds-glow:
-    radial-gradient(circle at top left, rgba(47, 128, 237, 0.18), transparent 34%),
-    radial-gradient(circle at 85% 10%, rgba(20, 184, 166, 0.18), transparent 30%),
-    radial-gradient(circle at 50% 100%, rgba(245, 158, 11, 0.12), transparent 28%);
+    radial-gradient(circle at top left, rgba(32, 108, 141, 0.1), transparent 32%),
+    radial-gradient(circle at 84% 10%, rgba(44, 155, 146, 0.08), transparent 38%);
+  --dwds-paper: linear-gradient(
+    180deg,
+    rgba(241, 247, 249, 0.96),
+    rgba(232, 240, 243, 0.98)
+  );
+  --dwds-grid: rgba(45, 88, 112, 0.08);
+  --dwds-brass: oklch(0.72 0.085 75);
+  --dwds-river: linear-gradient(180deg, rgba(20, 89, 129, 0.05), transparent 58%);
 }
 
 .dark {
@@ -134,9 +141,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-image:
-      var(--dwds-glow),
-      linear-gradient(180deg, rgba(247, 250, 255, 0.98), rgba(239, 245, 251, 0.98));
+    background-image: var(--dwds-glow), var(--dwds-paper);
     background-attachment: fixed;
     text-rendering: optimizeLegibility;
   }
@@ -175,9 +180,9 @@
     inset: 0;
     z-index: -2;
     background:
-      linear-gradient(rgba(20, 38, 63, 0.045) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(20, 38, 63, 0.045) 1px, transparent 1px);
-    background-size: 84px 84px;
+      linear-gradient(var(--dwds-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--dwds-grid) 1px, transparent 1px);
+    background-size: 144px 144px;
     mask-image: linear-gradient(180deg, white, rgba(255, 255, 255, 0.12));
     pointer-events: none;
   }
@@ -192,28 +197,40 @@
   }
 
   .dwds-panel {
-    @apply rounded-[1.75rem] border border-white/70 bg-white/78 shadow-[0_22px_80px_-52px_rgba(15,35,62,0.38)] backdrop-blur;
+    @apply border bg-white/72 shadow-[0_18px_36px_-32px_rgba(15,39,64,0.16)] backdrop-blur-sm;
+    border-radius: 1.1rem;
+    border-color: color-mix(in oklab, var(--border) 82%, white);
   }
 
   .dwds-region {
-    @apply rounded-[2rem] border border-border/75 bg-white/62 backdrop-blur;
+    @apply border bg-white/76 backdrop-blur-sm;
+    border-radius: 1.25rem;
+    border-color: color-mix(in oklab, var(--border) 82%, white);
   }
 
   .dwds-region-soft {
-    @apply rounded-[1.5rem] border border-border/60 bg-white/44 backdrop-blur;
+    @apply border bg-white/62 backdrop-blur-sm;
+    border-radius: 0.95rem;
+    border-color: color-mix(in oklab, var(--border) 76%, white);
   }
 
   .dwds-panel-dark {
     background: var(--dwds-hero);
-    @apply rounded-[1.9rem] border border-white/10 text-white shadow-[0_40px_120px_-60px_rgba(15,35,62,0.85)];
+    @apply border text-white shadow-[0_34px_80px_-56px_rgba(24,43,70,0.48)];
+    border-radius: 1.25rem;
+    border-color: rgba(255, 255, 255, 0.12);
   }
 
   .dwds-section {
-    @apply rounded-[1.6rem] border border-border/75 bg-white/58 backdrop-blur;
+    @apply border bg-white/74 backdrop-blur-sm;
+    border-radius: 1rem;
+    border-color: color-mix(in oklab, var(--border) 82%, white);
   }
 
   .dwds-subtle-block {
-    @apply rounded-[1.35rem] border border-border/65 bg-white/72;
+    @apply border bg-secondary/55;
+    border-radius: 0.9rem;
+    border-color: color-mix(in oklab, var(--border) 72%, white);
   }
 
   .dwds-divider {
@@ -225,7 +242,46 @@
   }
 
   .dwds-kicker {
-    @apply inline-flex items-center rounded-full border px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.24em];
+    @apply inline-flex items-center border px-3 py-1 text-[0.68rem] font-semibold uppercase tracking-[0.28em];
+    border-radius: 999px;
+  }
+
+  .dwds-rule-accent {
+    background:
+      linear-gradient(
+        90deg,
+        transparent,
+        color-mix(in oklab, var(--dwds-brass) 72%, white),
+        transparent
+      );
+    height: 1px;
+  }
+
+  .dwds-atlas-card {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dwds-atlas-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.22), transparent 28%);
+  }
+
+  .dwds-map-lines {
+    position: relative;
+  }
+
+  .dwds-map-lines::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(112deg, transparent 0 12%, rgba(255,255,255,0.08) 12.5% 13%, transparent 13.5% 100%),
+      linear-gradient(18deg, transparent 0 58%, rgba(255,255,255,0.08) 58.5% 59%, transparent 59.5% 100%);
   }
 }
 

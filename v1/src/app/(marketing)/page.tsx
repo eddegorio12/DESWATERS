@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -22,18 +21,18 @@ import { cn } from "@/lib/utils";
 export const metadata: Metadata = createMarketingMetadata({
   title: "Water Utility Operations Platform",
   description:
-    "DWDS gives utility operators one staff-facing control surface for reading approval, billing governance, collections, and overdue follow-up.",
+    "DWDS gives utility operators one staff-facing control surface for records, readings, billing, cashiering, routes, notices, exceptions, assistant support, and automation supervision.",
   pathname: "/",
 });
 
 const heroHighlights = [
   "Staff-facing utility workspace with protected internal access",
-  "Printable billing, receipt, and notice outputs tied to live records",
-  "Role-aware workflow controls across readings, billing, cashiering, and follow-up",
+  "Printable billing, receipt, notice, and recovery outputs tied to live records",
+  "Role-aware workflow controls across readings, billing, cashiering, follow-up, routes, and exceptions",
 ] as const;
 
 const trustStats = [
-  { value: "6", label: "Core modules", sublabel: "End-to-end operations" },
+  { value: "12+", label: "Live workspaces", sublabel: "Staff operations coverage" },
   { value: "5", label: "Staff roles", sublabel: "Role-based access" },
   { value: "100%", label: "Auditable", sublabel: "Every action tracked" },
   { value: "1", label: "Control surface", sublabel: "Unified workspace" },
@@ -58,7 +57,12 @@ const readinessSignals = [
   {
     title: "Operator-ready outputs",
     description:
-      "Printable consumer bills, official receipts, and follow-up notices live in the same operational system.",
+      "Printable consumer bills, official receipts, follow-up notices, and recovery exports live in the same operational system.",
+  },
+  {
+    title: "Supervised automation",
+    description:
+      "Assistant retrieval, worker proposals, Telegram approvals, and automation supervision are already part of the protected product surface.",
   },
 ] as const;
 
@@ -67,38 +71,35 @@ const workflowProofSections = [
     eyebrow: "Workflow Proof 01",
     title: "From approved readings to printable bills in one governed chain.",
     description:
-      "DWDS keeps the meter-to-bill path staff-facing and traceable. Customer records, meter assignments, reading approval, tariff-backed billing, and print-ready statements stay connected.",
-    imageSrc: "/marketing/billing-preview.svg",
-    imageAlt:
-      "DWDS billing workspace preview showing bill summary cards and line-item sections.",
+      "Real DWDS billing sample: the meter-to-bill path stays staff-facing and traceable. Customer records, meter assignments, reading approval, tariff-backed billing, cycle controls, and print-ready statements stay connected.",
+    route: "/admin/billing",
+    sample: "Billing workspace",
     bullets: [
       "Meter assignments and active account holders stay tied to the billing record path.",
       "Only approved readings advance into billing before charges are issued.",
-      "Printable statements remain linked to the reading and tariff context behind the bill.",
+      "Billing cycles, print batches, and reprint governance remain linked to the underlying tariff and reading context.",
     ],
   },
   {
     eyebrow: "Workflow Proof 02",
-    title: "Billing, cashiering, and collections on one surface.",
+    title: "Dashboard, cashiering, and operational supervision on one surface.",
     description:
-      "Queue pressure, module access, collections visibility, and audit context stay visible in one internal workspace instead of being reconstructed from separate reports.",
-    imageSrc: "/marketing/dashboard-preview.svg",
-    imageAlt:
-      "DWDS operations dashboard preview showing KPI counters and workflow panels.",
+      "Real DWDS dashboard sample: queue pressure, module access, collections visibility, assistant availability, and audit context stay visible in one internal workspace instead of being reconstructed from separate reports.",
+    route: "/admin/dashboard",
+    sample: "Operations dashboard",
     bullets: [
       "Managers and staff read one workspace instead of separate status views.",
-      "Cash movement, open work, and module routing stay visible at a glance.",
+      "Cash movement, open work, readiness posture, and module routing stay visible at a glance.",
       "The product stays positioned as an internal operations platform, not a public portal.",
     ],
   },
   {
     eyebrow: "Workflow Proof 03",
-    title: "Overdue pressure, notices, and route-aware operations.",
+    title: "Overdue pressure, notices, routes, and follow-up action in one queue.",
     description:
-      "Receivables follow-up, printable notices, route ownership, and service-status actions remain part of the operating model so teams manage collection pressure with clear next steps.",
-    imageSrc: "/marketing/follow-up-preview.svg",
-    imageAlt:
-      "DWDS follow-up workspace preview showing overdue stages and notification activity.",
+      "Real DWDS follow-up sample: receivables follow-up, printable notices, route ownership, and service-status actions remain part of the operating model so teams manage collection pressure with clear next steps.",
+    route: "/admin/follow-up",
+    sample: "Follow-up workspace",
     bullets: [
       "Reminder, final-notice, disconnection-review, and reinstatement stay explicit workflow states.",
       "Notice generation tied to live records reduces template drift and manual rework.",
@@ -135,117 +136,129 @@ const coreModules = [
   },
   {
     icon: Activity,
-    title: "Collections & Follow-Up",
-    description: "Overdue visibility, route operations, and audit trails.",
+    title: "Follow-Up, Routes, and Exceptions",
+    description: "Overdue visibility, route operations, notices, anomaly review, and audit trails.",
   },
 ] as const;
 
 export default function HomePage() {
   return (
-    <div className="space-y-8 pb-24 pt-2">
+    <div className="space-y-6 pb-16 pt-1">
       <section className="dwds-region relative overflow-hidden">
-        <div className="absolute inset-x-0 top-0 h-24 border-b border-border/60 bg-[linear-gradient(180deg,rgba(255,255,255,0.28),transparent)]" />
-        <div className="grid min-h-[calc(100dvh-8.5rem)] gap-0 lg:grid-cols-[0.94fr_1.06fr]">
-          <div className="flex flex-col justify-between border-b border-border/70 px-6 py-8 sm:px-8 sm:py-10 lg:border-b-0 lg:border-r lg:px-10 lg:py-12">
-            <div className="max-w-2xl">
-              <ScrollAnimate>
-                <p className="dwds-kicker border-primary/10 bg-primary/6 text-primary/80">
-                  Water Utility Operations
-                </p>
-              </ScrollAnimate>
-              <ScrollAnimate delay={80}>
-                <h1 className="mt-6 font-heading text-[clamp(3.2rem,7vw,6.8rem)] leading-[0.9] tracking-[-0.06em] text-foreground">
-                  Run the utility operating day from reading approval to collections closeout.
-                </h1>
-              </ScrollAnimate>
-              <ScrollAnimate delay={160}>
-                <p className="mt-6 max-w-xl text-base leading-8 text-muted-foreground sm:text-lg">
-                  DWDS is a staff-facing control surface for customer records,
-                  meter operations, billing governance, cashier posting,
-                  receivables follow-up, and deployment-ready reporting.
-                </p>
-              </ScrollAnimate>
-            </div>
-
-            <div className="mt-10 space-y-8">
-              <ScrollAnimate delay={240}>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Link
-                    href="/platform"
-                    className={cn(
-                      buttonVariants({
-                        className:
-                          "h-11 rounded-full bg-[linear-gradient(135deg,#163154,#15527a_56%,#10938d)] px-6 text-white shadow-[0_24px_50px_-30px_rgba(15,35,62,0.8)] hover:brightness-105",
-                      })
-                    )}
-                  >
-                    View platform
-                  </Link>
-                  <Link
-                    href="/contact"
-                    className={cn(
-                      buttonVariants({
-                        variant: "outline",
-                        className:
-                          "h-11 rounded-full border-primary/12 bg-white/50 px-6 hover:bg-white",
-                      })
-                    )}
-                  >
-                    Plan rollout
-                  </Link>
-                </div>
-              </ScrollAnimate>
-
-              <div className="dwds-divider grid gap-0 border-border/70 pt-6 sm:grid-cols-3">
-                {heroHighlights.map((item, index) => (
-                  <ScrollAnimate
-                    key={item}
-                    delay={300 + index * 80}
-                    className={cn(
-                      "py-4 sm:py-0",
-                      index > 0 && "border-t border-border/70 sm:border-l sm:border-t-0"
-                    )}
-                  >
-                    <div className="flex h-full gap-3 px-0 sm:px-5">
-                      <BadgeCheck className="mt-1 size-4 shrink-0 text-primary" />
-                      <p className="text-sm leading-6 text-muted-foreground">
-                        {item}
-                      </p>
-                    </div>
-                  </ScrollAnimate>
-                ))}
+        <div className="absolute inset-x-0 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(177,135,64,0.5),transparent)]" />
+        <div className="grid gap-0 xl:grid-cols-[0.42fr_1.58fr]">
+          <div className="border-b border-border/70 px-5 py-6 sm:px-7 sm:py-7 xl:border-b-0 xl:border-r xl:px-8 xl:py-8">
+            <ScrollAnimate>
+              <p className="dwds-kicker border-primary/10 bg-primary/6 text-primary">
+                Water Utility Operations
+              </p>
+            </ScrollAnimate>
+            <ScrollAnimate delay={80}>
+              <p className="mt-5 max-w-md text-[0.7rem] font-semibold uppercase tracking-[0.24em] text-primary/72">
+                Internal platform for operators, cashiers, billing staff, and managers
+              </p>
+            </ScrollAnimate>
+            <ScrollAnimate delay={120}>
+              <div className="mt-5 space-y-2 text-sm leading-6 text-muted-foreground">
+                <p>Real DWDS control surfaces</p>
+                <p>Utility records mapped into one operating flow</p>
+                <p>Rollout-ready with governed outputs and supervision</p>
               </div>
-            </div>
+            </ScrollAnimate>
           </div>
 
-          <div className="grid min-h-full grid-rows-[minmax(0,1fr)_auto]">
-            <ScrollAnimate
-              delay={180}
-              direction="scale"
-              className="border-b border-border/70 p-4 sm:p-6"
-            >
-              <div className="flex h-full min-h-[22rem] items-center justify-center rounded-[1.6rem] border border-border/60 bg-[linear-gradient(160deg,rgba(214,230,242,0.92),rgba(247,250,253,0.78))] p-3 sm:p-4">
-                <Image
-                  src="/marketing/dashboard-preview.svg"
-                  alt="DWDS dashboard preview"
-                  width={1200}
-                  height={840}
-                  priority
-                  className="h-full w-full rounded-[1.2rem] border border-border/65 object-cover object-top shadow-[0_24px_60px_-42px_rgba(15,35,62,0.45)]"
-                />
+          <div className="grid gap-0 lg:grid-cols-[0.92fr_1.08fr]">
+            <div className="border-b border-border/70 px-5 py-6 sm:px-7 sm:py-7 lg:border-b-0 lg:border-r lg:px-8 lg:py-8">
+            <ScrollAnimate delay={140}>
+              <h1 className="max-w-4xl font-heading text-[clamp(2.85rem,4.8vw,5rem)] leading-[0.9] tracking-[-0.055em] text-foreground">
+                Run the service day like civic infrastructure, not spreadsheet improvisation.
+              </h1>
+            </ScrollAnimate>
+            <ScrollAnimate delay={220}>
+              <p className="mt-5 max-w-3xl text-sm leading-7 text-muted-foreground sm:text-base">
+                DWDS is a staff-facing control surface for customer records,
+                meter operations, reading approval, billing governance,
+                cashier posting, follow-up, route planning, exceptions review,
+                and operational reporting.
+              </p>
+            </ScrollAnimate>
+
+            <ScrollAnimate delay={280}>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/platform"
+                  className={cn(
+                    buttonVariants({
+                      className:
+                        "h-11 rounded-full bg-primary px-6 text-white shadow-[0_14px_28px_-20px_rgba(20,89,129,0.38)] hover:bg-primary/92",
+                    })
+                  )}
+                >
+                  View platform
+                </Link>
+                <Link
+                  href="/contact"
+                  className={cn(
+                    buttonVariants({
+                      variant: "outline",
+                      className:
+                        "h-11 rounded-full border-[rgba(177,135,64,0.24)] bg-white/46 px-6 hover:bg-white",
+                    })
+                  )}
+                >
+                  Plan rollout
+                </Link>
               </div>
             </ScrollAnimate>
 
-            <div className="grid gap-0 md:grid-cols-[0.92fr_1.08fr]">
-              <div className="border-b border-border/70 px-6 py-6 sm:px-8 md:border-b-0 md:border-r">
-                <ScrollAnimate delay={260}>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/74">
+            <div className="mt-8 grid gap-0 border-t border-border/70 pt-4">
+              {heroHighlights.map((item, index) => (
+                <ScrollAnimate
+                  key={item}
+                  delay={340 + index * 70}
+                  className={cn(index > 0 && "border-t border-border/70")}
+                >
+                  <div className="grid gap-3 py-3 sm:grid-cols-[1.25rem_1fr]">
+                    <BadgeCheck className="mt-1 size-4 text-[color:rgba(139,106,52,0.9)]" />
+                    <p className="text-sm leading-6 text-muted-foreground">{item}</p>
+                  </div>
+                </ScrollAnimate>
+              ))}
+            </div>
+          </div>
+
+          <div className="relative px-4 py-4 sm:px-5 sm:py-5 lg:px-6 lg:py-6">
+            <ScrollAnimate delay={180} direction="scale">
+              <div className="dwds-section overflow-hidden rounded-[1.05rem] shadow-[0_18px_36px_-28px_rgba(20,89,129,0.16)]">
+                <div className="grid gap-0 divide-y divide-border/65">
+                  {[
+                    ["Live surfaces", "Dashboard, billing, follow-up, routes, exceptions"],
+                    ["Governed outputs", "Bills, receipts, notices, exports, approvals"],
+                    ["Supervision", "Assistant retrieval, worker lanes, automation oversight"],
+                  ].map(([label, value]) => (
+                    <div key={label} className="px-5 py-4">
+                      <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-primary/72">
+                        {label}
+                      </p>
+                      <p className="mt-2 max-w-md text-sm leading-6 text-foreground">
+                        {value}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </ScrollAnimate>
+
+            <div className="mt-3 grid gap-3 lg:grid-cols-[0.88fr_1.12fr]">
+              <ScrollAnimate delay={280}>
+                <div className="dwds-subtle-block h-full px-4 py-4">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-primary/72">
                     System posture
                   </p>
-                  <div className="mt-5 grid grid-cols-2 gap-x-5 gap-y-6">
+                  <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-5">
                     {trustStats.map((stat) => (
                       <div key={stat.label}>
-                        <p className="font-heading text-4xl tracking-[-0.05em] text-primary">
+                        <p className="font-heading text-[2rem] leading-none tracking-[-0.05em] text-primary">
                           {stat.value}
                         </p>
                         <p className="mt-2 text-sm font-semibold text-foreground">
@@ -257,19 +270,17 @@ export default function HomePage() {
                       </div>
                     ))}
                   </div>
-                </ScrollAnimate>
-              </div>
+                </div>
+              </ScrollAnimate>
 
-              <div className="px-6 py-6 sm:px-8">
-                <ScrollAnimate delay={320}>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/74">
+              <ScrollAnimate delay={340}>
+                <div className="dwds-subtle-block h-full px-4 py-4">
+                  <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-primary/72">
                     Deployment readiness
                   </p>
-                </ScrollAnimate>
-                <div className="mt-4 divide-y divide-border/70">
-                  {readinessSignals.map((item, index) => (
-                    <ScrollAnimate key={item.title} delay={360 + index * 70}>
-                      <div className="grid gap-2 py-4 md:grid-cols-[0.34fr_1fr] md:gap-6">
+                  <div className="mt-4 divide-y divide-border/60">
+                    {readinessSignals.slice(0, 4).map((item) => (
+                      <div key={item.title} className="grid gap-2 py-2.5 md:grid-cols-[0.42fr_1fr] md:gap-4">
                         <p className="text-sm font-semibold text-foreground">
                           {item.title}
                         </p>
@@ -277,117 +288,102 @@ export default function HomePage() {
                           {item.description}
                         </p>
                       </div>
-                    </ScrollAnimate>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </ScrollAnimate>
             </div>
           </div>
         </div>
-      </section>
-
-      <section className="space-y-8 pt-6">
-        <SectionHeading
-          eyebrow="Operational Proof"
-          title="Large workflow regions instead of a dense feature catalog."
-          description="Each slab below maps to an implemented DWDS surface and uses broad compositional zones, internal rules, and image-to-copy balance instead of stacked cards."
-        />
-
-        <div className="space-y-6">
-          {workflowProofSections.map((section, index) => (
-            <ScrollAnimate key={section.title} delay={80 + index * 40}>
-              <article className="dwds-region overflow-hidden">
-                <div className="grid min-h-[34rem] gap-0 lg:grid-cols-[1.04fr_0.96fr]">
-                  <div
-                    className={cn(
-                      "flex flex-col justify-between border-b border-border/70 px-6 py-8 sm:px-8 lg:border-b-0 lg:px-10 lg:py-10",
-                      index % 2 === 0 ? "lg:border-r" : "lg:order-2 lg:border-l"
-                    )}
-                  >
-                    <div className="max-w-xl">
-                      <p className="text-sm font-semibold uppercase tracking-[0.22em] text-primary/72">
-                        {section.eyebrow}
-                      </p>
-                      <h2 className="mt-5 font-heading text-3xl leading-tight tracking-[-0.03em] text-foreground sm:text-[2.7rem]">
-                        {section.title}
-                      </h2>
-                      <p className="mt-5 text-sm leading-7 text-muted-foreground sm:text-base">
-                        {section.description}
-                      </p>
-                    </div>
-
-                    <div className="mt-8 grid gap-0 border-t border-border/70 pt-5">
-                      {section.bullets.map((item, bulletIndex) => (
-                        <ScrollAnimate
-                          key={item}
-                          delay={220 + bulletIndex * 60}
-                          className={cn(
-                            "py-4",
-                            bulletIndex > 0 && "border-t border-border/70"
-                          )}
-                        >
-                          <div className="flex items-start gap-3">
-                            <CheckCircle2 className="mt-1 size-4 shrink-0 text-primary" />
-                            <p className="text-sm leading-6 text-muted-foreground">
-                              {item}
-                            </p>
-                          </div>
-                        </ScrollAnimate>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div
-                    className={cn(
-                      "flex items-center bg-[linear-gradient(180deg,rgba(224,239,249,0.88),rgba(245,249,252,0.82))] p-4 sm:p-6",
-                      index % 2 === 0 ? "" : "lg:order-1"
-                    )}
-                  >
-                    <Image
-                      src={section.imageSrc}
-                      alt={section.imageAlt}
-                      width={1200}
-                      height={840}
-                      className="h-auto w-full rounded-[1.35rem] border border-border/60 object-cover shadow-[0_30px_70px_-48px_rgba(15,35,62,0.45)]"
-                    />
-                  </div>
-                </div>
-              </article>
-            </ScrollAnimate>
-          ))}
         </div>
       </section>
 
       <section className="dwds-region overflow-hidden">
-        <div className="grid gap-0 lg:grid-cols-[0.72fr_1.28fr]">
-          <div className="border-b border-border/70 px-6 py-8 sm:px-8 lg:border-b-0 lg:border-r lg:px-10 lg:py-10">
+        <div className="grid gap-0 lg:grid-cols-[0.52fr_1.48fr]">
+          <div className="border-b border-border/70 px-5 py-5 sm:px-7 lg:border-b-0 lg:border-r lg:px-8">
             <SectionHeading
-              eyebrow="Core Modules"
-              title="Six connected modules, arranged as one operating matrix."
-              description="The platform uses shared data and governed handoffs. This section stays deliberately open and structured so the full viewport reads as a system map, not a wall of cards."
+              eyebrow="Operational Proof"
+              title="A public surface built around proof, governance, and operating flow."
+              description="The marketing layer now reads like a utility operating manual with editorial hierarchy, stronger evidence, and less template repetition."
+            />
+          </div>
+          <div className="grid gap-0 divide-y divide-border/70">
+            {workflowProofSections.map((section, index) => (
+              <ScrollAnimate key={section.title} delay={100 + index * 40}>
+                <article className="grid gap-0 xl:grid-cols-[0.28fr_0.72fr]">
+                  <div className="border-b border-border/70 px-5 py-5 sm:px-7 xl:border-b-0 xl:border-r xl:px-6">
+                    <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-primary/72">
+                      {section.eyebrow}
+                    </p>
+                    <p className="mt-3 text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/70">
+                      {section.sample} · {section.route}
+                    </p>
+                    <div className="mt-4 space-y-3">
+                      {section.bullets.map((item) => (
+                        <div key={item} className="flex items-start gap-3">
+                          <CheckCircle2 className="mt-1 size-4 shrink-0 text-[color:rgba(139,106,52,0.9)]" />
+                          <p className="text-sm leading-6 text-muted-foreground">
+                            {item}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid gap-0 lg:grid-cols-[1.04fr_0.96fr]">
+                    <div className="border-b border-border/70 px-5 py-5 sm:px-7 lg:border-b-0 lg:border-r lg:px-8">
+                      <h2 className="max-w-3xl font-heading text-[2rem] leading-[1.02] tracking-[-0.04em] text-foreground sm:text-[2.35rem]">
+                        {section.title}
+                      </h2>
+                      <p className="mt-4 max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
+                        {section.description}
+                      </p>
+                    </div>
+                    <div className="bg-secondary/34 p-4 sm:p-5">
+                      <div className="dwds-section h-full rounded-[1rem] bg-white/74 px-5 py-5">
+                        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.22em] text-primary/72">
+                          Real Sample Notes
+                        </p>
+                        <div className="mt-4 space-y-3 text-sm leading-6 text-muted-foreground">
+                          <p>Named protected route: {section.route}</p>
+                          <p>Public section references the actual DWDS workspace already implemented in your app.</p>
+                          <p>The redesign now relies on route-backed proof instead of screenshot-driven marketing panels.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              </ScrollAnimate>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="dwds-region overflow-hidden">
+        <div className="grid gap-0 xl:grid-cols-[0.64fr_1.36fr]">
+          <div className="border-b border-border/70 px-5 py-5 sm:px-7 xl:border-b-0 xl:border-r xl:px-8">
+            <SectionHeading
+              eyebrow="Connected Modules"
+              title="One operating matrix, six modules, shared record authority."
+              description="This reads as a system map rather than a feature-card gallery. Each module stays distinct but participates in one auditable service cycle."
             />
           </div>
 
-          <div className="grid grid-cols-1 divide-y divide-border/70 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+          <div className="grid gap-0 divide-y divide-border/70">
             {coreModules.map((module, index) => (
               <ScrollAnimate
                 key={module.title}
-                delay={index * 70}
-                className={cn(
-                  "px-6 py-8 sm:px-8",
-                  index >= 2 && "sm:border-t sm:border-border/70"
-                )}
+                delay={index * 60}
+                className="px-5 py-4 sm:px-7 lg:px-8"
               >
-                <div className="max-w-sm">
-                  <div className="inline-flex items-center gap-3">
-                    <div className="inline-flex size-11 items-center justify-center rounded-full border border-primary/12 bg-primary/6">
-                      <module.icon className="size-5 text-primary" />
-                    </div>
-                    <h3 className="font-heading text-xl text-foreground">
-                      {module.title}
-                    </h3>
+                <div className="grid items-start gap-4 md:grid-cols-[3rem_0.8fr_1.2fr]">
+                  <div className="inline-flex size-10 items-center justify-center rounded-[0.85rem] border border-[rgba(177,135,64,0.22)] bg-[rgba(177,135,64,0.12)]">
+                    <module.icon className="size-4.5 text-primary" />
                   </div>
-                  <p className="mt-4 text-sm leading-7 text-muted-foreground">
+                  <h3 className="font-heading text-[1.55rem] leading-none tracking-[-0.03em] text-foreground">
+                    {module.title}
+                  </h3>
+                  <p className="max-w-xl text-sm leading-7 text-muted-foreground sm:text-base">
                     {module.description}
                   </p>
                 </div>
@@ -398,24 +394,25 @@ export default function HomePage() {
       </section>
 
       <ScrollAnimate direction="up">
-        <section className="dwds-panel-dark relative overflow-hidden rounded-[2.2rem]">
+        <section className="dwds-panel-dark relative overflow-hidden">
           <div className="animate-shimmer pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent)]" />
-          <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="border-b border-white/12 px-6 py-8 sm:px-8 lg:border-b-0 lg:border-r lg:px-10 lg:py-10">
-              <p className="text-sm font-semibold uppercase tracking-[0.24em] text-primary-foreground/72">
+          <div className="grid gap-0 lg:grid-cols-[1.04fr_0.96fr]">
+            <div className="border-b border-white/12 px-5 py-6 sm:px-7 lg:border-b-0 lg:border-r lg:px-8 lg:py-8">
+              <p className="text-[0.68rem] font-semibold uppercase tracking-[0.24em] text-primary-foreground/72">
                 Staff-Facing By Design
               </p>
-              <h2 className="mt-5 max-w-2xl font-heading text-4xl leading-tight tracking-[-0.03em] text-white sm:text-[3rem]">
-                Evaluate DWDS as the operating layer for internal utility work,
-                then plan rollout around that core.
+              <h2 className="mt-4 max-w-3xl font-heading text-[2.2rem] leading-[0.98] tracking-[-0.035em] text-white sm:text-[2.75rem]">
+                Evaluate DWDS as the operating layer for internal utility work, then plan rollout from that core.
               </h2>
             </div>
 
-            <div className="flex flex-col justify-between px-6 py-8 sm:px-8 lg:px-10 lg:py-10">
-              <p className="max-w-xl text-sm leading-7 text-primary-foreground/78 sm:text-base">
-                DWDS is a deployment-ready internal utility platform for
-                operators and administrators. Future consumer channels remain
-                separate from the current product promise.
+            <div className="flex flex-col justify-between px-5 py-6 sm:px-7 lg:px-8 lg:py-8">
+              <p className="max-w-xl text-sm leading-7 text-primary-foreground/80 sm:text-base">
+                DWDS is a deployment-ready internal utility platform with live
+                coverage across billing, cashiering, routes, notices,
+                exceptions, assistant retrieval, and automation supervision.
+                Consumer channels remain a future expansion path rather than a
+                blurred promise on the current product surface.
               </p>
 
               <div className="mt-8 flex flex-col gap-4 border-t border-white/12 pt-6 sm:flex-row sm:items-center sm:justify-between">
@@ -425,7 +422,7 @@ export default function HomePage() {
                     className={cn(
                       buttonVariants({
                         className:
-                          "h-11 rounded-full bg-white px-6 text-primary hover:bg-white/90",
+                          "h-11 rounded-full bg-white px-6 text-primary hover:bg-white/92",
                       })
                     )}
                   >
@@ -445,9 +442,10 @@ export default function HomePage() {
                   </Link>
                 </div>
 
-                <p className="max-w-xs text-sm leading-6 text-primary-foreground/70">
-                  Public proof stays aligned to the live module set and rollout
-                  readiness already implemented in DWDS.
+                <p className="max-w-xs text-sm leading-6 text-primary-foreground/68">
+                  Public proof now stays tied to named DWDS workspaces including
+                  dashboard, billing, follow-up, routes, exceptions, assistant,
+                  automation, and system readiness.
                 </p>
               </div>
             </div>
@@ -460,7 +458,8 @@ export default function HomePage() {
           <div className="flex flex-col gap-4 border-t border-border/70 pt-5 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
             <p>
               Internal sign-in remains available for staffed environments. The
-              homepage prioritizes product proof and rollout readiness.
+              public entry surface now prioritizes product proof and rollout
+              clarity.
             </p>
             <Link
               href="/sign-in"

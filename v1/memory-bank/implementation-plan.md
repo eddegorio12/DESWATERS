@@ -655,7 +655,7 @@ Current progress:
 
 ### EH14 Follow-On Protected Surface Review
 **Priority:** High after EH14.5 validation
-**Status:** In progress
+**Status:** Validated
 **Depends on:** EH14.4 and EH14.5 validated
 
 Scope:
@@ -1052,13 +1052,14 @@ Exit criteria:
 - Operational hardening is in place before any broader autonomous behavior is approved.
 
 Current progress:
-- EH21 has now started with a protected `/admin/automation` supervision workspace for `SUPER_ADMIN` and `ADMIN`, so automation health no longer has to be inferred from the follow-up, exceptions, and payments modules separately.
+- EH21 has now been tested and validated with a protected `/admin/automation` supervision workspace for `SUPER_ADMIN` and `ADMIN`, so automation health no longer has to be inferred from the follow-up, exceptions, and payments modules separately.
 - Prisma now persists first-class lease, retry, dead-letter, invalidation, and failure-categorization state across `AutomationRun`, `AutomationApprovalRequest`, and `AutomationExecutionLog`.
 - Worker runs now record `leaseOwner` plus `leaseExpiresAt`, and the new supervisor action can expire stale pending worker leases into explicit failed or dead-lettered state instead of leaving them indefinitely pending.
 - Approval requests now record retry counts, delivery-error state, invalidation reason, and dead-letter reason, and the supervisor workspace can retry bounded Telegram approval delivery or expire pending approval backlog directly from DWDS.
 - Approved intents now revalidate target state before execution, so stale receivables and cashier intents are invalidated explicitly when the bill state or balance drifted after approval was requested.
 - Telegram approval delivery no longer deletes failed `PAYMENT_POST` approval requests immediately. Failed delivery now remains inspectable, retryable, and eventually dead-lettered after bounded retry attempts.
 - Recent execution logs now persist first-class failure category plus latency metadata, giving EH21 a measurable baseline for delivery failures, validation failures, target-state invalidations, replay blocking, and internal execution faults.
+- Manual validation has now confirmed healthy lane aggregation, supervisor visibility, and end-to-end EH21 behavior on the protected automation workspace.
 
 ### EH12 Follow-On Analytics: Loss-Risk Watchlist
 **Priority:** High after the current validated route analytics baseline

@@ -350,3 +350,4 @@ Add the observability, queue control, retry behavior, and supervisory safety nee
 - Automation persistence now includes lease ownership and expiry, retry counts, invalidation metadata, dead-letter metadata, and failure-category plus latency tracking.
 - Approval execution now invalidates stale follow-up or payment intents before DWDS mutates records, so drifted queue state is no longer treated as silently executable.
 - Telegram approval delivery failures now stay visible and retryable, and repeated delivery failure now dead-letters the request instead of leaving it in ambiguous transport state.
+- EH21 is now validated for the implemented supervision, retry, invalidation, and dead-letter baseline.
