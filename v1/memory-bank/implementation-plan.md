@@ -1014,7 +1014,7 @@ Current progress:
 
 ### EH20: Specialized Worker Lanes
 **Priority:** Medium after EH19
-**Status:** Planned
+**Status:** Validated
 **Depends on:** EH17 through EH19 foundations
 
 Scope:
@@ -1027,6 +1027,13 @@ Exit criteria:
 - DWDS can support multiple specialized worker lanes with isolated ownership and policy controls.
 - Parallel worker activity does not bypass approval, locking, or audit requirements.
 - Multi-lane behavior remains explainable and debuggable from stored run history.
+
+Current progress:
+- EH20 has now started with a shared worker-lane registry in `src/features/automation/lib/worker-lanes.ts`.
+- `AutomationRun` now persists a first-class `laneKey` plus a stored `laneSnapshot`, so lane ownership, policy version, execution mode, and bounded tool-access summary are preserved with each run instead of staying implicit in worker-specific code.
+- The existing follow-up and exceptions workers now create runs through the shared lane registry, using the specialized `FOLLOW_UP_QUEUE` and `EXCEPTION_REVIEW` lane definitions rather than duplicating lane metadata by hand inside each module.
+- `/admin/follow-up` and `/admin/exceptions` now expose the current lane label, owner, policy version, execution mode, and bounded tool-access summary on their worker panels so operators can distinguish specialized lanes before broader multi-lane expansion resumes.
+- User validation has now confirmed the lane-governance baseline on both `/admin/follow-up` and `/admin/exceptions`, with the expected specialized-lane labels, ownership, policy versions, execution modes, bounded tool-access summaries, and OpenClaw source visibility shown on live worker runs.
 
 ### EH21: Autonomous Operations Hardening
 **Priority:** Medium after EH20

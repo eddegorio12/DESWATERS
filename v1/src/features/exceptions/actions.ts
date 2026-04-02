@@ -1,8 +1,8 @@
 "use server";
 
 import {
+  AutomationWorkerLaneKey,
   AutomationProposalDecision,
-  AutomationWorkerType,
   BillStatus,
   CustomerStatus,
   PaymentStatus,
@@ -195,8 +195,7 @@ export async function runExceptionSummarization() {
 
   const startedAt = Date.now();
   const run = await createPendingAutomationRun({
-    workerType: "EXCEPTION_SUMMARIZATION" as AutomationWorkerType,
-    scopeType: "EXCEPTIONS_VISIBLE_QUEUE",
+    laneKey: AutomationWorkerLaneKey.EXCEPTION_REVIEW,
     triggeredById: staffUser.id,
     provider: "DWDS_INTERNAL",
     model: "exception-summary-heuristic-v1",
@@ -404,16 +403,13 @@ export async function dismissExceptionSummaryProposal(proposalId: string) {
       dismissedAt: true,
       run: {
         select: {
-          workerType: true,
+          laneKey: true,
         },
       },
     },
   });
 
-  if (
-    !proposal ||
-    proposal.run.workerType !== ("EXCEPTION_SUMMARIZATION" as AutomationWorkerType)
-  ) {
+  if (!proposal || proposal.run.laneKey !== AutomationWorkerLaneKey.EXCEPTION_REVIEW) {
     throw new Error("That exception summary proposal no longer exists.");
   }
 

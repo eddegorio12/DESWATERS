@@ -1,8 +1,8 @@
 "use server";
 
 import {
+  AutomationWorkerLaneKey,
   AutomationProposalDecision,
-  AutomationWorkerType,
   BillStatus,
   CustomerStatus,
   NotificationTemplate,
@@ -45,8 +45,7 @@ export async function runFollowUpTriage() {
 
   const startedAt = Date.now();
   const run = await createPendingAutomationRun({
-    workerType: AutomationWorkerType.FOLLOW_UP_TRIAGE,
-    scopeType: "FOLLOW_UP_VISIBLE_QUEUE",
+    laneKey: AutomationWorkerLaneKey.FOLLOW_UP_QUEUE,
     triggeredById: staffUser.id,
     provider: "DWDS_INTERNAL",
     model: "follow-up-heuristic-v1",
@@ -179,13 +178,13 @@ export async function dismissFollowUpTriageProposal(proposalId: string) {
       dismissedAt: true,
       run: {
         select: {
-          workerType: true,
+          laneKey: true,
         },
       },
     },
   });
 
-  if (!proposal || proposal.run.workerType !== AutomationWorkerType.FOLLOW_UP_TRIAGE) {
+  if (!proposal || proposal.run.laneKey !== AutomationWorkerLaneKey.FOLLOW_UP_QUEUE) {
     throw new Error("That follow-up triage proposal no longer exists.");
   }
 

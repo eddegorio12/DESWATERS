@@ -29,6 +29,14 @@ type FollowUpTriagePanelProps = {
         failureReason: string | null;
         triggeredByName: string;
         triggeredByRole: string;
+        lane: {
+          label: string;
+          ownerLabel: string;
+          policyVersion: string;
+          executionMode: "ADVISORY_ONLY" | "APPROVAL_GATED";
+          toolAccessLabel: string;
+          summary: string;
+        };
       }
     | null;
   proposals: {
@@ -156,6 +164,7 @@ export function FollowUpTriagePanel({ run, proposals }: FollowUpTriagePanelProps
                 <StatusPill priority={run.status === "FAILED" ? "attention" : "ready"}>
                   {run.status.toLowerCase()}
                 </StatusPill>
+                <StatusPill priority="readonly">{run.lane.executionMode.replaceAll("_", " ").toLowerCase()}</StatusPill>
                 {runSource ? (
                   <StatusPill priority={runSource.priority}>{runSource.label}</StatusPill>
                 ) : null}
@@ -185,7 +194,7 @@ export function FollowUpTriagePanel({ run, proposals }: FollowUpTriagePanelProps
       ) : null}
 
       {run ? (
-        <div className="mt-5 grid gap-4 lg:grid-cols-3">
+        <div className="mt-5 grid gap-4 xl:grid-cols-4">
           <article className="rounded-[1.2rem] border border-border/65 bg-white/76 p-4">
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
               Last run
@@ -208,6 +217,18 @@ export function FollowUpTriagePanel({ run, proposals }: FollowUpTriagePanelProps
           </article>
           <article className="rounded-[1.2rem] border border-border/65 bg-white/76 p-4">
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
+              Lane
+            </p>
+            <p className="mt-2 text-sm text-foreground">{run.lane.label}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {run.lane.ownerLabel}. Policy {run.lane.policyVersion}.
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {run.lane.summary}
+            </p>
+          </article>
+          <article className="rounded-[1.2rem] border border-border/65 bg-white/76 p-4">
+            <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
               Source
             </p>
             <p className="mt-2 text-sm text-foreground">{runSource?.label ?? "Unknown"}</p>
@@ -215,7 +236,7 @@ export function FollowUpTriagePanel({ run, proposals }: FollowUpTriagePanelProps
               {runSource?.detail ?? "No provider recorded"}.
             </p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Protected follow-up queue only. No bill-stage updates, notice generation, or service actions can run from this panel.
+              Tool access: {run.lane.toolAccessLabel}.
             </p>
           </article>
         </div>

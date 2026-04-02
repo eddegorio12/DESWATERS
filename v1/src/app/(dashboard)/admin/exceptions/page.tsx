@@ -28,6 +28,7 @@ import {
 } from "@/features/exceptions/lib/monitoring";
 import { syncReceivableStatuses } from "@/features/follow-up/lib/workflow";
 import { prisma } from "@/lib/prisma";
+import { parseAutomationWorkerLaneSnapshot } from "@/features/automation/lib/worker-lanes";
 
 function getDaysAgo(days: number, now = new Date()) {
   return new Date(now.getTime() - days * 86_400_000);
@@ -527,6 +528,8 @@ export default async function AdminExceptionsPage({
     select: {
       id: true,
       status: true,
+      laneKey: true,
+      laneSnapshot: true,
       startedAt: true,
       completedAt: true,
       provider: true,
@@ -610,20 +613,35 @@ export default async function AdminExceptionsPage({
   const canUpdateWorkOrders = canPerformCapability(access.user.role, "workorders:update");
   const alertById = new Map(alerts.map((alert) => [alert.id, alert]));
   const summaryRun = latestSummaryRun
-    ? {
-        id: latestSummaryRun.id,
-        status: latestSummaryRun.status,
-        startedAtLabel: latestSummaryRun.startedAt.toLocaleString("en-PH"),
+    ? (() => {
+        const lane = parseAutomationWorkerLaneSnapshot(
+          latestSummaryRun.laneSnapshot,
+          latestSummaryRun.laneKey
+        );
+
+        return {
+          id: latestSummaryRun.id,
+          status: latestSummaryRun.status,
+          startedAtLabel: latestSummaryRun.startedAt.toLocaleString("en-PH"),
         completedAtLabel: latestSummaryRun.completedAt
           ? latestSummaryRun.completedAt.toLocaleString("en-PH")
           : null,
         provider: latestSummaryRun.provider,
         model: latestSummaryRun.model,
-        proposalCount: latestSummaryRun.proposalCount,
-        failureReason: latestSummaryRun.failureReason,
-        triggeredByName: latestSummaryRun.triggeredBy.name,
-        triggeredByRole: latestSummaryRun.triggeredBy.role.replaceAll("_", " "),
-      }
+          proposalCount: latestSummaryRun.proposalCount,
+          failureReason: latestSummaryRun.failureReason,
+          triggeredByName: latestSummaryRun.triggeredBy.name,
+          triggeredByRole: latestSummaryRun.triggeredBy.role.replaceAll("_", " "),
+          lane: {
+            label: lane.label,
+            ownerLabel: lane.ownerLabel,
+            policyVersion: lane.policyVersion,
+            executionMode: lane.executionMode,
+            toolAccessLabel: lane.toolAccess.join(", "),
+            summary: lane.summary,
+          },
+        };
+      })()
     : null;
   const summaryProposals = latestSummaryRun
     ? latestSummaryRun.proposals.map((proposal) => {

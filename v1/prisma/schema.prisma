@@ -807,6 +807,8 @@ model AssistantEvaluationResult {
 model AutomationRun {
   id            String              @id @default(uuid())
   workerType    AutomationWorkerType
+  laneKey       AutomationWorkerLaneKey
+  laneSnapshot  Json?
   scopeType     String
   scopeKey      String?
   status        AutomationRunStatus @default(PENDING)
@@ -825,6 +827,7 @@ model AutomationRun {
   updatedAt     DateTime            @updatedAt
 
   @@index([workerType, startedAt(sort: Desc)])
+  @@index([laneKey, startedAt(sort: Desc)])
   @@index([status, startedAt(sort: Desc)])
   @@index([triggeredById, startedAt(sort: Desc)])
 }
@@ -1042,6 +1045,11 @@ enum AssistantEvaluationCategory {
 enum AutomationWorkerType {
   FOLLOW_UP_TRIAGE
   EXCEPTION_SUMMARIZATION
+}
+
+enum AutomationWorkerLaneKey {
+  FOLLOW_UP_QUEUE
+  EXCEPTION_REVIEW
 }
 
 enum AutomationActionType {

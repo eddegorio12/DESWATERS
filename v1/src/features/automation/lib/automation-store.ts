@@ -1,6 +1,10 @@
-import { AutomationRunStatus, AutomationWorkerType, Prisma } from "@prisma/client";
+import { AutomationRunStatus, AutomationWorkerLaneKey, Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import {
+  createAutomationWorkerLaneSnapshotJson,
+  getAutomationWorkerLaneConfig,
+} from "@/features/automation/lib/worker-lanes";
 
 type AutomationProposalInput = {
   rank: number;
@@ -14,17 +18,20 @@ type AutomationProposalInput = {
 };
 
 export async function createPendingAutomationRun(input: {
-  workerType: AutomationWorkerType;
-  scopeType: string;
+  laneKey: AutomationWorkerLaneKey;
   scopeKey?: string | null;
   triggeredById: string;
   provider?: string | null;
   model?: string | null;
 }) {
+  const lane = getAutomationWorkerLaneConfig(input.laneKey);
+
   return prisma.automationRun.create({
     data: {
-      workerType: input.workerType,
-      scopeType: input.scopeType,
+      workerType: lane.workerType,
+      laneKey: lane.key,
+      laneSnapshot: createAutomationWorkerLaneSnapshotJson(lane.key),
+      scopeType: lane.scopeType,
       scopeKey: input.scopeKey ?? null,
       triggeredById: input.triggeredById,
       provider: input.provider ?? null,

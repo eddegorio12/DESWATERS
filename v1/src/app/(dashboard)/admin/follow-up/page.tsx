@@ -17,6 +17,7 @@ import {
   syncReceivableStatuses,
 } from "@/features/follow-up/lib/workflow";
 import { NotificationLogList } from "@/features/notifications/components/notification-log-list";
+import { parseAutomationWorkerLaneSnapshot } from "@/features/automation/lib/worker-lanes";
 import { prisma } from "@/lib/prisma";
 
 type AdminFollowUpPageProps = {
@@ -160,6 +161,8 @@ export default async function AdminFollowUpPage({
       select: {
         id: true,
         status: true,
+        laneKey: true,
+        laneSnapshot: true,
         startedAt: true,
         completedAt: true,
         provider: true,
@@ -409,20 +412,35 @@ export default async function AdminFollowUpPage({
   const totalOutstanding = customers.reduce((sum, customer) => sum + customer.totalOutstanding, 0);
 
   const triageRun = latestTriageRun
-    ? {
-        id: latestTriageRun.id,
-        status: latestTriageRun.status,
-        startedAtLabel: latestTriageRun.startedAt.toLocaleString("en-PH"),
+    ? (() => {
+        const lane = parseAutomationWorkerLaneSnapshot(
+          latestTriageRun.laneSnapshot,
+          latestTriageRun.laneKey
+        );
+
+        return {
+          id: latestTriageRun.id,
+          status: latestTriageRun.status,
+          startedAtLabel: latestTriageRun.startedAt.toLocaleString("en-PH"),
         completedAtLabel: latestTriageRun.completedAt
           ? latestTriageRun.completedAt.toLocaleString("en-PH")
           : null,
         provider: latestTriageRun.provider,
         model: latestTriageRun.model,
-        proposalCount: latestTriageRun.proposalCount,
-        failureReason: latestTriageRun.failureReason,
-        triggeredByName: latestTriageRun.triggeredBy.name,
-        triggeredByRole: latestTriageRun.triggeredBy.role.replaceAll("_", " "),
-      }
+          proposalCount: latestTriageRun.proposalCount,
+          failureReason: latestTriageRun.failureReason,
+          triggeredByName: latestTriageRun.triggeredBy.name,
+          triggeredByRole: latestTriageRun.triggeredBy.role.replaceAll("_", " "),
+          lane: {
+            label: lane.label,
+            ownerLabel: lane.ownerLabel,
+            policyVersion: lane.policyVersion,
+            executionMode: lane.executionMode,
+            toolAccessLabel: lane.toolAccess.join(", "),
+            summary: lane.summary,
+          },
+        };
+      })()
     : null;
 
   const triageProposals = latestTriageRun
