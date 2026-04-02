@@ -228,10 +228,12 @@
 - EH16 should now remain the advisory worker baseline only.
 - EH17 should introduce the shared approval-intent and execution framework.
 - EH18 should introduce Telegram-first cashier-assist flows on top of that foundation.
-- EH19 should introduce real OpenClaw integration behind the existing planner boundary.
+- EH19 is now validated as the real OpenClaw integration behind the existing planner boundary.
 - EH20 and EH21 should cover specialized worker lanes and production hardening only after the single-lane approval flow is proven.
 - Telegram should remain a transport plus callback surface only. It must not become the system of record for the action or the final audit trail.
 - Payment posting, receipt issuance, and audit logging must remain DWDS responsibilities even if OpenClaw coordinates the cashier conversation.
+- The validated EH19 seam now keeps OpenClaw behind `src/features/automation/lib/openclaw-gateway.ts` and `src/features/automation/lib/openclaw-adapter.ts`, where bearer-authenticated gateway calls hit the `responses` endpoint, return bounded structured output, and are validated by DWDS before any worker or Telegram flow can use them.
+- EH19 now uses OpenClaw only for bounded planning tasks: follow-up triage ranking, exception-review prioritization, payment-detail extraction, bill-choice interpretation, and explicit Telegram confirmation interpretation. The validated live path uses a dedicated `dwds` agent, visible provider or model metadata on worker runs, fallback-reason surfacing, and normalization of ranking-only output into DWDS proposal shape. Bill matching, approval persistence, execution, payment posting, follow-up mutation, receipts, and audit logs still remain server-authoritative inside DWDS.
 - Broad autonomous multi-step execution, unrestricted record discovery, or hidden background retries should remain out of scope until a later phase proves the need and adds explicit safety plus audit controls.
 - Later worker lanes may include exception summarization, route-pressure briefings, notice drafting, and assistant knowledge-maintenance support after the follow-up triage baseline proves useful.
 - The implemented EH17 baseline now persists `AutomationActionIntent`, `AutomationApprovalRequest`, and `AutomationExecutionLog` in PostgreSQL, keeping exact action payloads, approval state, and execution outcomes inside DWDS rather than inside Telegram or provider-side runtime state.
@@ -242,6 +244,7 @@
 #### EH16.1 File Responsibilities
 - `prisma/schema.prisma`: defines the durable worker-state contract through `AutomationRun`, `AutomationProposal`, and `AutomationReview`. This keeps proposal history, dismissal state, and run metadata inside the same PostgreSQL authority already used by the rest of DWDS.
 - `src/features/automation/lib/automation-store.ts`: low-level persistence helpers for worker runs. This file should stay narrow and storage-focused so future worker types can reuse the same run/proposal lifecycle without duplicating Prisma transaction logic.
+- `src/features/automation/lib/openclaw-gateway.ts`: the private EH19 gateway client. It owns OpenClaw environment resolution, bearer-authenticated gateway `responses` requests, timeout handling, and strict parsing for bounded planner output.
 - `src/features/automation/lib/openclaw-adapter.ts`: the only intended runtime integration seam for OpenClaw-style orchestration. It should translate bounded DWDS candidates into provider calls and map provider output back into DWDS proposal shape, but it must not become a second source of truth or mutate records directly.
 - A later EH17 extension should add explicit action-intent, approval-request, and execution-log persistence rather than allowing provider output to call business mutations directly.
 - `src/features/follow-up/lib/follow-up-triage.ts`: the domain ranking layer for EH16.1. It owns the current deterministic fallback scoring, summary generation, rationale generation, confidence labels, and the provider-fallback decision when the OpenClaw adapter returns no result.

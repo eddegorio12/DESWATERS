@@ -124,10 +124,24 @@ export async function runFollowUpTriage() {
       .filter((candidate): candidate is NonNullable<typeof candidate> => candidate !== null);
 
     const proposals = await generateFollowUpTriageProposals(candidates);
+    const firstProposalMetadata =
+      proposals[0]?.sourceMetadata && typeof proposals[0].sourceMetadata === "object"
+        ? proposals[0].sourceMetadata
+        : null;
+    const provider =
+      firstProposalMetadata && "provider" in firstProposalMetadata
+        ? String(firstProposalMetadata.provider)
+        : "DWDS_INTERNAL";
+    const model =
+      firstProposalMetadata && "model" in firstProposalMetadata
+        ? String(firstProposalMetadata.model)
+        : "follow-up-heuristic-v1";
 
     await completeAutomationRunWithProposals({
       runId: run.id,
       latencyMs: Date.now() - startedAt,
+      provider,
+      model,
       proposals: proposals.map((proposal) => ({
         rank: proposal.rank,
         targetType: "BILL",

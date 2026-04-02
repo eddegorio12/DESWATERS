@@ -1,4 +1,8 @@
-import { type FollowUpTriageCandidate, runOpenClawFollowUpTriage } from "@/features/automation/lib/openclaw-adapter";
+import {
+  getLastOpenClawFailureReason,
+  type FollowUpTriageCandidate,
+  runOpenClawFollowUpTriage,
+} from "@/features/automation/lib/openclaw-adapter";
 
 const focusPriority: Record<FollowUpTriageCandidate["queueFocus"], number> = {
   READY_FOR_DISCONNECTION: 0,
@@ -100,7 +104,7 @@ function getRationale(candidate: FollowUpTriageCandidate) {
   ].join(" ");
 }
 
-function fallbackTriage(candidates: FollowUpTriageCandidate[]) {
+function fallbackTriage(candidates: FollowUpTriageCandidate[], openClawFailureReason?: string | null) {
   return [...candidates]
     .sort((left, right) => {
       return getPriorityScore(right) - getPriorityScore(left);
@@ -115,6 +119,9 @@ function fallbackTriage(candidates: FollowUpTriageCandidate[]) {
       confidenceLabel: getConfidenceLabel(candidate),
       sourceMetadata: {
         source: "dwds-follow-up-heuristic-v1",
+        provider: "DWDS_INTERNAL",
+        model: "follow-up-heuristic-v1",
+        openClawFailureReason: openClawFailureReason ?? null,
         queueFocus: candidate.queueFocus,
         followUpStatus: candidate.followUpStatus,
         customerStatus: candidate.customerStatus,
@@ -132,5 +139,5 @@ export async function generateFollowUpTriageProposals(candidates: FollowUpTriage
     return openClawResult;
   }
 
-  return fallbackTriage(candidates);
+  return fallbackTriage(candidates, getLastOpenClawFailureReason());
 }

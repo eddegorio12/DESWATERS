@@ -1,4 +1,5 @@
 import {
+  getLastOpenClawFailureReason,
   type ExceptionSummaryCandidate,
   runOpenClawExceptionSummarization,
 } from "@/features/automation/lib/openclaw-adapter";
@@ -83,7 +84,10 @@ function getRationale(candidate: ExceptionSummaryCandidate) {
   return `Linked module ${candidate.href}. Ranking basis: ${basis.join(", ")}.`;
 }
 
-function fallbackSummarization(candidates: ExceptionSummaryCandidate[]) {
+function fallbackSummarization(
+  candidates: ExceptionSummaryCandidate[],
+  openClawFailureReason?: string | null
+) {
   return [...candidates]
     .sort((left, right) => getCandidatePriorityScore(right) - getCandidatePriorityScore(left))
     .slice(0, 8)
@@ -96,6 +100,9 @@ function fallbackSummarization(candidates: ExceptionSummaryCandidate[]) {
       confidenceLabel: getConfidenceLabel(candidate),
       sourceMetadata: {
         source: "dwds-exception-summary-heuristic-v1",
+        provider: "DWDS_INTERNAL",
+        model: "exception-summary-heuristic-v1",
+        openClawFailureReason: openClawFailureReason ?? null,
         severity: candidate.severity,
         category: candidate.category,
         href: candidate.href,
@@ -128,5 +135,5 @@ export async function generateExceptionSummaryProposals(candidates: ExceptionSum
     return openClawResult;
   }
 
-  return fallbackSummarization(candidates);
+  return fallbackSummarization(candidates, getLastOpenClawFailureReason());
 }

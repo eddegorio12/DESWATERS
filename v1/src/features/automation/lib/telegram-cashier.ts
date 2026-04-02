@@ -14,6 +14,12 @@ import {
 import { prisma } from "@/lib/prisma";
 
 import { requestTelegramApprovalForPaymentSession } from "./approval-store";
+import {
+  runOpenClawTelegramBillSelection,
+  runOpenClawTelegramCashReceiptConfirmation,
+  runOpenClawTelegramPartialConfirmation,
+  runOpenClawTelegramPaymentDetailsParsing,
+} from "./openclaw-adapter";
 
 const SESSION_TTL_MS = 1000 * 60 * 20;
 const MAX_CANDIDATES = 5;
@@ -571,7 +577,11 @@ async function moveToCandidateDecision(session: TelegramCashierSession, draft: P
 }
 
 async function handleAwaitingPaymentDetails(session: TelegramCashierSession, text: string) {
-  if (isUnsupportedMethod(text)) {
+  const openClawParse = await runOpenClawTelegramPaymentDetailsParsing({
+    messageText: text,
+  });
+
+  if (openClawParse?.unsupportedMethod || isUnsupportedMethod(text)) {
     const reply =
       "EH18 currently supports cash-only onsite posting in Telegram. Use the web cashier form for GCash, Maya, bank transfer, or card settlements.";
     await saveSessionReply(session.id, {
@@ -584,9 +594,9 @@ async function handleAwaitingPaymentDetails(session: TelegramCashierSession, tex
     return reply;
   }
 
-  const amount = parseAmount(text);
-  const accountNumber = parseAccountNumber(text);
-  const payerQuery = parsePayerQuery(text, accountNumber);
+  const amount = openClawParse?.amount ?? parseAmount(text);
+  const accountNumber = openClawParse?.accountNumber ?? parseAccountNumber(text);
+  const payerQuery = openClawParse?.payerQuery ?? parsePayerQuery(text, accountNumber);
   const draft = createEmptyDraft();
   draft.amount = amount;
   draft.accountNumber = accountNumber;
@@ -598,7 +608,11 @@ async function handleAwaitingPaymentDetails(session: TelegramCashierSession, tex
 
 async function handleBillSelection(session: TelegramCashierSession, text: string) {
   const draft = readDraft(session.parsedIntent);
-  const choice = Number(text.trim());
+  const openClawSelection = await runOpenClawTelegramBillSelection({
+    messageText: text,
+    candidates: draft.candidateBills,
+  });
+  const choice = openClawSelection?.selection ?? Number(text.trim());
 
   if (!Number.isInteger(choice) || choice < 1 || choice > draft.candidateBills.length) {
     const reply = "Reply with one of the numbered bill choices, or send /cancel to stop.";
@@ -669,6 +683,9 @@ async function handleBillSelection(session: TelegramCashierSession, text: string
 async function handlePartialConfirmation(session: TelegramCashierSession, text: string) {
   const draft = readDraft(session.parsedIntent);
   const candidate = draft.candidateBills.find((entry) => entry.billId === draft.billId);
+  const openClawConfirmation = await runOpenClawTelegramPartialConfirmation({
+    messageText: text,
+  });
 
   if (!candidate || !draft.amount) {
     const reply = "The selected bill is no longer available. Send the payment line again.";
@@ -682,7 +699,7 @@ async function handlePartialConfirmation(session: TelegramCashierSession, text: 
     return reply;
   }
 
-  if (!isAffirmative(text)) {
+  if (!(openClawConfirmation?.confirmed ?? isAffirmative(text))) {
     const reply = "Partial payment was not confirmed. Send a new payment line with the corrected amount, or /cancel to stop.";
     await saveSessionReply(session.id, {
       stage: TelegramCashierSessionStage.AWAITING_PAYMENT_DETAILS,
@@ -712,8 +729,11 @@ async function handleCashConfirmation(
   requestedBy: { id: string; name: string }
 ) {
   const draft = readDraft(session.parsedIntent);
+  const openClawConfirmation = await runOpenClawTelegramCashReceiptConfirmation({
+    messageText: text,
+  });
 
-  if (!isReceivedConfirmation(text)) {
+  if (!(openClawConfirmation?.confirmed ?? isReceivedConfirmation(text))) {
     const reply = "Reply RECEIVED only after the physical cash is already in hand, or send /cancel to stop.";
     await saveSessionReply(session.id, {
       stage: TelegramCashierSessionStage.AWAITING_CASH_CONFIRMATION,

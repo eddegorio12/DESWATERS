@@ -989,7 +989,7 @@ Current progress:
 
 ### EH19: OpenClaw Integration
 **Priority:** Medium after EH18
-**Status:** Planned
+**Status:** Validated
 **Depends on:** EH17 and EH18 foundations, OpenClaw environment availability
 
 Scope:
@@ -1002,6 +1002,15 @@ Exit criteria:
 - OpenClaw can prepare bounded intents and clarification steps without becoming the system of record.
 - The same approval, execution, and audit flows continue working if the planner is swapped from stub logic to OpenClaw.
 - Provider unavailability still degrades safely to the deterministic fallback where required.
+
+Current progress:
+- `src/features/automation/lib/openclaw-gateway.ts` now provides the private OpenClaw gateway client for bearer-authenticated `/v1/responses` requests plus timeout handling and strict structured-output parsing, so provider output remains schema-checked inside DWDS.
+- `src/features/automation/lib/openclaw-adapter.ts` is no longer a hardcoded stub. It now sends bounded follow-up, exception, and Telegram cashier-planning prompts to OpenClaw when the gateway URL plus token are configured and still returns `null` on provider failure so the existing deterministic fallback remains authoritative.
+- EH16.1 follow-up triage and EH16.2 exception summarization now accept OpenClaw-ranked structured proposals from that shared adapter boundary while preserving the current heuristic ranking path whenever OpenClaw is unavailable or returns invalid output.
+- EH18 Telegram cashiering now also uses the same adapter boundary for bounded payment-detail extraction, numbered bill-choice interpretation, partial-payment confirmation, and cash-received confirmation while keeping bill matching, approval creation, payment posting, receipts, and audit logs inside DWDS.
+- Worker panels now persist and display provider or model metadata plus visible fallback-reason details, so validation can distinguish a real OpenClaw run from deterministic fallback without inspecting server logs.
+- The validated OpenClaw path now uses a dedicated `dwds` agent, normalizes ranking-only provider output into bounded DWDS proposal records, and keeps deterministic fallback active whenever OpenClaw is unavailable, invalid, or returns a nonconforming payload.
+- The required environment baseline is a private OpenClaw gateway URL plus bearer token, with optional agent-ID and timeout overrides. The feature remains safe to ship before those values exist because the deterministic baseline still handles all current paths.
 
 ### EH20: Specialized Worker Lanes
 **Priority:** Medium after EH19

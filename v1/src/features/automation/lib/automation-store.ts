@@ -38,6 +38,8 @@ export async function completeAutomationRunWithProposals(input: {
   runId: string;
   latencyMs: number;
   proposals: AutomationProposalInput[];
+  provider?: string | null;
+  model?: string | null;
 }) {
   return prisma.$transaction(async (tx) => {
     await tx.automationProposal.deleteMany({
@@ -68,6 +70,8 @@ export async function completeAutomationRunWithProposals(input: {
       },
       data: {
         status: AutomationRunStatus.COMPLETED,
+        provider: input.provider ?? undefined,
+        model: input.model ?? undefined,
         latencyMs: input.latencyMs,
         proposalCount: input.proposals.length,
         completedAt: new Date(),

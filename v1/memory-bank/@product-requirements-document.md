@@ -68,6 +68,7 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH17 has now started with exact action-intent, approval-request, and execution-log persistence plus Telegram transport and callback handling for one bounded follow-up approval path.
 - EH17 is now validated for its current bounded follow-up approval scope, including real Telegram delivery, approved execution, rejected-request behavior, and replay blocking.
 - EH18 is now the next active lane.
+- EH19 is now validated through a private OpenClaw gateway planner boundary that can rank follow-up and exception proposals plus interpret bounded Telegram cashier clarification while keeping DWDS as the execution authority.
 - EH12 now also includes a route-level loss-risk watchlist on `/admin/routes`, framed explicitly as a revenue-loss proxy from recent billed-versus-collected gaps plus overdue exposure, alongside route-linked complaint hotspot visibility from first-class complaint records.
 - Dedicated admin-management audit logging is now implemented, tested, and validated through a first-class account-management event log and a visible audit trail on `/admin/staff-access`.
 

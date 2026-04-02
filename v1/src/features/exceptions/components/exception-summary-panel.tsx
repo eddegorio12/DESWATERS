@@ -23,6 +23,8 @@ type ExceptionSummaryPanelProps = {
         status: "PENDING" | "COMPLETED" | "FAILED";
         startedAtLabel: string;
         completedAtLabel: string | null;
+        provider: string | null;
+        model: string | null;
         proposalCount: number;
         failureReason: string | null;
         triggeredByName: string;
@@ -45,6 +47,7 @@ type ExceptionSummaryPanelProps = {
     meterNumber: string | null;
     metric: string;
     href: string;
+    openClawFailureReason: string | null;
     dismissedAtLabel: string | null;
     dismissedByName: string | null;
   }[];
@@ -74,11 +77,28 @@ function getSeverityPriority(label: string) {
   return "pending" as const;
 }
 
+function formatRunSource(provider: string | null, model: string | null) {
+  if (provider === "OPENCLAW_GATEWAY") {
+    return {
+      label: "OpenClaw",
+      detail: model ?? "Gateway planner",
+      priority: "ready" as const,
+    };
+  }
+
+  return {
+    label: "Deterministic fallback",
+    detail: model ?? "DWDS internal heuristic",
+    priority: "readonly" as const,
+  };
+}
+
 export function ExceptionSummaryPanel({ run, proposals }: ExceptionSummaryPanelProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [pendingKey, setPendingKey] = useState<string | null>(null);
+  const runSource = run ? formatRunSource(run.provider, run.model) : null;
 
   const runAction = (key: string, action: () => Promise<void>) => {
     setError(null);
@@ -111,6 +131,9 @@ export function ExceptionSummaryPanel({ run, proposals }: ExceptionSummaryPanelP
                 <StatusPill priority={run.status === "FAILED" ? "attention" : "ready"}>
                   {run.status.toLowerCase()}
                 </StatusPill>
+                {runSource ? (
+                  <StatusPill priority={runSource.priority}>{runSource.label}</StatusPill>
+                ) : null}
                 <StatusPill priority="readonly">
                   {run.proposalCount} proposal{run.proposalCount === 1 ? "" : "s"}
                 </StatusPill>
@@ -160,11 +183,14 @@ export function ExceptionSummaryPanel({ run, proposals }: ExceptionSummaryPanelP
           </article>
           <article className="rounded-[1.2rem] border border-border/65 bg-white/76 p-4">
             <p className="text-[0.72rem] font-semibold uppercase tracking-[0.18em] text-primary/72">
-              Scope
+              Source
             </p>
-            <p className="mt-2 text-sm text-foreground">Protected exceptions queue only</p>
+            <p className="mt-2 text-sm text-foreground">{runSource?.label ?? "Unknown"}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              No work-order dispatch, billing updates, or service-state changes can run from this panel.
+              {runSource?.detail ?? "No provider recorded"}.
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Protected exceptions queue only. No work-order dispatch, billing updates, or service-state changes can run from this panel.
             </p>
           </article>
         </div>
@@ -210,6 +236,11 @@ export function ExceptionSummaryPanel({ run, proposals }: ExceptionSummaryPanelP
                       Suggested review step: {proposal.recommendedReviewStep}
                     </p>
                     <p className="text-sm text-muted-foreground">{proposal.rationale}</p>
+                    {proposal.openClawFailureReason ? (
+                      <p className="rounded-2xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                        OpenClaw fallback reason: {proposal.openClawFailureReason}
+                      </p>
+                    ) : null}
                     <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                       {proposal.customerName ? <span>{proposal.customerName}</span> : null}
                       {proposal.accountNumber ? <span>{proposal.accountNumber}</span> : null}

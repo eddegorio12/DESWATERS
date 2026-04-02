@@ -329,6 +329,7 @@ Connect OpenClaw to the existing planner boundary after the approval and executi
 ### Product Position
 - OpenClaw is the bounded planner and conversation coordinator.
 - It should not become the mutation authority or audit authority.
+- EH19 is now validated on the protected follow-up worker surface with `Source: OpenClaw`, while deterministic fallback remains required whenever the provider path is unavailable or invalid.
 
 ## EH20: Specialized Worker Lanes
 

@@ -348,10 +348,24 @@ export async function runExceptionSummarization() {
     });
     const candidates = buildExceptionSummaryCandidates(alerts);
     const proposals = await generateExceptionSummaryProposals(candidates);
+    const firstProposalMetadata =
+      proposals[0]?.sourceMetadata && typeof proposals[0].sourceMetadata === "object"
+        ? proposals[0].sourceMetadata
+        : null;
+    const provider =
+      firstProposalMetadata && "provider" in firstProposalMetadata
+        ? String(firstProposalMetadata.provider)
+        : "DWDS_INTERNAL";
+    const model =
+      firstProposalMetadata && "model" in firstProposalMetadata
+        ? String(firstProposalMetadata.model)
+        : "exception-summary-heuristic-v1";
 
     await completeAutomationRunWithProposals({
       runId: run.id,
       latencyMs: Date.now() - startedAt,
+      provider,
+      model,
       proposals: proposals.map((proposal) => ({
         rank: proposal.rank,
         targetType: "EXCEPTION_ALERT",

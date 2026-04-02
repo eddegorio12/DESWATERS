@@ -67,6 +67,15 @@ type AdminExceptionsPageProps = {
   searchParams: Promise<Record<string, SearchParamValue>>;
 };
 
+function getOpenClawFailureReason(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const rawReason = (value as { openClawFailureReason?: unknown }).openClawFailureReason;
+  return typeof rawReason === "string" && rawReason.length > 0 ? rawReason : null;
+}
+
 export default async function AdminExceptionsPage({
   searchParams,
 }: AdminExceptionsPageProps) {
@@ -520,6 +529,8 @@ export default async function AdminExceptionsPage({
       status: true,
       startedAt: true,
       completedAt: true,
+      provider: true,
+      model: true,
       proposalCount: true,
       failureReason: true,
       triggeredBy: {
@@ -538,6 +549,7 @@ export default async function AdminExceptionsPage({
           rationale: true,
           confidenceLabel: true,
           targetId: true,
+          sourceMetadata: true,
           dismissedAt: true,
           dismissedBy: {
             select: {
@@ -605,6 +617,8 @@ export default async function AdminExceptionsPage({
         completedAtLabel: latestSummaryRun.completedAt
           ? latestSummaryRun.completedAt.toLocaleString("en-PH")
           : null,
+        provider: latestSummaryRun.provider,
+        model: latestSummaryRun.model,
         proposalCount: latestSummaryRun.proposalCount,
         failureReason: latestSummaryRun.failureReason,
         triggeredByName: latestSummaryRun.triggeredBy.name,
@@ -631,6 +645,10 @@ export default async function AdminExceptionsPage({
           meterNumber: alert?.meterNumber ?? null,
           metric: alert?.metric ?? "Unknown metric",
           href: alert?.href ?? "/admin/exceptions",
+          openClawFailureReason:
+            latestSummaryRun.provider === "DWDS_INTERNAL"
+              ? getOpenClawFailureReason(proposal.sourceMetadata)
+              : null,
           dismissedAtLabel: proposal.dismissedAt
             ? proposal.dismissedAt.toLocaleString("en-PH")
             : null,

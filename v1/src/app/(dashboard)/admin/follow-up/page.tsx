@@ -54,6 +54,15 @@ type FollowUpCustomerEntry = {
   }[];
 };
 
+function getOpenClawFailureReason(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  const rawReason = (value as { openClawFailureReason?: unknown }).openClawFailureReason;
+  return typeof rawReason === "string" && rawReason.length > 0 ? rawReason : null;
+}
+
 export default async function AdminFollowUpPage({
   searchParams,
 }: AdminFollowUpPageProps) {
@@ -153,6 +162,8 @@ export default async function AdminFollowUpPage({
         status: true,
         startedAt: true,
         completedAt: true,
+        provider: true,
+        model: true,
         proposalCount: true,
         failureReason: true,
         triggeredBy: {
@@ -171,6 +182,7 @@ export default async function AdminFollowUpPage({
             rationale: true,
             confidenceLabel: true,
             targetId: true,
+            sourceMetadata: true,
             dismissedAt: true,
             dismissedBy: {
               select: {
@@ -404,6 +416,8 @@ export default async function AdminFollowUpPage({
         completedAtLabel: latestTriageRun.completedAt
           ? latestTriageRun.completedAt.toLocaleString("en-PH")
           : null,
+        provider: latestTriageRun.provider,
+        model: latestTriageRun.model,
         proposalCount: latestTriageRun.proposalCount,
         failureReason: latestTriageRun.failureReason,
         triggeredByName: latestTriageRun.triggeredBy.name,
@@ -440,6 +454,10 @@ export default async function AdminFollowUpPage({
             style: "currency",
             currency: "PHP",
           }).format(queueEntry?.outstandingBalance ?? 0),
+          openClawFailureReason:
+            latestTriageRun.provider === "DWDS_INTERNAL"
+              ? getOpenClawFailureReason(proposal.sourceMetadata)
+              : null,
           approvalEligible,
           dismissedAtLabel: proposal.dismissedAt
             ? proposal.dismissedAt.toLocaleString("en-PH")
