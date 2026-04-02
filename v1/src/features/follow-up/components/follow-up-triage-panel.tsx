@@ -58,11 +58,17 @@ type FollowUpTriagePanelProps = {
     approvalEligible: boolean;
     dismissedAtLabel: string | null;
     dismissedByName: string | null;
-    approval:
+        approval:
       | {
           requestId: string;
           actionType: string;
-          status: "PENDING" | "APPROVED" | "REJECTED" | "EXPIRED" | "EXECUTED";
+          status:
+            | "PENDING"
+            | "APPROVED"
+            | "REJECTED"
+            | "EXPIRED"
+            | "INVALIDATED"
+            | "EXECUTED";
           transport: string;
           deliveryError: string | null;
           requestedAtLabel: string;
@@ -93,6 +99,10 @@ function getApprovalPriority(status: string) {
   }
 
   if (status === "REJECTED" || status === "EXPIRED") {
+    return "attention" as const;
+  }
+
+  if (status === "INVALIDATED") {
     return "attention" as const;
   }
 

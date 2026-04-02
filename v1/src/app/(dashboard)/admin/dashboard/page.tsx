@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import {
   Activity,
   BanknoteArrowDown,
+  Bot,
   ClipboardCheck,
   FileSpreadsheet,
   Gauge,
@@ -56,6 +57,14 @@ const moduleCards: {
   action: string;
   icon: ComponentType<{ className?: string }>;
 }[] = [
+  {
+    module: "automation",
+    href: "/admin/automation",
+    title: "Automation supervision",
+    description: "Review worker health, approval transport issues, retries, and dead-letter outcomes.",
+    action: "Open automation",
+    icon: Bot,
+  },
   {
     module: "routeOperations",
     href: "/admin/routes",

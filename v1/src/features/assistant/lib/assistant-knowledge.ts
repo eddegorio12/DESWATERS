@@ -65,6 +65,7 @@ type AssistantSearchOptions = {
 const moduleLabels: Record<AdminModule, string> = {
   dashboard: "Dashboard",
   assistant: "Assistant",
+  automation: "Automation",
   staffAccess: "Staff Access",
   systemReadiness: "System",
   routeOperations: "Routes",

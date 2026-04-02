@@ -79,6 +79,7 @@
 - EH18 has now started as the Telegram-first cashier assistant lane, with cashier-owned Telegram identity linking, bounded Telegram payment sessions, deterministic payment-intent parsing, explicit partial-payment plus cash-received confirmations, approved `PAYMENT_POST` execution through the existing DWDS payment workflow, and a visible Telegram cashier audit panel on `/admin/payments`.
 - EH19 has now been tested and validated with a real OpenClaw gateway planner behind the existing protected adapter boundary, so follow-up triage, exception summarization, and bounded Telegram cashier clarification can use provider-backed structured planning without changing DWDS approval or execution authority.
 - EH20 has now been tested and validated as the specialized worker-lane governance baseline for the existing follow-up and exceptions workers, including a shared lane registry, persisted lane-policy snapshots on automation runs, and visible lane ownership plus execution-mode context on both worker panels.
+- EH21 has now started with a protected automation-supervision workspace, durable lease plus retry metadata, stale-intent invalidation, bounded Telegram delivery retries, and dead-letter visibility for the current approval-based automation baseline.
 - `/admin/routes` now also includes a clearly labeled loss-risk watchlist that ranks routes by recent billed-versus-collected gap plus current overdue exposure, plus a route-linked complaint hotspot view based on first-class complaint records.
 - Dedicated admin-management audit logging is now implemented, tested, and validated through a first-class Prisma event table plus a visible audit trail on `/admin/staff-access` for account creation, role changes, activation changes, lockout clearing, temporary-password resets, and self-service password changes.
 - The deferred EH9 field-service expansion has now been implemented, tested, and validated with complaint-driven field work orders on `/admin/exceptions`, including technician assignment, dispatch notes, scheduled visits, in-progress tracking, completion logging, and complaint auto-resolution on completed work.
@@ -336,16 +337,20 @@
 - Status: `validated`
 - Notes: EH20 is now validated as a lane-governance pass on top of the validated EH16 through EH19 automation baseline. `AutomationRun` now persists a first-class `laneKey` plus `laneSnapshot`, so each worker run records its specialized lane label, owner group, policy version, execution mode, and bounded tool-access summary instead of leaving that context implicit in worker-specific code only. `src/features/automation/lib/worker-lanes.ts` now owns the shared specialized-lane registry, and the current `FOLLOW_UP_QUEUE` plus `EXCEPTION_REVIEW` lanes are wired through that registry on `/admin/follow-up` and `/admin/exceptions`. Manual user validation confirmed that both worker panels display the expected lane owner, policy version, execution mode, and bounded tool-access summary while preserving the existing worker behavior and OpenClaw-backed planner visibility.
 
+### EH21: Autonomous Operations Hardening
+- Status: `in progress`
+- Notes: EH21 has now started as the production-hardening lane on top of the validated EH20 baseline. `/admin/automation` now gives `SUPER_ADMIN` and `ADMIN` a protected supervision workspace for stale worker leases, pending approvals, delivery retries, and recent execution outcomes. Prisma now persists lease ownership plus expiry on `AutomationRun`, retry and invalidation or dead-letter state on `AutomationApprovalRequest`, and failure-category plus latency metadata on `AutomationExecutionLog`. Approved follow-up and cashier intents now revalidate current bill state before execution so drifted targets become explicit invalidations instead of silent downstream failures. Telegram approval delivery failures now remain visible, retryable, and eventually dead-lettered after bounded retry attempts rather than disappearing immediately.
+
 ## Current Next-Step Recommendation
-The current AI and automation baseline is EH16.1 follow-up triage, EH16.2 exception summarization, a validated EH17 approval foundation, a locally validated EH18 Telegram cashier-assist slice, a validated EH19 OpenClaw planner layer, and a validated EH20 specialized-lane governance slice.
+The current AI and automation baseline is EH16.1 follow-up triage, EH16.2 exception summarization, a validated EH17 approval foundation, a locally validated EH18 Telegram cashier-assist slice, a validated EH19 OpenClaw planner layer, a validated EH20 specialized-lane governance slice, and an active EH21 supervision or hardening slice.
 
 The next step is now:
 1. keep EH16.1 follow-up triage and EH16.2 exception summarization as the current bounded worker baseline
 2. treat EH18 as locally validated for Telegram-first cashier intent handling, approval, and audited `PAYMENT_POST` execution on top of the validated EH17 foundation
 3. treat EH19 as validated for bounded OpenClaw-backed planning on `/admin/follow-up`, `/admin/exceptions`, and the Telegram cashier clarification seam, with deterministic fallback still required whenever OpenClaw is unavailable or invalid
 4. reload live `/admin/meters` after the manual `MeterReplacementHistory` table creation and use the next Vercel runtime error, if any, to repair the next missing production schema dependency
-5. optionally finish a live end-to-end cashier test once the deployed environment has at least one open bill available for safe validation
-6. do not start EH21 until the user explicitly authorizes EH21
+5. use `/admin/automation` as the supervision surface for stale leases, pending approvals, Telegram delivery retries, and dead-letter review while the bounded worker baseline stays unchanged
+6. optionally finish a live end-to-end cashier test once the deployed environment has at least one open bill available for safe validation
 
 Standing guardrails:
 1. keep EH15 closed as the stable assistant baseline unless there is a regression or an explicitly approved scope change

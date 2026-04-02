@@ -344,3 +344,9 @@ Support future follow-up queue management, exception investigation, and other do
 
 ### Goal
 Add the observability, queue control, retry behavior, and supervisory safety needed before broader autonomous operations are considered production-ready.
+
+### Current Implemented Baseline
+- `/admin/automation` now exists as a protected supervision workspace for admins reviewing worker health, pending approvals, delivery retries, stale runs, and recent execution outcomes.
+- Automation persistence now includes lease ownership and expiry, retry counts, invalidation metadata, dead-letter metadata, and failure-category plus latency tracking.
+- Approval execution now invalidates stale follow-up or payment intents before DWDS mutates records, so drifted queue state is no longer treated as silently executable.
+- Telegram approval delivery failures now stay visible and retryable, and repeated delivery failure now dead-letters the request instead of leaving it in ambiguous transport state.

@@ -943,6 +943,7 @@ export async function finalizeTelegramCashierSession(input: {
     input.approvalStatus === AutomationApprovalStatus.REJECTED
       ? TelegramConversationStatus.CANCELLED
       : input.approvalStatus === AutomationApprovalStatus.EXPIRED ||
+          input.approvalStatus === AutomationApprovalStatus.INVALIDATED ||
           input.approvalStatus === "FAILED_APPROVAL_DELIVERY"
         ? TelegramConversationStatus.EXPIRED
         : TelegramConversationStatus.COMPLETED;

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   BanknoteArrowDown,
   BotMessageSquare,
+  Bot,
   ClipboardCheck,
   FileSpreadsheet,
   Gauge,
@@ -24,6 +25,7 @@ import { cn } from "@/lib/utils";
 const iconMap = {
   dashboard: LayoutDashboard,
   assistant: BotMessageSquare,
+  automation: Bot,
   staffAccess: UserCog,
   systemReadiness: Server,
   routeOperations: MapPinned,

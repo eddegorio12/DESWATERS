@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 export type AdminModule =
   | "dashboard"
   | "assistant"
+  | "automation"
   | "staffAccess"
   | "systemReadiness"
   | "routeOperations"
@@ -21,6 +22,7 @@ export type AdminModule =
   | "followUp";
 
 export type StaffCapability =
+  | "automation:supervise"
   | "admins:manage"
   | "admins:unlock"
   | "routes:manage"
@@ -67,6 +69,7 @@ const moduleAccess: Record<AdminModule, readonly Role[]> = {
     Role.CASHIER,
     Role.VIEWER,
   ],
+  automation: [Role.SUPER_ADMIN, Role.ADMIN],
   staffAccess: [Role.SUPER_ADMIN],
   systemReadiness: [Role.SUPER_ADMIN, Role.ADMIN],
   routeOperations: [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
@@ -83,6 +86,7 @@ const moduleAccess: Record<AdminModule, readonly Role[]> = {
 };
 
 const capabilityAccess: Record<StaffCapability, readonly Role[]> = {
+  "automation:supervise": [Role.SUPER_ADMIN, Role.ADMIN],
   "admins:manage": [Role.SUPER_ADMIN],
   "admins:unlock": [Role.SUPER_ADMIN],
   "routes:manage": [Role.SUPER_ADMIN, Role.ADMIN, Role.BILLING],
@@ -114,6 +118,7 @@ const capabilityAccess: Record<StaffCapability, readonly Role[]> = {
 const moduleLabels: Record<AdminModule, string> = {
   dashboard: "dashboard",
   assistant: "staff assistant",
+  automation: "automation supervision",
   staffAccess: "admin management",
   systemReadiness: "system readiness",
   routeOperations: "route operations",
@@ -130,6 +135,7 @@ const moduleLabels: Record<AdminModule, string> = {
 };
 
 const capabilityLabels: Record<StaffCapability, string> = {
+  "automation:supervise": "supervise automation operations",
   "admins:manage": "manage admin accounts",
   "admins:unlock": "clear admin lockouts",
   "routes:manage": "manage route operations",

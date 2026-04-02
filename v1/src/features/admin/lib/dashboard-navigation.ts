@@ -10,6 +10,12 @@ const dashboardNavMeta = {
     description: "Daily priorities and module access.",
     icon: "dashboard",
   },
+  automation: {
+    href: "/admin/automation",
+    label: "Automation",
+    description: "Worker health, approvals, retries, and supervision.",
+    icon: "automation",
+  },
   staffAccess: {
     href: "/admin/staff-access",
     label: "Staff Access",

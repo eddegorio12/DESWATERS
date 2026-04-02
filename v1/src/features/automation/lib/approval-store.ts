@@ -2,6 +2,7 @@ import {
   AutomationApprovalStatus,
   AutomationApprovalTransport,
   AutomationExecutionStatus,
+  AutomationFailureCategory,
   type AutomationActionType,
   Prisma,
   TelegramCashierSessionStage,
@@ -13,9 +14,12 @@ import { recordPaymentForActor } from "@/features/payments/lib/payment-recording
 import { prisma } from "@/lib/prisma";
 
 import { createApprovalToken, verifyApprovalToken } from "./approval-tokens";
+import {
+  AUTOMATION_APPROVAL_MAX_RETRY_COUNT,
+  getAutomationApprovalExpiry,
+  hasDateExpired,
+} from "./automation-policy";
 import { sendTelegramApprovalMessage, sendTelegramTextMessage } from "./telegram-transport";
-
-const APPROVAL_TTL_MS = 1000 * 60 * 30;
 
 type FollowUpApprovalIntent = {
   actionType:
@@ -30,7 +34,7 @@ type FollowUpApprovalIntent = {
 };
 
 function getApprovalExpiry() {
-  return new Date(Date.now() + APPROVAL_TTL_MS);
+  return getAutomationApprovalExpiry();
 }
 
 async function finalizeTelegramCashierSession(input: {
@@ -116,6 +120,251 @@ function getFollowUpApprovalIntent(sourceMetadata: unknown): FollowUpApprovalInt
   return null;
 }
 
+function getApprovalActionLabel(actionType: AutomationActionType) {
+  switch (actionType) {
+    case "FOLLOW_UP_SEND_REMINDER":
+      return "Log first reminder";
+    case "FOLLOW_UP_SEND_FINAL_NOTICE":
+      return "Log final notice";
+    case "FOLLOW_UP_ESCALATE_DISCONNECTION_REVIEW":
+      return "Escalate to disconnection review";
+    case "PAYMENT_POST":
+      return "Post cash payment";
+    default:
+      return String(actionType).replaceAll("_", " ");
+  }
+}
+
+async function getApprovalTargetLabel(intent: {
+  actionType: AutomationActionType;
+  targetId: string;
+}) {
+  if (
+    intent.actionType === "FOLLOW_UP_SEND_REMINDER" ||
+    intent.actionType === "FOLLOW_UP_SEND_FINAL_NOTICE" ||
+    intent.actionType === "FOLLOW_UP_ESCALATE_DISCONNECTION_REVIEW" ||
+    intent.actionType === "PAYMENT_POST"
+  ) {
+    const bill = await prisma.bill.findUnique({
+      where: {
+        id: intent.targetId,
+      },
+      select: {
+        billingPeriod: true,
+        customer: {
+          select: {
+            name: true,
+            accountNumber: true,
+          },
+        },
+      },
+    });
+
+    if (bill) {
+      return `${bill.customer.name} (${bill.customer.accountNumber}) | ${bill.billingPeriod}`;
+    }
+  }
+
+  return `${intent.actionType.replaceAll("_", " ")} target ${intent.targetId}`;
+}
+
+async function deliverApprovalRequest(input: {
+  approvalRequestId: string;
+  token: string;
+  summary: string;
+  actionType: AutomationActionType;
+  targetId: string;
+  expiresAt: Date;
+  requestedByName: string;
+}) {
+  return sendTelegramApprovalMessage({
+    requestId: input.approvalRequestId,
+    token: input.token,
+    summary: input.summary,
+    expiresAt: input.expiresAt,
+    requestedByName: input.requestedByName,
+    actionLabel: getApprovalActionLabel(input.actionType),
+    targetLabel: await getApprovalTargetLabel({
+      actionType: input.actionType,
+      targetId: input.targetId,
+    }),
+  });
+}
+
+async function recordExecutionLog(input: {
+  intentId: string;
+  approvalRequestId: string;
+  actionType: AutomationActionType;
+  status: AutomationExecutionStatus;
+  resultSummary: string;
+  errorMessage?: string | null;
+  failureCategory?: AutomationFailureCategory | null;
+  latencyMs?: number | null;
+  resultMetadata?: Prisma.JsonObject | null;
+}) {
+  return prisma.automationExecutionLog.create({
+    data: {
+      intentId: input.intentId,
+      approvalRequestId: input.approvalRequestId,
+      actionType: input.actionType,
+      status: input.status,
+      resultSummary: input.resultSummary,
+      errorMessage: input.errorMessage ?? null,
+      failureCategory: input.failureCategory ?? null,
+      latencyMs: input.latencyMs ?? null,
+      resultMetadata: input.resultMetadata ?? Prisma.JsonNull,
+    },
+  });
+}
+
+async function invalidateApprovalRequest(input: {
+  approvalRequestId: string;
+  intentId: string;
+  actionType: AutomationActionType;
+  decidedByLabel: string;
+  reason: string;
+}) {
+  const now = new Date();
+
+  await prisma.automationApprovalRequest.update({
+    where: {
+      id: input.approvalRequestId,
+    },
+    data: {
+      status: AutomationApprovalStatus.INVALIDATED,
+      decidedAt: now,
+      decidedByLabel: input.decidedByLabel,
+      invalidatedAt: now,
+      invalidatedReason: input.reason,
+    },
+  });
+
+  await recordExecutionLog({
+    intentId: input.intentId,
+    approvalRequestId: input.approvalRequestId,
+    actionType: input.actionType,
+    status: AutomationExecutionStatus.INVALIDATED,
+    resultSummary: input.reason,
+    failureCategory: AutomationFailureCategory.TARGET_STATE,
+  });
+}
+
+async function validateIntentStillRunnable(input: {
+  actionType: AutomationActionType;
+  payload: unknown;
+}) {
+  if (
+    input.actionType === "FOLLOW_UP_SEND_REMINDER" ||
+    input.actionType === "FOLLOW_UP_SEND_FINAL_NOTICE" ||
+    input.actionType === "FOLLOW_UP_ESCALATE_DISCONNECTION_REVIEW"
+  ) {
+    if (!input.payload || typeof input.payload !== "object" || Array.isArray(input.payload)) {
+      return "The follow-up approval intent payload is invalid.";
+    }
+
+    const billId = "billId" in input.payload ? input.payload.billId : null;
+
+    if (typeof billId !== "string") {
+      return "The follow-up approval intent payload is incomplete.";
+    }
+
+    const bill = await prisma.bill.findUnique({
+      where: {
+        id: billId,
+      },
+      select: {
+        followUpStatus: true,
+        totalCharges: true,
+        payments: {
+          where: {
+            status: "COMPLETED",
+          },
+          select: {
+            amount: true,
+          },
+        },
+      },
+    });
+
+    if (!bill) {
+      return "The approved follow-up target no longer exists.";
+    }
+
+    const outstandingBalance = Math.max(
+      0,
+      bill.totalCharges - bill.payments.reduce((sum, payment) => sum + payment.amount, 0)
+    );
+
+    if (outstandingBalance <= 0) {
+      return "The approved follow-up target is already settled, so the queued action was invalidated.";
+    }
+
+    const expectedStatus =
+      input.actionType === "FOLLOW_UP_SEND_REMINDER"
+        ? "CURRENT"
+        : input.actionType === "FOLLOW_UP_SEND_FINAL_NOTICE"
+          ? "REMINDER_SENT"
+          : "FINAL_NOTICE_SENT";
+
+    if (bill.followUpStatus !== expectedStatus) {
+      return `The follow-up queue state moved to ${bill.followUpStatus.replaceAll("_", " ").toLowerCase()}, so the queued action was invalidated.`;
+    }
+
+    return null;
+  }
+
+  if (input.actionType === "PAYMENT_POST") {
+    if (!input.payload || typeof input.payload !== "object" || Array.isArray(input.payload)) {
+      return "The PAYMENT_POST intent payload is invalid.";
+    }
+
+    const billId = "billId" in input.payload ? input.payload.billId : null;
+    const amount = "amount" in input.payload ? input.payload.amount : null;
+
+    if (typeof billId !== "string" || typeof amount !== "number") {
+      return "The PAYMENT_POST intent payload is incomplete.";
+    }
+
+    const bill = await prisma.bill.findUnique({
+      where: {
+        id: billId,
+      },
+      select: {
+        totalCharges: true,
+        payments: {
+          where: {
+            status: "COMPLETED",
+          },
+          select: {
+            amount: true,
+          },
+        },
+      },
+    });
+
+    if (!bill) {
+      return "The approved payment target no longer exists.";
+    }
+
+    const outstandingBalance = Math.max(
+      0,
+      bill.totalCharges - bill.payments.reduce((sum, payment) => sum + payment.amount, 0)
+    );
+
+    if (outstandingBalance <= 0) {
+      return "The bill is already settled, so the queued PAYMENT_POST intent was invalidated.";
+    }
+
+    if (amount - outstandingBalance > 0.000001) {
+      return `The queued PAYMENT_POST amount now exceeds the remaining balance of ${outstandingBalance.toFixed(2)}.`;
+    }
+
+    return null;
+  }
+
+  return "That automation action type is not executable in the current automation lane.";
+}
+
 export async function requestTelegramApprovalForFollowUpProposal(input: {
   proposalId: string;
   requestedById: string;
@@ -141,7 +390,6 @@ export async function requestTelegramApprovalForFollowUpProposal(input: {
         orderBy: [{ createdAt: "desc" }],
         take: 1,
         select: {
-          id: true,
           approvalRequests: {
             orderBy: [{ createdAt: "desc" }],
             take: 1,
@@ -214,24 +462,10 @@ export async function requestTelegramApprovalForFollowUpProposal(input: {
     });
   });
 
-  const bill = await prisma.bill.findUnique({
-    where: {
-      id: proposal.targetId,
-    },
-    select: {
-      billingPeriod: true,
-      customer: {
-        select: {
-          name: true,
-          accountNumber: true,
-        },
-      },
-    },
+  const targetLabel = await getApprovalTargetLabel({
+    actionType: approvalRequest.intent.actionType,
+    targetId: approvalRequest.intent.targetId,
   });
-
-  const targetLabel = bill
-    ? `${bill.customer.name} (${bill.customer.accountNumber}) | ${bill.billingPeriod}`
-    : `Bill ${proposal.targetId}`;
   const delivery = await sendTelegramApprovalMessage({
     requestId: approvalRequest.id,
     token,
@@ -327,7 +561,9 @@ export async function requestTelegramApprovalForPaymentSession(input: {
   const rawDraft =
     input.paymentDraft && typeof input.paymentDraft === "object"
       ? input.paymentDraft
-      : session.parsedIntent && typeof session.parsedIntent === "object" && !Array.isArray(session.parsedIntent)
+      : session.parsedIntent &&
+          typeof session.parsedIntent === "object" &&
+          !Array.isArray(session.parsedIntent)
         ? (session.parsedIntent as Record<string, unknown>)
         : null;
   const amount = rawDraft && typeof rawDraft.amount === "number" ? rawDraft.amount : null;
@@ -399,7 +635,8 @@ export async function requestTelegramApprovalForPaymentSession(input: {
         targetType: "BILL",
         targetId: bill.id,
         summary,
-        rationale: "Telegram-originated cashier assistant intent with explicit cash receipt confirmation.",
+        rationale:
+          "Telegram-originated cashier assistant intent with explicit cash receipt confirmation.",
         payload: {
           billId: bill.id,
           amount,
@@ -435,28 +672,19 @@ export async function requestTelegramApprovalForPaymentSession(input: {
     targetLabel: `${bill.customer.name} (${bill.customer.accountNumber}) | ${bill.billingPeriod}`,
   });
 
-  if (!delivery.ok) {
-    await prisma.automationApprovalRequest.delete({
-      where: {
-        id: approvalRequest.id,
-      },
-    });
-
-    return {
-      request: null,
-      delivery,
-    };
-  }
-
   const updatedRequest = await prisma.automationApprovalRequest.update({
     where: {
       id: approvalRequest.id,
     },
-    data: {
-      transportMessageId: delivery.messageId,
-      lastDeliveredAt: delivery.deliveredAt,
-      deliveryError: null,
-    },
+    data: delivery.ok
+      ? {
+          transportMessageId: delivery.messageId,
+          lastDeliveredAt: delivery.deliveredAt,
+          deliveryError: null,
+        }
+      : {
+          deliveryError: delivery.errorMessage,
+        },
     include: {
       intent: true,
     },
@@ -501,28 +729,6 @@ export async function getApprovalRequestForDecision(input: {
   return { ok: true as const, approvalRequest };
 }
 
-async function recordExecutionLog(input: {
-  intentId: string;
-  approvalRequestId: string;
-  actionType: AutomationActionType;
-  status: AutomationExecutionStatus;
-  resultSummary: string;
-  errorMessage?: string | null;
-  resultMetadata?: Prisma.JsonObject | null;
-}) {
-  return prisma.automationExecutionLog.create({
-    data: {
-      intentId: input.intentId,
-      approvalRequestId: input.approvalRequestId,
-      actionType: input.actionType,
-      status: input.status,
-      resultSummary: input.resultSummary,
-      errorMessage: input.errorMessage ?? null,
-      resultMetadata: input.resultMetadata ?? Prisma.JsonNull,
-    },
-  });
-}
-
 async function executeIntent(input: {
   intentId: string;
   approvalRequestId: string;
@@ -530,6 +736,8 @@ async function executeIntent(input: {
   payload: unknown;
   actorId: string;
 }) {
+  const startedAt = Date.now();
+
   if (
     input.actionType === "FOLLOW_UP_SEND_REMINDER" ||
     input.actionType === "FOLLOW_UP_SEND_FINAL_NOTICE" ||
@@ -561,6 +769,7 @@ async function executeIntent(input: {
       actionType: input.actionType,
       status: AutomationExecutionStatus.SUCCEEDED,
       resultSummary: `${executionResult.accountNumber} moved to ${executionResult.nextStatus.replaceAll("_", " ").toLowerCase()}.`,
+      latencyMs: Date.now() - startedAt,
       resultMetadata: executionResult,
     });
 
@@ -613,6 +822,7 @@ async function executeIntent(input: {
       actionType: input.actionType,
       status: AutomationExecutionStatus.SUCCEEDED,
       resultSummary: `Payment posted successfully with receipt ${payment.receiptNumber}.`,
+      latencyMs: Date.now() - startedAt,
       resultMetadata: {
         paymentId: payment.id,
         receiptNumber: payment.receiptNumber,
@@ -653,6 +863,7 @@ export async function processApprovalDecision(input: {
       actionType: approvalRequest.intent.actionType,
       status: AutomationExecutionStatus.REPLAY_BLOCKED,
       resultSummary: "A replayed callback was blocked after execution.",
+      failureCategory: AutomationFailureCategory.VALIDATION,
     });
 
     return { ok: false as const, reason: "replay" as const };
@@ -661,12 +872,13 @@ export async function processApprovalDecision(input: {
   if (
     approvalRequest.status === AutomationApprovalStatus.APPROVED ||
     approvalRequest.status === AutomationApprovalStatus.REJECTED ||
-    approvalRequest.status === AutomationApprovalStatus.EXPIRED
+    approvalRequest.status === AutomationApprovalStatus.EXPIRED ||
+    approvalRequest.status === AutomationApprovalStatus.INVALIDATED
   ) {
     return { ok: false as const, reason: "closed" as const };
   }
 
-  if (approvalRequest.expiresAt <= now) {
+  if (hasDateExpired(approvalRequest.expiresAt, now)) {
     await prisma.automationApprovalRequest.update({
       where: {
         id: approvalRequest.id,
@@ -684,6 +896,7 @@ export async function processApprovalDecision(input: {
       actionType: approvalRequest.intent.actionType,
       status: AutomationExecutionStatus.EXPIRED,
       resultSummary: "The approval request expired before execution.",
+      failureCategory: AutomationFailureCategory.VALIDATION,
     });
 
     if (approvalRequest.intent.actionType === "PAYMENT_POST") {
@@ -695,6 +908,33 @@ export async function processApprovalDecision(input: {
     }
 
     return { ok: false as const, reason: "expired" as const };
+  }
+
+  if (input.decision === "approve") {
+    const invalidationReason = await validateIntentStillRunnable({
+      actionType: approvalRequest.intent.actionType,
+      payload: approvalRequest.intent.payload,
+    });
+
+    if (invalidationReason) {
+      await invalidateApprovalRequest({
+        approvalRequestId: approvalRequest.id,
+        intentId: approvalRequest.intentId,
+        actionType: approvalRequest.intent.actionType,
+        decidedByLabel: input.decidedByLabel,
+        reason: invalidationReason,
+      });
+
+      if (approvalRequest.intent.actionType === "PAYMENT_POST") {
+        await finalizeTelegramCashierSession({
+          approvalRequestId: approvalRequest.id,
+          status: TelegramConversationStatus.EXPIRED,
+          reply: invalidationReason,
+        });
+      }
+
+      return { ok: false as const, reason: "closed" as const };
+    }
   }
 
   if (input.decision === "reject") {
@@ -715,6 +955,7 @@ export async function processApprovalDecision(input: {
       actionType: approvalRequest.intent.actionType,
       status: AutomationExecutionStatus.REJECTED,
       resultSummary: "The approval request was rejected.",
+      failureCategory: AutomationFailureCategory.VALIDATION,
     });
 
     if (approvalRequest.intent.actionType === "PAYMENT_POST") {
@@ -784,6 +1025,7 @@ export async function processApprovalDecision(input: {
       status: AutomationExecutionStatus.FAILED,
       resultSummary: "The approved action failed during DWDS execution.",
       errorMessage: error instanceof Error ? error.message : "Unknown execution failure.",
+      failureCategory: AutomationFailureCategory.INTERNAL,
     });
 
     if (approvalRequest.intent.actionType === "PAYMENT_POST") {
@@ -799,4 +1041,154 @@ export async function processApprovalDecision(input: {
 
     throw error;
   }
+}
+
+export async function retryTelegramApprovalRequestDelivery(input: {
+  requestId: string;
+  supervisorLabel: string;
+}) {
+  const approvalRequest = await prisma.automationApprovalRequest.findUnique({
+    where: {
+      id: input.requestId,
+    },
+    include: {
+      intent: true,
+      requestedBy: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  if (!approvalRequest) {
+    throw new Error("That automation approval request no longer exists.");
+  }
+
+  if (approvalRequest.transport !== AutomationApprovalTransport.TELEGRAM) {
+    throw new Error("Only Telegram delivery retries are supported in the current automation lane.");
+  }
+
+  if (approvalRequest.status !== AutomationApprovalStatus.PENDING) {
+    throw new Error("Only pending approval requests can be retried.");
+  }
+
+  if (hasDateExpired(approvalRequest.expiresAt)) {
+    await prisma.automationApprovalRequest.update({
+      where: {
+        id: approvalRequest.id,
+      },
+      data: {
+        status: AutomationApprovalStatus.EXPIRED,
+        decidedAt: new Date(),
+        decidedByLabel: input.supervisorLabel,
+      },
+    });
+
+    await recordExecutionLog({
+      intentId: approvalRequest.intentId,
+      approvalRequestId: approvalRequest.id,
+      actionType: approvalRequest.intent.actionType,
+      status: AutomationExecutionStatus.EXPIRED,
+      resultSummary: "The pending approval request expired before delivery retry could run.",
+      failureCategory: AutomationFailureCategory.VALIDATION,
+    });
+
+    throw new Error("That approval request already expired.");
+  }
+
+  const { token, tokenHash } = createApprovalToken();
+  const retryCount = approvalRequest.retryCount + 1;
+  const startedAt = Date.now();
+  const delivery = await deliverApprovalRequest({
+    approvalRequestId: approvalRequest.id,
+    token,
+    summary: approvalRequest.intent.summary,
+    actionType: approvalRequest.intent.actionType,
+    targetId: approvalRequest.intent.targetId,
+    expiresAt: approvalRequest.expiresAt,
+    requestedByName: approvalRequest.requestedBy.name,
+  });
+
+  if (delivery.ok) {
+    await prisma.automationApprovalRequest.update({
+      where: {
+        id: approvalRequest.id,
+      },
+      data: {
+        callbackTokenHash: tokenHash,
+        transportMessageId: delivery.messageId,
+        lastDeliveredAt: delivery.deliveredAt,
+        deliveryError: null,
+        retryCount,
+        lastRetriedAt: new Date(),
+        deadLetteredAt: null,
+        deadLetterReason: null,
+      },
+    });
+
+    return {
+      ok: true as const,
+      retryCount,
+    };
+  }
+
+  const now = new Date();
+  const shouldDeadLetter = retryCount >= AUTOMATION_APPROVAL_MAX_RETRY_COUNT;
+  const failureMessage =
+    delivery.errorMessage ??
+    "Telegram approval delivery failed before a response was received.";
+
+  await prisma.automationApprovalRequest.update({
+    where: {
+      id: approvalRequest.id,
+    },
+    data: shouldDeadLetter
+      ? {
+          status: AutomationApprovalStatus.INVALIDATED,
+          retryCount,
+          lastRetriedAt: now,
+          deliveryError: failureMessage,
+          deadLetteredAt: now,
+          deadLetterReason: `Telegram delivery failed after ${retryCount} attempts.`,
+          invalidatedAt: now,
+          invalidatedReason: `Telegram delivery failed after ${retryCount} attempts.`,
+          decidedAt: now,
+          decidedByLabel: input.supervisorLabel,
+        }
+      : {
+          retryCount,
+          lastRetriedAt: now,
+          deliveryError: failureMessage,
+        },
+  });
+
+  await recordExecutionLog({
+    intentId: approvalRequest.intentId,
+    approvalRequestId: approvalRequest.id,
+    actionType: approvalRequest.intent.actionType,
+    status: shouldDeadLetter
+      ? AutomationExecutionStatus.DEAD_LETTERED
+      : AutomationExecutionStatus.FAILED,
+    resultSummary: shouldDeadLetter
+      ? `Telegram delivery failed after ${retryCount} attempts.`
+      : "Telegram delivery retry failed.",
+    errorMessage: failureMessage,
+    failureCategory: AutomationFailureCategory.DELIVERY,
+    latencyMs: Date.now() - startedAt,
+  });
+
+  if (shouldDeadLetter && approvalRequest.intent.actionType === "PAYMENT_POST") {
+    await finalizeTelegramCashierSession({
+      approvalRequestId: approvalRequest.id,
+      status: TelegramConversationStatus.EXPIRED,
+      reply: `DWDS invalidated the PAYMENT_POST request after ${retryCount} failed Telegram delivery attempts.`,
+    });
+  }
+
+  throw new Error(
+    shouldDeadLetter
+      ? `Telegram delivery failed ${retryCount} times and the request was dead-lettered.`
+      : failureMessage
+  );
 }

@@ -80,6 +80,8 @@
   - Standalone printable notice route for EH10 customer communication records
 - `src/app/(dashboard)/admin/system-readiness/`
   - EH11 admin-only route for backup snapshot logging, restore guidance, and security/readiness visibility
+- `src/app/(dashboard)/admin/automation/`
+  - EH21 admin-only route for automation supervision, approval delivery retries, stale-run review, and recent execution visibility
 - `src/app/(dashboard)/admin/exceptions/proofs/[proofId]/`
   - Protected EH9 file-serving route for stored field-proof images tied to completed work orders
 
@@ -229,12 +231,16 @@
 - EH17 should introduce the shared approval-intent and execution framework.
 - EH18 should introduce Telegram-first cashier-assist flows on top of that foundation.
 - EH19 is now validated as the real OpenClaw integration behind the existing planner boundary.
-- EH20 is now validated as the specialized-worker-lane layer on top of that validated planner boundary, while EH21 remains reserved for later production hardening and must not start until the user explicitly authorizes it.
+- EH20 is now validated as the specialized-worker-lane layer on top of that validated planner boundary, and EH21 is now the active production-hardening lane on top of that baseline.
+- EH21 has now started as the production-hardening lane on top of the validated EH20 baseline, with the first slice focused on supervision and bounded retry handling rather than broader autonomous authority.
 - Telegram should remain a transport plus callback surface only. It must not become the system of record for the action or the final audit trail.
 - Payment posting, receipt issuance, and audit logging must remain DWDS responsibilities even if OpenClaw coordinates the cashier conversation.
 - The validated EH19 seam now keeps OpenClaw behind `src/features/automation/lib/openclaw-gateway.ts` and `src/features/automation/lib/openclaw-adapter.ts`, where bearer-authenticated gateway calls hit the `responses` endpoint, return bounded structured output, and are validated by DWDS before any worker or Telegram flow can use them.
 - EH19 now uses OpenClaw only for bounded planning tasks: follow-up triage ranking, exception-review prioritization, payment-detail extraction, bill-choice interpretation, and explicit Telegram confirmation interpretation. The validated live path uses a dedicated `dwds` agent, visible provider or model metadata on worker runs, fallback-reason surfacing, and normalization of ranking-only output into DWDS proposal shape. Bill matching, approval persistence, execution, payment posting, follow-up mutation, receipts, and audit logs still remain server-authoritative inside DWDS.
 - EH20 now adds `src/features/automation/lib/worker-lanes.ts` as the shared lane registry for specialized worker ownership and policy metadata. `AutomationRun` now persists `laneKey` plus `laneSnapshot`, so the recorded run history keeps the lane label, module key, owner label, execution mode, policy version, bounded tool-access summary, and approval-action allowance that were in force when the run executed.
+- EH21 now extends that automation persistence with lease ownership and expiry on `AutomationRun`, retry plus invalidation or dead-letter state on `AutomationApprovalRequest`, and failure-category plus latency metadata on `AutomationExecutionLog`.
+- The first EH21 supervision slice now lives on `/admin/automation`, where admins can expire stale worker leases, expire pending approval backlog, review recent execution outcomes, and retry bounded Telegram approval delivery without bypassing DWDS server-authoritative execution rules.
+- Stale-intent invalidation now runs before approved execution for follow-up and cashier intents, so approvals drift cleanly into explicit invalidated state instead of depending only on downstream mutation failures.
 - The current specialized lanes are `FOLLOW_UP_QUEUE` and `EXCEPTION_REVIEW`. They reuse the existing `FOLLOW_UP_TRIAGE` and `EXCEPTION_SUMMARIZATION` worker types, but they now expose lane-level governance explicitly instead of relying on worker-type inference alone.
 - Broad autonomous multi-step execution, unrestricted record discovery, or hidden background retries should remain out of scope until a later phase proves the need and adds explicit safety plus audit controls.
 - Later worker lanes may include exception summarization, route-pressure briefings, notice drafting, and assistant knowledge-maintenance support after the follow-up triage baseline proves useful.

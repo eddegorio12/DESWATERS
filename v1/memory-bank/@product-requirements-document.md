@@ -64,12 +64,14 @@ Build a modular, robust web-based utility operations system that starts with a s
 - EH17 is now defined as the approval-based automation foundation.
 - EH18 is now defined as the Telegram-first cashier assistant lane.
 - EH19 is now defined as the OpenClaw integration lane.
-- EH20 and EH21 are now reserved for specialized worker lanes and production hardening.
+- EH20 is now validated for specialized worker lanes, and EH21 has now started as the production-hardening lane.
 - EH17 has now started with exact action-intent, approval-request, and execution-log persistence plus Telegram transport and callback handling for one bounded follow-up approval path.
 - EH17 is now validated for its current bounded follow-up approval scope, including real Telegram delivery, approved execution, rejected-request behavior, and replay blocking.
 - EH18 is now the next active lane.
 - EH19 is now validated through a private OpenClaw gateway planner boundary that can rank follow-up and exception proposals plus interpret bounded Telegram cashier clarification while keeping DWDS as the execution authority.
 - EH20 is now validated through a specialized worker-lane baseline that records lane ownership, policy version, execution mode, and bounded tool-access summary on automation runs and exposes that lane context on the existing follow-up and exceptions worker panels.
+- EH21 has now started with a protected `/admin/automation` supervision workspace plus durable lease, retry, invalidation, dead-letter, and execution-failure metadata across the current automation records.
+- EH21 now also invalidates stale follow-up and cashier intents before execution and supports bounded Telegram approval redelivery with visible dead-letter outcomes after repeated delivery failure.
 - EH12 now also includes a route-level loss-risk watchlist on `/admin/routes`, framed explicitly as a revenue-loss proxy from recent billed-versus-collected gaps plus overdue exposure, alongside route-linked complaint hotspot visibility from first-class complaint records.
 - Dedicated admin-management audit logging is now implemented, tested, and validated through a first-class account-management event log and a visible audit trail on `/admin/staff-access`.
 
@@ -371,7 +373,7 @@ Current status:
 4. Start EH18 on top of the validated EH17 approval foundation rather than reopening follow-up approval-core work.
 5. Treat OpenClaw as the bounded planner and conversation coordinator, not as the financial or operational source of truth.
 6. Treat Telegram-first cashiering as a separate lane from the approval foundation so field workflow, planner runtime, and execution safety can be validated in stages.
-7. Do not start EH21 production hardening until the user explicitly authorizes EH21.
+7. Continue EH21 only if the goal remains bounded supervision, retry safety, and observability rather than broader autonomous authority.
 
 ### Visual-Composition Refinement Direction
 Goal: make DWDS feel intentionally designed rather than template-assembled by reducing repeated card patterns and letting hierarchy come more from layout, typography, and state emphasis.

@@ -819,6 +819,12 @@ model AutomationRun {
   latencyMs     Int?
   proposalCount Int                 @default(0)
   failureReason String?
+  leaseOwner    String?
+  leaseExpiresAt DateTime?
+  retryCount    Int                 @default(0)
+  lastRetriedAt DateTime?
+  deadLetteredAt DateTime?
+  deadLetterReason String?
   startedAt     DateTime            @default(now())
   completedAt   DateTime?
   proposals     AutomationProposal[]
@@ -829,6 +835,8 @@ model AutomationRun {
   @@index([workerType, startedAt(sort: Desc)])
   @@index([laneKey, startedAt(sort: Desc)])
   @@index([status, startedAt(sort: Desc)])
+  @@index([status, leaseExpiresAt])
+  @@index([deadLetteredAt, startedAt(sort: Desc)])
   @@index([triggeredById, startedAt(sort: Desc)])
 }
 
@@ -907,20 +915,27 @@ model AutomationApprovalRequest {
   callbackTokenHash  String                     @unique
   transportMessageId String?
   deliveryError      String?
+  retryCount         Int                        @default(0)
+  lastRetriedAt      DateTime?
   requestedById      String
   requestedBy        User                       @relation("AutomationApprovalRequestRequestedBy", fields: [requestedById], references: [id])
   requestedAt        DateTime                   @default(now())
   expiresAt          DateTime
   decidedAt          DateTime?
   decidedByLabel     String?
+  invalidatedAt      DateTime?
+  invalidatedReason  String?
   lastDeliveredAt    DateTime?
   executedAt         DateTime?
+  deadLetteredAt     DateTime?
+  deadLetterReason   String?
   executionLogs      AutomationExecutionLog[]
   createdAt          DateTime                   @default(now())
   updatedAt          DateTime                   @updatedAt
 
   @@index([intentId, createdAt(sort: Desc)])
   @@index([status, expiresAt])
+  @@index([deadLetteredAt, requestedAt(sort: Desc)])
   @@index([requestedById, createdAt(sort: Desc)])
 }
 
@@ -934,6 +949,8 @@ model AutomationExecutionLog {
   status            AutomationExecutionStatus
   resultSummary     String
   errorMessage      String?
+  failureCategory   AutomationFailureCategory?
+  latencyMs         Int?
   resultMetadata    Json?
   createdAt         DateTime                  @default(now())
 
@@ -1079,6 +1096,7 @@ enum AutomationApprovalStatus {
   APPROVED
   REJECTED
   EXPIRED
+  INVALIDATED
   EXECUTED
 }
 
@@ -1087,7 +1105,17 @@ enum AutomationExecutionStatus {
   FAILED
   REJECTED
   EXPIRED
+  INVALIDATED
+  DEAD_LETTERED
   REPLAY_BLOCKED
+}
+
+enum AutomationFailureCategory {
+  DELIVERY
+  VALIDATION
+  TARGET_STATE
+  SUPERVISOR
+  INTERNAL
 }
 
 enum TelegramConversationStatus {

@@ -5,6 +5,7 @@ import {
   createAutomationWorkerLaneSnapshotJson,
   getAutomationWorkerLaneConfig,
 } from "@/features/automation/lib/worker-lanes";
+import { getAutomationRunLeaseExpiry } from "@/features/automation/lib/automation-policy";
 
 type AutomationProposalInput = {
   rank: number;
@@ -23,6 +24,7 @@ export async function createPendingAutomationRun(input: {
   triggeredById: string;
   provider?: string | null;
   model?: string | null;
+  retryCount?: number;
 }) {
   const lane = getAutomationWorkerLaneConfig(input.laneKey);
 
@@ -37,6 +39,9 @@ export async function createPendingAutomationRun(input: {
       provider: input.provider ?? null,
       model: input.model ?? null,
       status: AutomationRunStatus.PENDING,
+      leaseOwner: `web:${input.triggeredById}`,
+      leaseExpiresAt: getAutomationRunLeaseExpiry(),
+      retryCount: input.retryCount ?? 0,
     },
   });
 }
@@ -81,6 +86,8 @@ export async function completeAutomationRunWithProposals(input: {
         model: input.model ?? undefined,
         latencyMs: input.latencyMs,
         proposalCount: input.proposals.length,
+        leaseOwner: null,
+        leaseExpiresAt: null,
         completedAt: new Date(),
       },
     });
@@ -100,6 +107,8 @@ export async function failAutomationRun(input: {
       status: AutomationRunStatus.FAILED,
       latencyMs: input.latencyMs,
       failureReason: input.failureReason,
+      leaseOwner: null,
+      leaseExpiresAt: null,
       completedAt: new Date(),
     },
   });
